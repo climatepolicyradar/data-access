@@ -1,4 +1,4 @@
-from typing import Sequence, Optional, List, Tuple, Any
+from typing import Sequence, Optional, List, Tuple, Any, cast
 from pathlib import Path
 from enum import Enum
 import datetime
@@ -96,34 +96,13 @@ class Document(BaseModel):
     def from_parser_output(cls, parser_document: ParserOutput) -> "Document":  # type: ignore
         """Load from document parser output"""
 
-        if parser_document.document_content_type not in (
-            CONTENT_TYPE_PDF,
-            CONTENT_TYPE_HTML,
-            None,
-        ):
-            raise ValueError(
-                f"Unsupported content type: {parser_document.document_content_type}"
-            )
-
         if parser_document.document_content_type is None:
-            return Document(
-                document_id=parser_document.document_id,
-                document_name=parser_document.document_name,
-                document_description=parser_document.document_description,
-                document_source_url=parser_document.document_source_url,
-                document_cdn_object=parser_document.document_cdn_object,
-                document_content_type=parser_document.document_content_type,
-                document_md5_sum=parser_document.document_md5_sum,
-                document_slug=parser_document.document_slug,
-                document_metadata=parser_document.document_metadata,  # type: ignore
-                languages=parser_document.languages,
-                translated=parser_document.translated,
-                has_valid_text=None,
-                text_blocks=None,
-                page_metadata=None,
-            )
+            has_valid_text = None
+            text_blocks = None
+            page_metadata = None
 
         elif parser_document.document_content_type == CONTENT_TYPE_HTML:
+            has_valid_text = parser_document.html_data.has_valid_text  # type: ignore
             text_blocks = [
                 TextBlock(
                     text=html_block.text,
@@ -136,44 +115,34 @@ class Document(BaseModel):
                 )
                 for html_block in parser_document.html_data.text_blocks  # type: ignore
             ]
-
-            return Document(
-                document_id=parser_document.document_id,
-                document_name=parser_document.document_name,
-                document_description=parser_document.document_description,
-                document_source_url=parser_document.document_source_url,
-                document_cdn_object=parser_document.document_cdn_object,
-                document_content_type=parser_document.document_content_type,
-                document_md5_sum=parser_document.document_md5_sum,
-                document_slug=parser_document.document_slug,
-                document_metadata=parser_document.document_metadata,  # type: ignore
-                languages=parser_document.languages,
-                translated=parser_document.translated,
-                has_valid_text=parser_document.html_data.has_valid_text,  # type: ignore
-                text_blocks=text_blocks,
-                page_metadata=None,
-            )
+            page_metadata = None
 
         elif parser_document.document_content_type == CONTENT_TYPE_PDF:
-            text_blocks = parser_document.pdf_data.text_blocks  # type: ignore
-            page_metadata = parser_document.pdf_data.page_metadata  # type: ignore
+            has_valid_text = None
+            text_blocks = [TextBlock(block) for block in (parser_document.pdf_data.text_blocks)]  # type: ignore
+            page_metadata = [PageMetadata(meta) for meta in parser_document.pdf_data.page_metadata]  # type: ignore
 
-            return Document(
-                document_id=parser_document.document_id,
-                document_name=parser_document.document_name,
-                document_description=parser_document.document_description,
-                document_source_url=parser_document.document_source_url,
-                document_cdn_object=parser_document.document_cdn_object,
-                document_content_type=parser_document.document_content_type,
-                document_md5_sum=parser_document.document_md5_sum,
-                document_slug=parser_document.document_slug,
-                document_metadata=parser_document.document_metadata,  # type: ignore
-                languages=parser_document.languages,
-                translated=parser_document.translated,
-                has_valid_text=None,
-                text_blocks=text_blocks,  # type: ignore
-                page_metadata=page_metadata,  # type: ignore
+        else:
+            raise ValueError(
+                f"Unsupported content type: {parser_document.document_content_type}"
             )
+
+        return Document(
+            document_id=parser_document.document_id,
+            document_name=parser_document.document_name,
+            document_description=parser_document.document_description,
+            document_source_url=parser_document.document_source_url,
+            document_cdn_object=parser_document.document_cdn_object,
+            document_content_type=parser_document.document_content_type,
+            document_md5_sum=parser_document.document_md5_sum,
+            document_slug=parser_document.document_slug,
+            document_metadata=cast(Any, parser_document.document_metadata),
+            languages=parser_document.languages,
+            translated=parser_document.translated,
+            has_valid_text=has_valid_text,
+            text_blocks=text_blocks,
+            page_metadata=page_metadata,
+        )
 
 
 class Dataset:
