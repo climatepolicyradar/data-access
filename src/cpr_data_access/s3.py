@@ -1,6 +1,7 @@
 import re
 
 import boto3
+from aws_error_utils.aws_error_utils import errors
 
 ID_PATTERN = re.compile(r"^[a-zA-Z0-9]+\.[a-zA-Z0-9]+\.[a-zA-Z0-9]+\.[a-zA-Z0-9]+")
 S3_PATTERN = re.compile(r"s3://(?P<bucket>[\w-]+)/(?P<prefix>.+)")
@@ -28,7 +29,15 @@ def _get_s3_keys_with_prefix(s3_prefix: str) -> list[str]:
     prefix = s3_match.group("prefix").rstrip("/") + "/"
     s3client = boto3.client("s3")
 
-    list_response = s3client.list_objects_v2(Bucket=bucket, Prefix=prefix)
+    try:
+        list_response = s3client.list_objects_v2(Bucket=bucket, Prefix=prefix)
+    except errors.NoSuchBucket:
+        raise ValueError(f"Bucket {bucket} does not exist")
+    except errors.NoSuchKey:
+        raise ValueError(f"Prefix {prefix} does not exist in bucket {bucket}")
+    except Exception as e:
+        raise e
+
     files = [o["Key"] for o in list_response["Contents"] if o["Key"] != prefix]
 
     finished_listing = not list_response["IsTruncated"]
@@ -62,6 +71,14 @@ def _s3_object_read_text(s3_path: str) -> str:
     bucket = s3_match.group("bucket")
     key = s3_match.group("prefix")
     s3client = boto3.client("s3")
-    response = s3client.get_object(Bucket=bucket, Key=key)
+
+    try:
+        response = s3client.get_object(Bucket=bucket, Key=key)
+    except errors.NoSuchBucket:
+        raise ValueError(f"Bucket {bucket} does not exist")
+    except errors.NoSuchKey:
+        raise ValueError(f"Key {key} does not exist")
+    except Exception as e:
+        raise e
 
     return response["Body"].read().decode("utf-8")
