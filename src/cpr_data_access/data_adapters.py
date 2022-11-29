@@ -14,9 +14,7 @@ class DataAdapter(ABC):
     """Base class for data adaptors."""
 
     @abstractmethod
-    def load_dataset(
-        self, bucket_name_or_folder_path: str, limit: Optional[int] = None
-    ) -> List[ParserOutput]:
+    def load_dataset(self, key: str, limit: Optional[int] = None) -> List[ParserOutput]:
         """Load entire dataset from data source."""
         raise NotImplementedError
 
@@ -24,13 +22,15 @@ class DataAdapter(ABC):
 class S3DataAdapter(DataAdapter):
     """Adaptor for loading data from S3."""
 
-    def load_dataset(
-        self, bucket_name_or_folder_path: str, limit: Optional[int] = None
-    ) -> List[ParserOutput]:
-        """Load entire dataset from S3."""
-        s3_objects = _get_s3_keys_with_prefix(
-            f"s3://{bucket_name_or_folder_path}/embeddings_input"
-        )
+    def load_dataset(self, key: str, limit: Optional[int] = None) -> List[ParserOutput]:
+        """
+        Load entire dataset from S3.
+
+        :param key: S3 bucket
+        :param limit: optionally limit number of documents loaded. Defaults to None
+        :return List[ParserOutput]: list of parser outputs
+        """
+        s3_objects = _get_s3_keys_with_prefix(f"s3://{key}/embeddings_input")
 
         parsed_files = []
 
@@ -38,9 +38,7 @@ class S3DataAdapter(DataAdapter):
             if filename.endswith(".json"):
                 parsed_files.append(
                     ParserOutput.parse_raw(
-                        _s3_object_read_text(
-                            f"s3://{bucket_name_or_folder_path}/{filename}"
-                        )
+                        _s3_object_read_text(f"s3://{key}/{filename}")
                     )
                 )
 
@@ -50,12 +48,16 @@ class S3DataAdapter(DataAdapter):
 class LocalDataAdapter(DataAdapter):
     """Adaptor for loading data from a local path."""
 
-    def load_dataset(
-        self, bucket_name_or_folder_path: str, limit: Optional[int] = None
-    ) -> List[ParserOutput]:
-        """Load entire dataset from a local path."""
+    def load_dataset(self, key: str, limit: Optional[int] = None) -> List[ParserOutput]:
+        """
+        Load entire dataset from a local path.
 
-        folder_path = Path(bucket_name_or_folder_path).resolve()
+        :param str key: path to local directory containing parser outputs/embeddings inputs
+        :param limit: optionally limit number of documents loaded. Defaults to None
+        :return List[ParserOutput]: list of parser outputs
+        """
+
+        folder_path = Path(key).resolve()
         parsed_files = []
 
         for file in tqdm(list(folder_path.glob("*.json"))[:limit]):
