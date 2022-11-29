@@ -1,4 +1,4 @@
-from typing import Sequence, Optional, List, Tuple, Any, cast
+from typing import Sequence, Optional, List, Tuple, Any
 from pathlib import Path
 from enum import Enum
 import datetime
@@ -35,9 +35,9 @@ class TextBlock(BaseModel):
     text: Sequence[str]
     text_block_id: str
     language: Optional[str]
-    type: Optional[BlockType]
-    type_confidence: Optional[confloat(ge=0, le=1)]  # type: ignore
-    page_number: Optional[NonNegativeInt]
+    type: BlockType
+    type_confidence: confloat(ge=0, le=1)  # type: ignore
+    page_number: NonNegativeInt
     coords: Optional[List[Tuple[float, float]]]
 
     def to_string(self) -> str:
@@ -69,7 +69,14 @@ class DocumentMetadata(BaseModel):
 
 
 class Document(BaseModel):
-    """Document data model. Note this is very similar to the ParserOutput model."""
+    """
+    Document data model. Note this is very similar to the ParserOutput model.
+
+    Special cases for content types:
+    - HTML: all text blocks have page_number == -1, block type == BlockType.TEXT, type_confidence == 1.0 and coords == None
+    - PDF: all documents have has_valid_text == True
+    - no content type: all documents have has_valid_text == False
+    """
 
     document_id: str  # import ID
     document_name: str
@@ -84,9 +91,7 @@ class Document(BaseModel):
     document_metadata: DocumentMetadata
     languages: Optional[Sequence[str]]
     translated: bool
-    has_valid_text: Optional[
-        bool
-    ]  # Currently just used for HTMLs. Useful for filtering out documents we have predicted to be nonsense in any parser.
+    has_valid_text: bool
     text_blocks: Optional[Sequence[TextBlock]]  # None if there is no content type
     page_metadata: Optional[
         Sequence[PageMetadata]
@@ -97,7 +102,7 @@ class Document(BaseModel):
         """Load from document parser output"""
 
         if parser_document.document_content_type is None:
-            has_valid_text = None
+            has_valid_text = False
             text_blocks = None
             page_metadata = None
 
@@ -108,9 +113,9 @@ class Document(BaseModel):
                     text=html_block.text,
                     text_block_id=html_block.text_block_id,
                     language=html_block.language,
-                    type=None,
-                    type_confidence=None,
-                    page_number=None,
+                    type=BlockType.TEXT,
+                    type_confidence=1,
+                    page_number=-1,
                     coords=None,
                 )
                 for html_block in parser_document.html_data.text_blocks  # type: ignore
@@ -118,7 +123,7 @@ class Document(BaseModel):
             page_metadata = None
 
         elif parser_document.document_content_type == CONTENT_TYPE_PDF:
-            has_valid_text = None
+            has_valid_text = True
             text_blocks = [TextBlock(block) for block in (parser_document.pdf_data.text_blocks)]  # type: ignore
             page_metadata = [PageMetadata(meta) for meta in parser_document.pdf_data.page_metadata]  # type: ignore
 
@@ -136,7 +141,9 @@ class Document(BaseModel):
             document_content_type=parser_document.document_content_type,
             document_md5_sum=parser_document.document_md5_sum,
             document_slug=parser_document.document_slug,
-            document_metadata=cast(Any, parser_document.document_metadata),
+            document_metadata=DocumentMetadata.parse_obj(
+                parser_document.document_metadata
+            ),
             languages=parser_document.languages,
             translated=parser_document.translated,
             has_valid_text=has_valid_text,
