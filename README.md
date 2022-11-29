@@ -8,10 +8,10 @@ Internal library for persistent access to text data.
 from src.cpr_data_access.models import Dataset
 
 # Load from remote, or 
-dataset = Dataset.load_from_remote(bucket_name="cpr-data", limit=1000)
+dataset = Dataset.load_from_remote(dataset_key="cpr-data", limit=1000)
 
 # load from local
-dataset = Dataset.load_from_local(folder_path="~/data")
+dataset = Dataset.load_from_local(dataset_key="~/data")
 
 # Using the dataset
 len(dataset)
