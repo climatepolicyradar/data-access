@@ -5,7 +5,7 @@ import datetime
 
 from pydantic import BaseModel, AnyHttpUrl, NonNegativeInt, confloat
 
-import src.cpr_data_access.data_adapters as adapters
+import cpr_data_access.data_adaptors as adaptors
 from src.cpr_data_access.parser_models import (
     ParserOutput,
     CONTENT_TYPE_HTML,
@@ -188,7 +188,7 @@ class Dataset:
     ) -> "Dataset":
         """Load from s3 or local copy of an s3 directory"""
 
-        parser_outputs = adapters.S3DataAdapter().load_dataset(bucket_name, limit)
+        parser_outputs = adaptors.S3DataAdaptor().load_dataset(bucket_name, limit)
         documents = [Document.from_parser_output(doc) for doc in parser_outputs]
 
         return Dataset(documents)
@@ -199,7 +199,7 @@ class Dataset:
     ) -> "Dataset":
         """Load from local copy of an s3 directory"""
 
-        parser_outputs = adapters.LocalDataAdapter().load_dataset(folder_path, limit)
+        parser_outputs = adaptors.LocalDataAdaptor().load_dataset(folder_path, limit)
         documents = [Document.from_parser_output(doc) for doc in parser_outputs]
 
         return Dataset(documents)

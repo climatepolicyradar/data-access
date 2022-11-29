@@ -10,7 +10,7 @@ from src.cpr_data_access.s3 import _get_s3_keys_with_prefix, _s3_object_read_tex
 from src.cpr_data_access.parser_models import ParserOutput
 
 
-class DataAdapter(ABC):
+class DataAdaptor(ABC):
     """Base class for data adaptors."""
 
     @abstractmethod
@@ -19,7 +19,7 @@ class DataAdapter(ABC):
         raise NotImplementedError
 
 
-class S3DataAdapter(DataAdapter):
+class S3DataAdaptor(DataAdaptor):
     """Adaptor for loading data from S3."""
 
     def load_dataset(self, key: str, limit: Optional[int] = None) -> List[ParserOutput]:
@@ -45,7 +45,7 @@ class S3DataAdapter(DataAdapter):
         return parsed_files
 
 
-class LocalDataAdapter(DataAdapter):
+class LocalDataAdaptor(DataAdaptor):
     """Adaptor for loading data from a local path."""
 
     def load_dataset(self, key: str, limit: Optional[int] = None) -> List[ParserOutput]:
