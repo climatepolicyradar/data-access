@@ -64,6 +64,16 @@ class LocalDataAdaptor(DataAdaptor):
         """
 
         folder_path = Path(dataset_key).resolve()
+
+        if not folder_path.exists():
+            raise ValueError(f"Path {folder_path} does not exist")
+
+        if not folder_path.is_dir():
+            raise ValueError(f"Path {folder_path} is not a directory")
+
+        if len(list(folder_path.glob("*.json"))) == 0:
+            raise ValueError(f"Path {folder_path} does not contain any json files")
+
         parsed_files = []
 
         for file in tqdm(list(folder_path.glob("*.json"))[:limit]):
