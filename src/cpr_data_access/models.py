@@ -82,9 +82,7 @@ class Document(BaseModel):
     document_name: str
     document_description: str
     document_source_url: Optional[AnyHttpUrl]
-    document_cdn_object: Optional[
-        str
-    ]  # TODO: do we want to manufacture a URL, and if so should it point to the prod or the dev CDN instance?
+    document_cdn_object: Optional[str]
     document_content_type: Optional[str]
     document_md5_sum: Optional[str]
     document_slug: str
@@ -151,34 +149,60 @@ class Document(BaseModel):
             page_metadata=page_metadata,
         )
 
+    def with_document_url(self, cdn_url: str) -> "DocumentWithURL":
+        """
+        Return a document with a URL set. This is the CDN URL if there is a CDN object, otherwise the source URL.
+
+        :param cdn_url: URL of CPR CDN
+        """
+
+        document_url = self.document_source_url if self.document_cdn_object is None else f"{cdn_url}/{self.document_cdn_object}"  # type: ignore
+
+        return DocumentWithURL(**self.dict(), document_url=document_url)  # type: ignore
+
+
+class DocumentWithURL(Document):
+    """Document with a document_url field"""
+
+    document_url: Optional[AnyHttpUrl]
+
 
 class Dataset:
     """Helper class for accessing the entire corpus."""
 
-    def __init__(self, documents: Sequence[Document] = []):
+    def __init__(
+        self,
+        cdn_url: str = "https://cdn.climatepolicyradar.org",
+        documents: Sequence[Document] = [],
+    ):
+        self.cdn_url = cdn_url
         self.documents = documents
 
-    @classmethod
     def load_from_remote(
-        cls, bucket_name: str, limit: Optional[int] = None
+        self, bucket_name: str, limit: Optional[int] = None
     ) -> "Dataset":
-        """Load from s3 or local copy of an s3 directory"""
+        """Load data from s3 or local copy of an s3 directory"""
 
         parser_outputs = adaptors.S3DataAdaptor().load_dataset(bucket_name, limit)
-        documents = [Document.from_parser_output(doc) for doc in parser_outputs]
+        self.documents = [
+            Document.from_parser_output(doc).with_document_url(cdn_url=self.cdn_url)
+            for doc in parser_outputs
+        ]
 
-        return Dataset(documents)
+        return self
 
-    @classmethod
     def load_from_local(
-        cls, folder_path: str, limit: Optional[int] = None
+        self, folder_path: str, limit: Optional[int] = None
     ) -> "Dataset":
-        """Load from local copy of an s3 directory"""
+        """Load data from local copy of an s3 directory"""
 
         parser_outputs = adaptors.LocalDataAdaptor().load_dataset(folder_path, limit)
-        documents = [Document.from_parser_output(doc) for doc in parser_outputs]
+        self.documents = [
+            Document.from_parser_output(doc).with_document_url(cdn_url=self.cdn_url)
+            for doc in parser_outputs
+        ]
 
-        return Dataset(documents)
+        return self
 
     @classmethod
     def save(cls, path: Path):
@@ -192,7 +216,10 @@ class Dataset:
     def filter(self, attribute: str, value: Any) -> "Dataset":
         """Filter documents by attribute"""
         return Dataset(
-            [doc for doc in self.documents if getattr(doc, attribute) == value]
+            documents=[
+                doc for doc in self.documents if getattr(doc, attribute) == value
+            ],
+            cdn_url=self.cdn_url,
         )
 
     def filter_by_language(self, language: str) -> "Dataset":
