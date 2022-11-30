@@ -1,4 +1,4 @@
-"""A copy of src/base.py from navigator-document-parser, with methods that rely on external libraries removed."""
+"""A copy of src/base.py from navigator-document-parser, with methods that rely on external libraries removed. These may be duplicated in models.py, but the intention is that these stay in sync with the data pipeline so we can easily update the pipeline should we decide to use these new models."""
 
 import logging
 import logging.config

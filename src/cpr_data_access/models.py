@@ -1,3 +1,5 @@
+"""Data models for data access."""
+
 from typing import Sequence, Optional, List, Tuple, Any
 from pathlib import Path
 from enum import Enum
@@ -149,14 +151,14 @@ class Document(BaseModel):
             page_metadata=page_metadata,
         )
 
-    def with_document_url(self, cdn_url: str) -> "DocumentWithURL":
+    def with_document_url(self, cdn_domain: str) -> "DocumentWithURL":
         """
         Return a document with a URL set. This is the CDN URL if there is a CDN object, otherwise the source URL.
 
-        :param cdn_url: URL of CPR CDN
+        :param cdn_domain: domain of CPR CDN
         """
 
-        document_url = self.document_source_url if self.document_cdn_object is None else f"{cdn_url}/{self.document_cdn_object}"  # type: ignore
+        document_url = self.document_source_url if self.document_cdn_object is None else f"https://{cdn_domain}/{self.document_cdn_object}"  # type: ignore
 
         return DocumentWithURL(**self.dict(), document_url=document_url)  # type: ignore
 
@@ -172,10 +174,10 @@ class Dataset:
 
     def __init__(
         self,
-        cdn_url: str = "https://cdn.climatepolicyradar.org",
+        cdn_domain: str = "cdn.climatepolicyradar.org",
         documents: Sequence[Document] = [],
     ):
-        self.cdn_url = cdn_url
+        self.cdn_domain = cdn_domain
         self.documents = documents
 
     def load_from_remote(
@@ -185,7 +187,9 @@ class Dataset:
 
         parser_outputs = adaptors.S3DataAdaptor().load_dataset(bucket_name, limit)
         self.documents = [
-            Document.from_parser_output(doc).with_document_url(cdn_url=self.cdn_url)
+            Document.from_parser_output(doc).with_document_url(
+                cdn_domain=self.cdn_domain
+            )
             for doc in parser_outputs
         ]
 
@@ -198,7 +202,9 @@ class Dataset:
 
         parser_outputs = adaptors.LocalDataAdaptor().load_dataset(folder_path, limit)
         self.documents = [
-            Document.from_parser_output(doc).with_document_url(cdn_url=self.cdn_url)
+            Document.from_parser_output(doc).with_document_url(
+                cdn_domain=self.cdn_domain
+            )
             for doc in parser_outputs
         ]
 
@@ -219,7 +225,7 @@ class Dataset:
             documents=[
                 doc for doc in self.documents if getattr(doc, attribute) == value
             ],
-            cdn_url=self.cdn_url,
+            cdn_domain=self.cdn_domain,
         )
 
     def filter_by_language(self, language: str) -> "Dataset":
