@@ -33,4 +33,4 @@ jobs:
           key: ${{ runner.os }}-poetry-${{ hashFiles('**/Poetry.lock') }}
       - name: Run test suite
         run: |
-          python -m pytest -vvv
+          poetry run python -m pytest -vvv
