@@ -36,6 +36,11 @@ class S3DataAdaptor(DataAdaptor):
         """
         s3_objects = _get_s3_keys_with_prefix(f"s3://{dataset_key}/embeddings_input")
 
+        if len(s3_objects) == 0:
+            raise ValueError(
+                f"No objects found in 'embeddings_input' folder in S3 bucket {dataset_key}."
+            )
+
         parsed_files = []
 
         for filename in tqdm(s3_objects[:limit]):

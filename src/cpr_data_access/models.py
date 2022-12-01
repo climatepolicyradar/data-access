@@ -5,7 +5,7 @@ from pathlib import Path
 from enum import Enum
 import datetime
 
-from pydantic import BaseModel, AnyHttpUrl, NonNegativeInt, confloat
+from pydantic import BaseModel, AnyHttpUrl, NonNegativeInt, confloat, conint
 
 import cpr_data_access.data_adaptors as adaptors
 from src.cpr_data_access.parser_models import (
@@ -39,7 +39,7 @@ class TextBlock(BaseModel):
     language: Optional[str]
     type: BlockType
     type_confidence: confloat(ge=0, le=1)  # type: ignore
-    page_number: NonNegativeInt
+    page_number: conint(ge=-1)  # type: ignore
     coords: Optional[List[Tuple[float, float]]]
 
     def to_string(self) -> str:
@@ -124,8 +124,8 @@ class Document(BaseModel):
 
         elif parser_document.document_content_type == CONTENT_TYPE_PDF:
             has_valid_text = True
-            text_blocks = [TextBlock(block) for block in (parser_document.pdf_data.text_blocks)]  # type: ignore
-            page_metadata = [PageMetadata(meta) for meta in parser_document.pdf_data.page_metadata]  # type: ignore
+            text_blocks = [TextBlock.parse_obj(block) for block in (parser_document.pdf_data.text_blocks)]  # type: ignore
+            page_metadata = [PageMetadata.parse_obj(meta) for meta in parser_document.pdf_data.page_metadata]  # type: ignore
 
         else:
             raise ValueError(

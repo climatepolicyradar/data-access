@@ -38,7 +38,7 @@ def _get_s3_keys_with_prefix(s3_prefix: str) -> list[str]:
     except Exception as e:
         raise e
 
-    files = [o["Key"] for o in list_response["Contents"] if o["Key"] != prefix]
+    files = [o["Key"] for o in list_response.get("Contents", []) if o["Key"] != prefix]
 
     finished_listing = not list_response["IsTruncated"]
     while not finished_listing:
