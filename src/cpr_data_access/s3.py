@@ -13,7 +13,7 @@ def _get_filename(source_folder: str, filepath: str) -> str:
 
 def _get_s3_keys_with_prefix(s3_prefix: str) -> list[str]:
     """
-    Get a list of keys in an S3 bucket with a given prefix.
+    Get a list of keys in an S3 bucket with a given prefix. Returns an empty list if the prefix does not exist or is empty.
 
     We use this instead of cloudpathlib's glob because it's much faster. Relevant issue: https://github.com/drivendataorg/cloudpathlib/issues/274.
 
@@ -33,8 +33,6 @@ def _get_s3_keys_with_prefix(s3_prefix: str) -> list[str]:
         list_response = s3client.list_objects_v2(Bucket=bucket, Prefix=prefix)
     except errors.NoSuchBucket:
         raise ValueError(f"Bucket {bucket} does not exist")
-    except errors.NoSuchKey:
-        raise ValueError(f"Prefix {prefix} does not exist in bucket {bucket}")
     except Exception as e:
         raise e
 
@@ -63,7 +61,6 @@ def _s3_object_read_text(s3_path: str) -> str:
     :param s3_key: path to S3 object, including s3:// prefix
     :return str: text of S3 object
     """
-
     s3_match = S3_PATTERN.match(s3_path)
     if s3_match is None:
         raise Exception(f"Key does not represent an s3 path: {s3_path}")
