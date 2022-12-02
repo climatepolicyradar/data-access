@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from pydantic.error_wrappers import ValidationError
 
-from src.cpr_data_access.data_adaptors import S3DataAdaptor, LocalDataAdaptor
+from cpr_data_access.data_adaptors import S3DataAdaptor, LocalDataAdaptor
 
 
 def test_local_data_adaptor_valid_data():

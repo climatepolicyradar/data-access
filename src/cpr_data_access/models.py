@@ -8,7 +8,7 @@ import datetime
 from pydantic import BaseModel, AnyHttpUrl, NonNegativeInt, confloat, conint
 
 import cpr_data_access.data_adaptors as adaptors
-from src.cpr_data_access.parser_models import (
+from cpr_data_access.parser_models import (
     ParserOutput,
     CONTENT_TYPE_HTML,
     CONTENT_TYPE_PDF,

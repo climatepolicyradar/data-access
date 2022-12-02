@@ -1,7 +1,7 @@
 import pytest
 
-from src.cpr_data_access.parser_models import ParserOutput
-from src.cpr_data_access.models import Dataset, Document
+from cpr_data_access.parser_models import ParserOutput
+from cpr_data_access.models import Dataset, Document
 
 
 @pytest.fixture
