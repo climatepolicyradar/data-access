@@ -6,8 +6,8 @@ from pathlib import Path
 
 from tqdm.auto import tqdm
 
-from src.cpr_data_access.s3 import _get_s3_keys_with_prefix, _s3_object_read_text
-from src.cpr_data_access.parser_models import ParserOutput
+from cpr_data_access.s3 import _get_s3_keys_with_prefix, _s3_object_read_text
+from cpr_data_access.parser_models import ParserOutput
 
 
 class DataAdaptor(ABC):
@@ -35,6 +35,11 @@ class S3DataAdaptor(DataAdaptor):
         :return List[ParserOutput]: list of parser outputs
         """
         s3_objects = _get_s3_keys_with_prefix(f"s3://{dataset_key}/embeddings_input")
+
+        if len(s3_objects) == 0:
+            raise ValueError(
+                f"No objects found in 'embeddings_input' folder in S3 bucket {dataset_key}."
+            )
 
         parsed_files = []
 

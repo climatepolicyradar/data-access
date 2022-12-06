@@ -5,7 +5,7 @@ Internal library for persistent access to text data.
 ## Usage 
 
 ``` py
-from src.cpr_data_access.models import Dataset
+from cpr_data_access.models import Dataset
 
 # Load from remote, or 
 dataset = Dataset(cdn_domain="cdn_dev.climatepolicyradar.org").load_from_remote(dataset_key="cpr-data", limit=1000)
