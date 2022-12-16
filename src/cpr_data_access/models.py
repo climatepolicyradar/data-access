@@ -44,7 +44,7 @@ class TextBlock(BaseModel):
 
     def to_string(self) -> str:
         """Return text in a clean format"""
-        raise NotImplementedError
+        return " ".join([line.strip() for line in self.text])
 
 
 class PageMetadata(BaseModel):

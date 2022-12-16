@@ -2,7 +2,6 @@
 
 import logging
 import logging.config
-from abc import ABC, abstractmethod
 from datetime import date
 from datetime import datetime
 from enum import Enum
@@ -201,46 +200,6 @@ class ParserOutput(BaseModel):
 
         return " ".join(
             [text_block.to_string().strip() for text_block in self.text_blocks]
-        )
-
-
-class HTMLParser(ABC):
-    """Base class for an HTML parser."""
-
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        """Identifier for the parser. Can be used if we want to identify the parser that parsed a web page."""
-        raise NotImplementedError()
-
-    @abstractmethod
-    def parse_html(self, html: str, url: str) -> ParserOutput:
-        """Parse an HTML string directly."""
-        raise NotImplementedError()
-
-    @abstractmethod
-    def parse(self, input: ParserInput) -> ParserOutput:
-        """Parse a web page, by fetching the HTML and then parsing it. Implementations will often call `parse_html`."""
-        raise NotImplementedError()
-
-    def _get_empty_response(self, input: ParserInput) -> ParserOutput:
-        """Return ParsedHTML object with empty fields."""
-        return ParserOutput(
-            document_id=input.document_id,
-            document_metadata=input.document_metadata,
-            document_content_type=input.document_content_type,
-            document_name=input.document_name,
-            document_description=input.document_description,
-            document_source_url=input.document_source_url,
-            document_cdn_object=input.document_cdn_object,
-            document_md5_sum=input.document_md5_sum,
-            document_slug=input.document_slug,
-            html_data=HTMLData(
-                text_blocks=[],
-                detected_date=None,
-                detected_title="",
-                has_valid_text=False,
-            ),
         )
 
 
