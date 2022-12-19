@@ -2,6 +2,9 @@
 
 Internal library for persistent access to text data.
 
+> **Warning**
+> This library is heavily under construction and doesn't work with any of our open data yet. We're working on making it usable for anyone.
+
 ## Usage 
 
 ``` py
