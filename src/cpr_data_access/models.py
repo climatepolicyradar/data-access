@@ -162,7 +162,8 @@ class Document(BaseModel):
 
         return DocumentWithURL(**self.dict(), document_url=document_url)  # type: ignore
 
-    def load_from_remote(self, bucket_name: str, document_id: str) -> "Document":
+    @classmethod
+    def load_from_remote(cls, bucket_name: str, document_id: str) -> "Document":
         """
         Load document from s3
 
@@ -179,7 +180,8 @@ class Document(BaseModel):
 
         return Document.from_parser_output(parser_output)
 
-    def load_from_local(self, path: str, document_id: str) -> "Document":
+    @classmethod
+    def load_from_local(cls, path: str, document_id: str) -> "Document":
         """
         Load document from local directory
 

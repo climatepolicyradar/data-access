@@ -29,4 +29,11 @@ dataset.filter("document_id", "1234")
 
 dataset.filter_by_language("en")
 >>> Dataset()
+
+# Loading individual documents
+from cpr_data_access.models import Document
+
+document = Document.load_from_remote(dataset_key="cpr-data", document_id="1234")
+
+document = Document.load_from_local(dataset_key="~/data", document_id="1234")
 ```
