@@ -164,7 +164,7 @@ class Document(BaseModel):
 
     def load_from_remote(self, bucket_name: str, document_id: str) -> "Document":
         """
-        Load data from s3
+        Load document from s3
 
         :param str bucket_name: bucket name
         :param str document_id: document id
@@ -181,9 +181,9 @@ class Document(BaseModel):
 
     def load_from_local(self, path: str, document_id: str) -> "Document":
         """
-        Load data from local directory
+        Load document from local directory
 
-        :param str bucket_name: bucket name
+        :param str path: local path to document
         :param str document_id: document id
         :raises ValueError: if document not found
         :return Document: document object
