@@ -162,6 +162,40 @@ class Document(BaseModel):
 
         return DocumentWithURL(**self.dict(), document_url=document_url)  # type: ignore
 
+    def load_from_remote(self, bucket_name: str, document_id: str) -> "Document":
+        """
+        Load data from s3
+
+        :param str bucket_name: bucket name
+        :param str document_id: document id
+        :raises ValueError: if document not found
+        :return Document: document object
+        """
+
+        parser_output = adaptors.S3DataAdaptor().get_by_id(bucket_name, document_id)
+
+        if parser_output is None:
+            raise ValueError(f"Document with id {document_id} not found")
+
+        return Document.from_parser_output(parser_output)
+
+    def load_from_local(self, path: str, document_id: str) -> "Document":
+        """
+        Load data from local directory
+
+        :param str bucket_name: bucket name
+        :param str document_id: document id
+        :raises ValueError: if document not found
+        :return Document: document object
+        """
+
+        parser_output = adaptors.LocalDataAdaptor().get_by_id(path, document_id)
+
+        if parser_output is None:
+            raise ValueError(f"Document with id {document_id} not found")
+
+        return Document.from_parser_output(parser_output)
+
 
 class DocumentWithURL(Document):
     """Document with a document_url field"""
@@ -183,7 +217,7 @@ class Dataset:
     def load_from_remote(
         self, bucket_name: str, limit: Optional[int] = None
     ) -> "Dataset":
-        """Load data from s3 or local copy of an s3 directory"""
+        """Load data from s3"""
 
         parser_outputs = adaptors.S3DataAdaptor().load_dataset(bucket_name, limit)
         self.documents = [

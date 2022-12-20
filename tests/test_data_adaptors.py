@@ -58,3 +58,22 @@ def test_s3_data_adaptor_non_existent_data(s3_client):
         match="No objects found in 'embeddings_input' folder in S3 bucket empty-bucket",
     ):
         _ = adaptor.load_dataset("empty-bucket")
+
+
+def test_s3_data_adaptor_get_by_id(s3_client):
+    adaptor = S3DataAdaptor()
+
+    valid_doc = adaptor.get_by_id("test-bucket", "test_html")
+    assert valid_doc
+
+    missing_doc = adaptor.get_by_id("test-bucket", "non-existent-doc")
+    assert missing_doc is None
+
+
+def test_local_data_adaptor_get_by_id():
+    adaptor = LocalDataAdaptor()
+    doc = adaptor.get_by_id("tests/test_data/valid", "test_html")
+    assert doc
+
+    missing_doc = adaptor.get_by_id("tests/test_data/valid", "non-existent-doc")
+    assert missing_doc is None
