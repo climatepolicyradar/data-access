@@ -256,13 +256,28 @@ class Dataset:
         return len(self.documents)
 
     def filter(self, attribute: str, value: Any) -> "Dataset":
-        """Filter documents by attribute"""
-        return Dataset(
-            documents=[
-                doc for doc in self.documents if getattr(doc, attribute) == value
-            ],
-            cdn_domain=self.cdn_domain,
-        )
+        """
+        Filter documents by attribute. Value can be a single value or a function returning a boolean.
+
+        :param attribute: attribute (field) to filter on
+        :param value: value to filter on, or function returning a boolean which specifies whether to keep a value
+        :return Dataset: filtered dataset
+        """
+
+        if callable(value):
+            return Dataset(
+                documents=[
+                    doc for doc in self.documents if value(getattr(doc, attribute))
+                ],
+                cdn_domain=self.cdn_domain,
+            )
+        else:
+            return Dataset(
+                documents=[
+                    doc for doc in self.documents if getattr(doc, attribute) == value
+                ],
+                cdn_domain=self.cdn_domain,
+            )
 
     def filter_by_language(self, language: str) -> "Dataset":
         """Return documents whose only language is the given language."""

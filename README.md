@@ -30,6 +30,10 @@ dataset.filter("document_id", "1234")
 dataset.filter_by_language("en")
 >>> Dataset()
 
+# Filtering using a function
+dataset.filter("document_id", lambda x: x in ["1234", "5678"])
+>>> Dataset()
+
 # Loading individual documents
 from cpr_data_access.models import Document
 
