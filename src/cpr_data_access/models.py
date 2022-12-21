@@ -288,3 +288,12 @@ class Dataset:
     ):
         """Randomly sample a number of text blocks. Used for e.g. negative sampling for text classification."""
         raise NotImplementedError
+
+    def get_all_text_blocks(self) -> List[TextBlock]:
+        """Return all text blocks in the dataset."""
+        return [
+            block
+            for doc in self.documents
+            if doc.text_blocks is not None
+            for block in doc.text_blocks
+        ]

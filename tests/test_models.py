@@ -37,3 +37,15 @@ def test_document_set_url(test_document):
         doc_with_url.document_url
         == "https://dev.cdn.climatepolicyradar.org/EUR/2013/EUR-2013-01-01-Overview+of+CAP+Reform+2014-2020_6237180d8c443d72c06c9167019ca177.pdf"
     )
+
+
+def test_dataset_get_all_text_blocks(test_dataset):
+    text_blocks = test_dataset.get_all_text_blocks()
+    num_text_blocks = sum(
+        [
+            len(doc.text_blocks) if doc.text_blocks is not None else 0
+            for doc in test_dataset.documents
+        ]
+    )
+
+    assert len(text_blocks) == num_text_blocks
