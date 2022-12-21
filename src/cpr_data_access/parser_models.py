@@ -3,13 +3,9 @@
 import logging
 import logging.config
 from datetime import date
-from datetime import datetime
 from enum import Enum
-from pathlib import Path
 from typing import Optional, Sequence, Tuple, List
-from typing import Union
 
-from cloudpathlib import S3Path
 from pydantic import BaseModel, AnyHttpUrl, Field, root_validator
 
 logger = logging.getLogger(__name__)
@@ -201,17 +197,3 @@ class ParserOutput(BaseModel):
         return " ".join(
             [text_block.to_string().strip() for text_block in self.text_blocks]
         )
-
-
-class StandardErrorLog(BaseModel):
-    """Standardized log format for errors.
-
-    This is used to ensure that we can effectively filter the logs when the application runs in production in AWS.
-    """
-
-    timestamp: datetime
-    pipeline_stage: str
-    status_code: str
-    error_type: str
-    message: str
-    document_in_process: Union[Path, S3Path, str]
