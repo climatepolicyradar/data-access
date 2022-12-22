@@ -303,15 +303,12 @@ class Dataset:
 
         for doc in self.documents:
             if doc.text_blocks is not None:
-                for block in doc.text_blocks:
-                    if with_document_context:
-                        doc_dict = {
-                            k: v
-                            for k, v in doc.dict().items()
-                            if k not in ["text_blocks"]
-                        }
+                if with_document_context:
+                    doc_dict = doc.dict(exclude={"text_blocks"})
+                    for block in doc.text_blocks:
                         output_values.append((block, doc_dict))
-                    else:
+                else:
+                    for block in doc.text_blocks:
                         output_values.append(block)
 
         return output_values
