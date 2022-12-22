@@ -1,6 +1,6 @@
 """Data models for data access."""
 
-from typing import Sequence, Optional, List, Tuple, Any
+from typing import Sequence, Optional, List, Tuple, Any, Union
 from pathlib import Path
 from enum import Enum
 import datetime
@@ -289,11 +289,29 @@ class Dataset:
         """Randomly sample a number of text blocks. Used for e.g. negative sampling for text classification."""
         raise NotImplementedError
 
-    def get_all_text_blocks(self) -> List[TextBlock]:
-        """Return all text blocks in the dataset."""
-        return [
-            block
-            for doc in self.documents
-            if doc.text_blocks is not None
-            for block in doc.text_blocks
-        ]
+    def get_all_text_blocks(
+        self, with_document_context: bool = False
+    ) -> Union[List[TextBlock], Tuple[List[TextBlock], dict]]:
+        """
+        Return all text blocks in the dataset.
+
+        :param with_document_context: If True, include document context in the output. Defaults to False
+        :return: list of text blocks or (text block, document context) tuples.
+        """
+
+        output_values = []
+
+        for doc in self.documents:
+            if doc.text_blocks is not None:
+                for block in doc.text_blocks:
+                    if with_document_context:
+                        doc_dict = {
+                            k: v
+                            for k, v in doc.dict().items()
+                            if k not in ["text_blocks"]
+                        }
+                        output_values.append((block, doc_dict))
+                    else:
+                        output_values.append(block)
+
+        return output_values

@@ -49,3 +49,10 @@ def test_dataset_get_all_text_blocks(test_dataset):
     )
 
     assert len(text_blocks) == num_text_blocks
+
+    text_blocks_with_document_context = test_dataset.get_all_text_blocks(
+        with_document_context=True
+    )
+    assert len(text_blocks_with_document_context) == num_text_blocks
+    assert all([isinstance(i[1], dict) for i in text_blocks_with_document_context])
+    assert all(["text_blocks" not in i[1] for i in text_blocks_with_document_context])
