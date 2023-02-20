@@ -5,6 +5,7 @@ from pathlib import Path
 from enum import Enum
 import datetime
 import hashlib
+import logging
 
 from pydantic import BaseModel, AnyHttpUrl, NonNegativeInt, confloat, conint
 
@@ -15,6 +16,8 @@ from cpr_data_access.parser_models import (
     CONTENT_TYPE_PDF,
 )
 
+LOGGER = logging.getLogger(__name__)
+
 
 class Span(BaseModel):
     """
@@ -23,21 +26,27 @@ class Span(BaseModel):
     Properties:
     - document_id: document ID that span is in
     - document_text_hash: to check that the annotation is still valid when added to a document
-    - span_type: less fine-grained identifier for concept, e.g. "location"
-    - span_id: fine-grained identifier for concept, e.g. 'Paris_France'
-    - span_start_idx: start index in full document text
-    - span_end_idx: end index in full document text
-    - span_sentence: containing sentence (or otherwise useful surrounding text window) of span
+    - type: less fine-grained identifier for concept, e.g. "location"
+    - id: fine-grained identifier for concept, e.g. 'Paris_France'
+    - text: text of span
+    - start_idx: start index in full document text
+    - end_idx: end index in full document text
+    - sentence: containing sentence (or otherwise useful surrounding text window) of span
     """
 
     document_id: str
     document_text_hash: str
-    span_type: str
-    span_id: str
-    span_start_idx: int
-    span_end_idx: int
-    span_sentence: str
-    span_pred_probability: float
+    type: str
+    id: str
+    text: str
+    start_idx: int
+    end_idx: int
+    sentence: str
+    pred_probability: float
+
+    def __hash__(self):
+        """Make hashable."""
+        return hash((type(self),) + tuple(self.__dict__.values()))
 
 
 class BlockType(str, Enum):
@@ -233,6 +242,7 @@ class Document(BaseModel):
 
         return " ".join([block.to_string() for block in self.text_blocks])
 
+    @property
     def text_hash(self) -> str:
         """
         Get hash of document text, where the document text is text blocks concatenated with joining spaces. If the document has no text, return an empty string.
@@ -252,36 +262,56 @@ class Document(BaseModel):
         )
 
     def add_spans(
-        self, spans: Sequence[Span], ignore_errors: bool = True
+        self, spans: Sequence[Span], raise_on_error: bool = False
     ) -> "Document":
         """
         Add spans to the document.
 
         :param spans: spans to add
-        :param ignore_errors: if True, ignore errors and continue adding spans. If False, raise an error if any of the spans do not have `document_text_hash` equal to the document's text hash
-        :raises ValueError: if any of the spans do not have `document_text_hash` equal to the document's text hash
+        :param raise_on_error: if True, raise an error if any of the spans do not have `document_text_hash` equal to the document's text hash. If False, print a warning message instead.
+        :raises ValueError: if any of the spans do not have the same text hash or document ID as the document
         :raises ValueError: if the document has no text
         :return: document with spans added
         """
 
-        document_text_hash = self.text_hash()
+        document_text_hash = self.text_hash
 
         if document_text_hash == "":
             raise ValueError("Document has no text")
 
         spans_unique = set(spans)
-        valid_spans = [
-            span
-            for span in spans_unique
-            if span.document_text_hash == document_text_hash
-        ]
+        valid_spans_document_id = set(
+            [span for span in spans_unique if span.document_id == self.document_id]
+        )
+        valid_spans_text_hash = set(
+            [
+                span
+                for span in spans_unique
+                if span.document_text_hash == document_text_hash
+            ]
+        )
 
-        if not ignore_errors and len(valid_spans) < len(spans_unique):
-            raise ValueError(
-                "Some spans are invalid: their document_text_hash does not match the document's text hash. No spans have been added. Use ignore_errors=True to ignore this error and add valid spans."
+        invalid_reasons = []
+
+        if len(valid_spans_document_id) < len(spans_unique):
+            invalid_reasons.append("their document ID does not match the document's")
+
+        if len(valid_spans_text_hash) < len(spans_unique):
+            invalid_reasons.append("their text hash does not match the document's")
+
+        if invalid_reasons:
+            error_msg = (
+                "Some spans are invalid: "
+                + " and ".join(invalid_reasons)
+                + ". No spans have been added. Use ignore_errors=True to ignore this error and add valid spans."
             )
-        else:
-            self.spans = valid_spans
+
+            if raise_on_error:
+                raise ValueError(error_msg)
+            else:
+                LOGGER.warning(error_msg)
+
+        self.spans = list(valid_spans_text_hash & valid_spans_document_id)
 
         return self
 
