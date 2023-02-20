@@ -7,7 +7,14 @@ import datetime
 import hashlib
 import logging
 
-from pydantic import BaseModel, AnyHttpUrl, NonNegativeInt, confloat, conint
+from pydantic import (
+    BaseModel,
+    AnyHttpUrl,
+    NonNegativeInt,
+    confloat,
+    conint,
+    root_validator,
+)
 
 import cpr_data_access.data_adaptors as adaptors
 from cpr_data_access.parser_models import (
@@ -23,14 +30,18 @@ class Span(BaseModel):
     """
     Annotation with a type and ID made to a span of text in a document.
 
+    The following validation is performed on creation of a `Span` instance:
+    - checking that `start_idx` and `end_idx` are consistent with the length of `text`
+    - checking that the span's `text` value appears from indices `start_idx` to `end_idx` in `sentence`
+
     Properties:
     - document_id: document ID that span is in
     - document_text_hash: to check that the annotation is still valid when added to a document
-    - type: less fine-grained identifier for concept, e.g. "location"
-    - id: fine-grained identifier for concept, e.g. 'Paris_France'
+    - type: less fine-grained identifier for concept, e.g. "LOCATION". Converted to uppercase and spaces replaced with underscores.
+    - id: fine-grained identifier for concept, e.g. 'Paris_France'. Converted to uppercase and spaces replaced with underscores.
     - text: text of span
     - start_idx: start index in full document text
-    - end_idx: end index in full document text
+    - end_idx: the index of the first character after the span in full document text
     - sentence: containing sentence (or otherwise useful surrounding text window) of span
     """
 
@@ -42,11 +53,33 @@ class Span(BaseModel):
     start_idx: int
     end_idx: int
     sentence: str
-    pred_probability: float
+    pred_probability: confloat(ge=0, le=1)  # type: ignore
 
     def __hash__(self):
         """Make hashable."""
         return hash((type(self),) + tuple(self.__dict__.values()))
+
+    @root_validator
+    def _is_valid(cls, values):
+        """Check that the span is valid, and convert label and id to a consistent format."""
+
+        if values["start_idx"] + len(values["text"]) != values["end_idx"]:
+            raise ValueError(
+                "Values of 'start_idx', 'end_idx' and 'text' are not consistent. 'end_idx' should be 'start_idx' + len('text')."
+            )
+
+        if (
+            values["sentence"][values["start_idx"] : values["end_idx"]]
+            != values["text"]
+        ):
+            raise ValueError(
+                f"The span's 'text' value does not seem to appear in 'sentence' from the values set by 'start_idx' and 'end_idx'. Span text according to 'start_idx' and 'end_idx' is: {values['sentence'][values['start_idx']:values['end_idx']]}"
+            )
+
+        values["type"] = values["type"].upper().replace(" ", "_")
+        values["id"] = values["id"].upper().replace(" ", "_")
+
+        return values
 
 
 class BlockType(str, Enum):

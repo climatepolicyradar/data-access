@@ -38,8 +38,8 @@ def test_spans_valid(test_document) -> list[Span]:
         Span(
             document_id=test_document.document_id,
             document_text_hash=test_document.text_hash,
-            start_idx=20,
-            end_idx=25,
+            start_idx=0,
+            end_idx=5,
             text="test2",
             sentence="test2 second",
             id="test sentence 2",
@@ -67,8 +67,8 @@ def test_spans_invalid(test_document) -> list[Span]:
         Span(
             document_id="abcd",
             document_text_hash=test_document.text_hash,
-            start_idx=20,
-            end_idx=25,
+            start_idx=0,
+            end_idx=5,
             text="test2",
             sentence="test2 second",
             id="test sentence 2",
@@ -78,8 +78,8 @@ def test_spans_invalid(test_document) -> list[Span]:
         Span(
             document_id="abcd",
             document_text_hash="1234",
-            start_idx=20,
-            end_idx=25,
+            start_idx=0,
+            end_idx=5,
             text="test3",
             sentence="test3 second",
             id="test sentence 3",
@@ -163,3 +163,9 @@ def test_add_spans_empty_document(
 
     with pytest.raises(ValueError):
         empty_document.add_spans(all_spans, raise_on_error=raise_on_error)
+
+
+def test_span_validation(test_spans_valid):
+    for span in test_spans_valid:
+        assert span.id.isupper()
+        assert span.type.isupper()
