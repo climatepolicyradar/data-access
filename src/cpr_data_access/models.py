@@ -14,6 +14,7 @@ from pydantic import (
     confloat,
     conint,
     root_validator,
+    PrivateAttr,
 )
 
 import cpr_data_access.data_adaptors as adaptors
@@ -163,7 +164,7 @@ class Document(BaseModel):
     page_metadata: Optional[
         Sequence[PageMetadata]
     ]  # Properties such as page numbers and dimensions for paged documents
-    spans: Sequence[Span] = []
+    _spans: Sequence[Span] = PrivateAttr(default_factory=list)
 
     @classmethod
     def from_parser_output(cls, parser_document: ParserOutput) -> "Document":  # type: ignore
@@ -294,6 +295,11 @@ class Document(BaseModel):
             + hashlib.sha256(text_utf8).hexdigest()
         )
 
+    @property
+    def spans(self) -> Sequence[Span]:
+        """Return all spans in the document."""
+        return self._spans
+
     def add_spans(
         self, spans: Sequence[Span], raise_on_error: bool = False
     ) -> "Document":
@@ -344,7 +350,7 @@ class Document(BaseModel):
             else:
                 LOGGER.warning(error_msg)
 
-        self.spans = list(valid_spans_text_hash & valid_spans_document_id)
+        self._spans = list(valid_spans_text_hash & valid_spans_document_id)
 
         return self
 
