@@ -4,6 +4,7 @@ from typing import Sequence, Optional, List, Tuple, Any, Union
 from pathlib import Path
 from enum import Enum
 import datetime
+import hashlib
 
 from pydantic import BaseModel, AnyHttpUrl, NonNegativeInt, confloat, conint
 
@@ -13,6 +14,30 @@ from cpr_data_access.parser_models import (
     CONTENT_TYPE_HTML,
     CONTENT_TYPE_PDF,
 )
+
+
+class Span(BaseModel):
+    """
+    Annotation with a type and ID made to a span of text in a document.
+
+    Properties:
+    - document_id: document ID that span is in
+    - document_text_hash: to check that the annotation is still valid when added to a document
+    - span_type: less fine-grained identifier for concept, e.g. "location"
+    - span_id: fine-grained identifier for concept, e.g. 'Paris_France'
+    - span_start_idx: start index in full document text
+    - span_end_idx: end index in full document text
+    - span_sentence: containing sentence (or otherwise useful surrounding text window) of span
+    """
+
+    document_id: str
+    document_text_hash: str
+    span_type: str
+    span_id: str
+    span_start_idx: int
+    span_end_idx: int
+    span_sentence: str
+    span_pred_probability: float
 
 
 class BlockType(str, Enum):
@@ -96,6 +121,7 @@ class Document(BaseModel):
     page_metadata: Optional[
         Sequence[PageMetadata]
     ]  # Properties such as page numbers and dimensions for paged documents
+    spans: Sequence[Span] = []
 
     @classmethod
     def from_parser_output(cls, parser_document: ParserOutput) -> "Document":  # type: ignore
@@ -197,6 +223,67 @@ class Document(BaseModel):
             raise ValueError(f"Document with id {document_id} not found")
 
         return Document.from_parser_output(parser_output)
+
+    @property
+    def text(self) -> str:
+        """Text blocks concatenated with joining spaces."""
+
+        if self.text_blocks is None:
+            return ""
+
+        return " ".join([block.to_string() for block in self.text_blocks])
+
+    def text_hash(self) -> str:
+        """
+        Get hash of document text, where the document text is text blocks concatenated with joining spaces. If the document has no text, return an empty string.
+
+        :return str: md5sum + "__" + sha256, or empty string if the document has no text
+        """
+
+        if self.text == "":
+            return ""
+
+        text_utf8 = self.text.encode("utf-8")
+
+        return (
+            hashlib.md5(text_utf8).hexdigest()
+            + "__"
+            + hashlib.sha256(text_utf8).hexdigest()
+        )
+
+    def add_spans(
+        self, spans: Sequence[Span], ignore_errors: bool = True
+    ) -> "Document":
+        """
+        Add spans to the document.
+
+        :param spans: spans to add
+        :param ignore_errors: if True, ignore errors and continue adding spans. If False, raise an error if any of the spans do not have `document_text_hash` equal to the document's text hash
+        :raises ValueError: if any of the spans do not have `document_text_hash` equal to the document's text hash
+        :raises ValueError: if the document has no text
+        :return: document with spans added
+        """
+
+        document_text_hash = self.text_hash()
+
+        if document_text_hash == "":
+            raise ValueError("Document has no text")
+
+        spans_unique = set(spans)
+        valid_spans = [
+            span
+            for span in spans_unique
+            if span.document_text_hash == document_text_hash
+        ]
+
+        if not ignore_errors and len(valid_spans) < len(spans_unique):
+            raise ValueError(
+                "Some spans are invalid: their document_text_hash does not match the document's text hash. No spans have been added. Use ignore_errors=True to ignore this error and add valid spans."
+            )
+        else:
+            self.spans = valid_spans
+
+        return self
 
 
 class DocumentWithURL(Document):
