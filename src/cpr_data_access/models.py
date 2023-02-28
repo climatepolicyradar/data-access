@@ -109,7 +109,7 @@ class TextBlock(BaseModel):
     type_confidence: confloat(ge=0, le=1)  # type: ignore
     page_number: conint(ge=-1)  # type: ignore
     coords: Optional[List[Tuple[float, float]]]
-    _spans: Sequence[Span] = PrivateAttr(default_factory=list)
+    _spans: list[Span] = PrivateAttr(default_factory=list)
 
     def to_string(self) -> str:
         """Return text in a clean format"""
@@ -143,7 +143,7 @@ class TextBlock(BaseModel):
         self, spans: Sequence[Span], raise_on_error: bool = False
     ) -> "TextBlock":
         """
-        Add spans to the text block.
+        Add spans to the text block. If adding spans to a document, `Document.add_spans` should be used instead, as it checks that the document ID of the span matches the text block.
 
         :param spans: spans to add
         :param raise_on_error: if True, raise an error if any of the spans do not have `text_block_text_hash` equal to the text block's text hash. If False, print a warning message instead.
@@ -151,6 +151,10 @@ class TextBlock(BaseModel):
         :raises ValueError: if the text block has no text
         :return: text block with spans added
         """
+
+        LOGGER.warning(
+            "This method should not be used if adding spans to a document as it does not check that the document ID of the span matches document. Use `Document.add_spans` instead."
+        )
 
         block_text_hash = self.text_hash
 
@@ -179,7 +183,7 @@ class TextBlock(BaseModel):
             else:
                 LOGGER.warning(error_msg + " Valid spans have been added.")
 
-        self._spans = list(valid_spans_text_hash)
+        self._spans.extend(list(valid_spans_text_hash))
 
         return self
 

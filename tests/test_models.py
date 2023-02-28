@@ -46,6 +46,17 @@ def test_spans_valid(test_document) -> list[Span]:
             type="TEST",
             pred_probability=0.99,
         ),
+        Span(
+            document_id=test_document.document_id,
+            text_block_text_hash="a12ff2b1979c932f07792d57aa6aacdc__ea4e549f185fd2237fdac7719cf0c6d88fc939fa4aa5a3b5574f3f7b4804ac26",
+            start_idx=4,
+            end_idx=7,
+            text="new",
+            sentence="The new CAP maintains the two pillars, but increases the links\nbetween them, thus offering a more holistic and integrated approach\nto policy support.",
+            id="test sentence 2",
+            type="TEST",
+            pred_probability=0.99,
+        ),
     ]
 
 
@@ -118,16 +129,48 @@ def test_dataset_get_all_text_blocks(test_dataset):
     assert all(["text_blocks" not in i[1] for i in text_blocks_with_document_context])
 
 
-def test_text_block_add_valid_spans():
-    raise NotImplementedError
+def test_text_block_add_valid_spans(test_document, test_spans_valid):
+    block_1 = test_document.text_blocks[0]
+    block_2 = test_document.text_blocks[1]
+
+    block_1_span_added = block_1.add_spans([test_spans_valid[0]])
+    block_2_span_added = block_2.add_spans([test_spans_valid[1], test_spans_valid[2]])
+
+    assert len(block_1_span_added.spans) == 1
+    assert len(block_2_span_added.spans) == 2
 
 
-def test_text_block_add_invalid_spans():
-    raise NotImplementedError
+def test_text_block_add_invalid_spans(test_document, test_spans_invalid, caplog):
+    text_block_with_spans = test_document.text_blocks[0].add_spans(
+        [test_spans_invalid[0]], raise_on_error=False
+    )
+
+    # This will add the text block and warn that the incorrect document ID was ignored
+    assert len(text_block_with_spans.spans) == 1
+    assert "WARNING" in caplog.text
+
+    # This won't add the text block, as the text block hash is incorrect
+    text_block_with_spans = test_document.text_blocks[1].add_spans(
+        [test_spans_invalid[1]], raise_on_error=False
+    )
+    assert len(text_block_with_spans.spans) == 0
+
+    # This will raise as the second text block can't be added
+    with pytest.raises(ValueError):
+        test_document.add_spans(test_spans_invalid, raise_on_error=True)
 
 
-def test_add_spans_empty_text_block():
-    raise NotImplementedError
+@pytest.mark.parametrize("raise_on_error", [True, False])
+def test_add_spans_empty_text_block(
+    test_document, test_spans_valid, test_spans_invalid, raise_on_error
+):
+    text_block = test_document.text_blocks[0]
+    text_block.text = ""
+
+    all_spans = test_spans_valid + test_spans_invalid
+
+    with pytest.raises(ValueError):
+        text_block.add_spans(all_spans, raise_on_error=raise_on_error)
 
 
 @pytest.mark.parametrize("raise_on_error", [True, False])
@@ -138,9 +181,9 @@ def test_document_add_valid_spans(test_document, test_spans_valid, raise_on_erro
     )
 
     added_spans = [
-        spans
+        span
         for text_block in document_with_spans.text_blocks
-        for spans in text_block.spans
+        for span in text_block.spans
     ]
 
     assert len(added_spans) == len(test_spans_valid)
@@ -154,9 +197,9 @@ def test_document_add_invalid_spans(test_document, test_spans_invalid):
     )
 
     added_spans = [
-        spans
+        span
         for text_block in document_with_spans.text_blocks
-        for spans in text_block.spans
+        for span in text_block.spans
     ]
     assert len(added_spans) == 0
 
