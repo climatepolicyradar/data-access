@@ -274,7 +274,7 @@ class Document(BaseModel):
         if self.text_blocks is None:
             return ""
 
-        return " ".join([block.to_string() for block in self.text_blocks])
+        return " ".join([block.to_string().strip() for block in self.text_blocks])
 
     @property
     def text_hash(self) -> str:
