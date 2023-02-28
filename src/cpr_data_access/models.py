@@ -44,6 +44,7 @@ class Span(BaseModel):
     - start_idx: start index in text block text
     - end_idx: the index of the first character after the span in text block text
     - sentence: containing sentence (or otherwise useful surrounding text window) of span
+    - annotator: name of annotator
     """
 
     document_id: str
@@ -55,6 +56,7 @@ class Span(BaseModel):
     end_idx: int
     sentence: str
     pred_probability: confloat(ge=0, le=1)  # type: ignore
+    annotator: str
 
     def __hash__(self):
         """Make hashable."""

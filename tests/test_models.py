@@ -34,6 +34,7 @@ def test_spans_valid(test_document) -> list[Span]:
             id="test sentence 1",
             type="TEST",
             pred_probability=1,
+            annotator="pytest",
         ),
         Span(
             document_id=test_document.document_id,
@@ -45,6 +46,7 @@ def test_spans_valid(test_document) -> list[Span]:
             id="test sentence 2",
             type="TEST",
             pred_probability=0.99,
+            annotator="pytest",
         ),
         Span(
             document_id=test_document.document_id,
@@ -56,6 +58,7 @@ def test_spans_valid(test_document) -> list[Span]:
             id="test sentence 2",
             type="TEST",
             pred_probability=0.99,
+            annotator="pytest",
         ),
     ]
 
@@ -75,6 +78,7 @@ def test_spans_invalid(test_document) -> list[Span]:
             id="test sentence 2",
             type="TEST",
             pred_probability=0.99,
+            annotator="pytest",
         ),
         # invalid text block hash
         Span(
@@ -87,6 +91,7 @@ def test_spans_invalid(test_document) -> list[Span]:
             id="test sentence 3",
             type="TEST",
             pred_probability=0.99,
+            annotator="pytest",
         ),
     ]
 
