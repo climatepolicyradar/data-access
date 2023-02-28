@@ -143,7 +143,9 @@ class TextBlock(BaseModel):
         self, spans: Sequence[Span], raise_on_error: bool = False
     ) -> "TextBlock":
         """
-        Add spans to the text block. If adding spans to a document, `Document.add_spans` should be used instead, as it checks that the document ID of the span matches the text block.
+        Add spans to the text block.
+
+        If adding spans to a document, `Document.add_spans` should be used instead, as it checks that the document ID of the span matches the text block.
 
         :param spans: spans to add
         :param raise_on_error: if True, raise an error if any of the spans do not have `text_block_text_hash` equal to the text block's text hash. If False, print a warning message instead.
