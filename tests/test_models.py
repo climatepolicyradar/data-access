@@ -26,22 +26,22 @@ def test_spans_valid(test_document) -> list[Span]:
     return [
         Span(
             document_id=test_document.document_id,
-            document_text_hash=test_document.text_hash,
-            start_idx=0,
-            end_idx=5,
-            text="test1",
-            sentence="test1 first",
+            text_block_text_hash="0c8f98b268ce90f7bcd7d9bee09863fa__81e9c9f2b0fe330c612f8605b6d1df98ffa8f8df35e98c4e2b6749bda61b8b63",
+            start_idx=12,
+            end_idx=23,
+            text="Agriculture",
+            sentence="Contact: DG Agriculture and\nRural Development",
             id="test sentence 1",
             type="TEST",
             pred_probability=1,
         ),
         Span(
             document_id=test_document.document_id,
-            document_text_hash=test_document.text_hash,
-            start_idx=0,
-            end_idx=5,
-            text="test2",
-            sentence="test2 second",
+            text_block_text_hash="a12ff2b1979c932f07792d57aa6aacdc__ea4e549f185fd2237fdac7719cf0c6d88fc939fa4aa5a3b5574f3f7b4804ac26",
+            start_idx=8,
+            end_idx=11,
+            text="CAP",
+            sentence="The new CAP maintains the two pillars, but increases the links\nbetween them, thus offering a more holistic and integrated approach\nto policy support.",
             id="test sentence 2",
             type="TEST",
             pred_probability=0.99,
@@ -53,20 +53,10 @@ def test_spans_valid(test_document) -> list[Span]:
 def test_spans_invalid(test_document) -> list[Span]:
     """Test spans."""
     return [
-        Span(
-            document_id="1234",
-            document_text_hash=test_document.text_hash,
-            start_idx=0,
-            end_idx=5,
-            text="test1",
-            sentence="test1 first",
-            id="test sentence 1",
-            type="TEST",
-            pred_probability=1,
-        ),
+        # invalid document id
         Span(
             document_id="abcd",
-            document_text_hash=test_document.text_hash,
+            text_block_text_hash="0c8f98b268ce90f7bcd7d9bee09863fa__81e9c9f2b0fe330c612f8605b6d1df98ffa8f8df35e98c4e2b6749bda61b8b63",
             start_idx=0,
             end_idx=5,
             text="test2",
@@ -75,9 +65,10 @@ def test_spans_invalid(test_document) -> list[Span]:
             type="TEST",
             pred_probability=0.99,
         ),
+        # invalid text block hash
         Span(
-            document_id="abcd",
-            document_text_hash="1234",
+            document_id=test_document.document_id,
+            text_block_text_hash="1234",
             start_idx=0,
             end_idx=5,
             text="test3",
@@ -127,24 +118,47 @@ def test_dataset_get_all_text_blocks(test_dataset):
     assert all(["text_blocks" not in i[1] for i in text_blocks_with_document_context])
 
 
+def test_text_block_add_valid_spans():
+    raise NotImplementedError
+
+
+def test_text_block_add_invalid_spans():
+    raise NotImplementedError
+
+
+def test_add_spans_empty_text_block():
+    raise NotImplementedError
+
+
 @pytest.mark.parametrize("raise_on_error", [True, False])
-def test_add_valid_spans(test_document, test_spans_valid, raise_on_error):
+def test_document_add_valid_spans(test_document, test_spans_valid, raise_on_error):
 
     document_with_spans = test_document.add_spans(
         test_spans_valid, raise_on_error=raise_on_error
     )
 
-    assert len(document_with_spans.spans) == len(test_spans_valid)
+    added_spans = [
+        spans
+        for text_block in document_with_spans.text_blocks
+        for spans in text_block.spans
+    ]
+
+    assert len(added_spans) == len(test_spans_valid)
     # Check that all spans are unique
-    assert len(set(document_with_spans.spans)) == len(document_with_spans.spans)
+    assert len(set(added_spans)) == len(test_spans_valid)
 
 
-def test_add_invalid_spans(test_document, test_spans_invalid):
+def test_document_add_invalid_spans(test_document, test_spans_invalid):
     document_with_spans = test_document.add_spans(
         test_spans_invalid, raise_on_error=False
     )
 
-    assert len(document_with_spans.spans) == 0
+    added_spans = [
+        spans
+        for text_block in document_with_spans.text_blocks
+        for spans in text_block.spans
+    ]
+    assert len(added_spans) == 0
 
     with pytest.raises(ValueError):
         test_document.add_spans(test_spans_invalid, raise_on_error=True)

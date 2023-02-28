@@ -36,18 +36,18 @@ class Span(BaseModel):
     - checking that the span's `text` value appears from indices `start_idx` to `end_idx` in `sentence`
 
     Properties:
-    - document_id: document ID that span is in
-    - document_text_hash: to check that the annotation is still valid when added to a document
+    - document_id: document ID containing text block that span is in
+    - text_block_text_hash: to check that the annotation is still valid when added to a text block
     - type: less fine-grained identifier for concept, e.g. "LOCATION". Converted to uppercase and spaces replaced with underscores.
     - id: fine-grained identifier for concept, e.g. 'Paris_France'. Converted to uppercase and spaces replaced with underscores.
     - text: text of span
-    - start_idx: start index in full document text
-    - end_idx: the index of the first character after the span in full document text
+    - start_idx: start index in text block text
+    - end_idx: the index of the first character after the span in text block text
     - sentence: containing sentence (or otherwise useful surrounding text window) of span
     """
 
     document_id: str
-    document_text_hash: str
+    text_block_text_hash: str
     type: str
     id: str
     text: str
@@ -109,10 +109,79 @@ class TextBlock(BaseModel):
     type_confidence: confloat(ge=0, le=1)  # type: ignore
     page_number: conint(ge=-1)  # type: ignore
     coords: Optional[List[Tuple[float, float]]]
+    _spans: Sequence[Span] = PrivateAttr(default_factory=list)
 
     def to_string(self) -> str:
         """Return text in a clean format"""
         return " ".join([line.strip() for line in self.text])
+
+    @property
+    def text_hash(self) -> str:
+        """
+        Get hash of text block text. If the text block has no text (although this shouldn't be the case), return an empty string.
+
+        :return str: md5sum + "__" + sha256, or empty string if the text block has no text
+        """
+
+        if self.text == "":
+            return ""
+
+        text_utf8 = self.to_string().encode("utf-8")
+
+        return (
+            hashlib.md5(text_utf8).hexdigest()
+            + "__"
+            + hashlib.sha256(text_utf8).hexdigest()
+        )
+
+    @property
+    def spans(self) -> Sequence[Span]:
+        """Return all spans in the text block."""
+        return self._spans
+
+    def add_spans(
+        self, spans: Sequence[Span], raise_on_error: bool = False
+    ) -> "TextBlock":
+        """
+        Add spans to the text block.
+
+        :param spans: spans to add
+        :param raise_on_error: if True, raise an error if any of the spans do not have `text_block_text_hash` equal to the text block's text hash. If False, print a warning message instead.
+        :raises ValueError: if any of the spans do not have `text_block_text_hash` equal to the text block's text hash
+        :raises ValueError: if the text block has no text
+        :return: text block with spans added
+        """
+
+        block_text_hash = self.text_hash
+
+        if block_text_hash == "":
+            raise ValueError("Text block has no text")
+
+        spans_unique = set(spans)
+        valid_spans_text_hash = set(
+            [
+                span
+                for span in spans_unique
+                if span.text_block_text_hash == block_text_hash
+            ]
+        )
+
+        if len(valid_spans_text_hash) < len(spans_unique):
+            error_msg = (
+                "Some spans are invalid as their text does not match the text block's."
+            )
+
+            if raise_on_error:
+                raise ValueError(
+                    error_msg
+                    + " No spans have been added. Use ignore_errors=True to ignore this error and add valid spans."
+                )
+            else:
+                LOGGER.warning(error_msg + " Valid spans have been added.")
+
+        self._spans = list(valid_spans_text_hash)
+
+        return self
 
 
 class PageMetadata(BaseModel):
@@ -164,7 +233,6 @@ class Document(BaseModel):
     page_metadata: Optional[
         Sequence[PageMetadata]
     ]  # Properties such as page numbers and dimensions for paged documents
-    _spans: Sequence[Span] = PrivateAttr(default_factory=list)
 
     @classmethod
     def from_parser_output(cls, parser_document: ParserOutput) -> "Document":  # type: ignore
@@ -277,80 +345,78 @@ class Document(BaseModel):
         return " ".join([block.to_string().strip() for block in self.text_blocks])
 
     @property
-    def text_hash(self) -> str:
-        """
-        Get hash of document text, where the document text is text blocks concatenated with joining spaces. If the document has no text, return an empty string.
+    def _text_block_idx_hash_map(self) -> dict[str, set[int]]:
+        """Return a map of text block hash to text block indices."""
 
-        :return str: md5sum + "__" + sha256, or empty string if the document has no text
-        """
+        if self.text_blocks is None:
+            return {}
 
-        if self.text == "":
-            return ""
+        hash_map: dict[str, set[int]] = dict()
 
-        text_utf8 = self.text.encode("utf-8")
+        for idx, block in enumerate(self.text_blocks):
+            if block.text_hash in hash_map:
+                hash_map[block.text_hash].add(idx)
+            else:
+                hash_map[block.text_hash] = {idx}
 
-        return (
-            hashlib.md5(text_utf8).hexdigest()
-            + "__"
-            + hashlib.sha256(text_utf8).hexdigest()
-        )
-
-    @property
-    def spans(self) -> Sequence[Span]:
-        """Return all spans in the document."""
-        return self._spans
+        return hash_map
 
     def add_spans(
         self, spans: Sequence[Span], raise_on_error: bool = False
     ) -> "Document":
         """
-        Add spans to the document.
+        Add spans to text blocks in the document.
 
-        :param spans: spans to add
-        :param raise_on_error: if True, raise an error if any of the spans do not have `document_text_hash` equal to the document's text hash. If False, print a warning message instead.
-        :raises ValueError: if any of the spans do not have the same text hash or document ID as the document
-        :raises ValueError: if the document has no text
-        :return: document with spans added
+        :param Sequence[Span] spans: spans to add
+        :param bool raise_on_error: whether to raise if a span in the input is invalid, defaults to False
+        :raises ValueError: if any of the spans do not have `text_block_text_hash` equal to the text block's text hash
+        :return Document: document with spans added to text blocks
         """
 
-        document_text_hash = self.text_hash
-
-        if document_text_hash == "":
-            raise ValueError("Document has no text")
+        if self.text_blocks is None:
+            raise ValueError("Document has no text blocks")
 
         spans_unique = set(spans)
-        valid_spans_document_id = set(
-            [span for span in spans_unique if span.document_id == self.document_id]
-        )
-        valid_spans_text_hash = set(
-            [
-                span
-                for span in spans_unique
-                if span.document_text_hash == document_text_hash
-            ]
-        )
 
-        invalid_reasons = []
-
-        if len(valid_spans_document_id) < len(spans_unique):
-            invalid_reasons.append("their document ID does not match the document's")
-
-        if len(valid_spans_text_hash) < len(spans_unique):
-            invalid_reasons.append("their text hash does not match the document's")
-
-        if invalid_reasons:
-            error_msg = (
-                "Some spans are invalid: "
-                + " and ".join(invalid_reasons)
-                + ". No spans have been added. Use ignore_errors=True to ignore this error and add valid spans."
-            )
+        if invalid_spans_document_id := {
+            span for span in spans_unique if span.document_id != self.document_id
+        }:
+            error_msg = f"Span document id does not match document id for {len(invalid_spans_document_id)} spans provided."
 
             if raise_on_error:
                 raise ValueError(error_msg)
             else:
-                LOGGER.warning(error_msg)
+                LOGGER.warning(error_msg + " Skipping these spans.")
 
-        self._spans = list(valid_spans_text_hash & valid_spans_document_id)
+            spans_unique = spans_unique - invalid_spans_document_id
+
+        if invalid_spans_block_text := {
+            span
+            for span in spans_unique
+            if span.text_block_text_hash not in self._text_block_idx_hash_map
+        }:
+            error_msg = f"Span text hash does not match text block text hash for {len(invalid_spans_block_text)} spans provided."
+
+            if raise_on_error:
+                raise ValueError(error_msg)
+            else:
+                LOGGER.warning(error_msg + " Skipping these spans.")
+
+            spans_unique = spans_unique - invalid_spans_block_text
+
+        for span in spans_unique:
+            for idx in self._text_block_idx_hash_map[span.text_block_text_hash]:
+                try:
+                    self.text_blocks[idx].add_spans(
+                        [span], raise_on_error=raise_on_error
+                    )
+                except Exception as e:
+                    if raise_on_error:
+                        raise e
+                    else:
+                        LOGGER.warning(
+                            f"Error adding span {span} to text block {self.text_blocks[idx]}: {e}"
+                        )
 
         return self
 
