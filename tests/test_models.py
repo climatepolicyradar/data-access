@@ -1,4 +1,5 @@
 import pytest
+import pandas as pd
 
 from cpr_data_access.parser_models import ParserOutput
 from cpr_data_access.models import Dataset, CPRDocument, Span
@@ -20,6 +21,14 @@ def test_document() -> CPRDocument:
     return CPRDocument.from_parser_output(
         ParserOutput.parse_file("tests/test_data/valid/test_pdf.json")
     )
+
+
+def test_dataset_metadata_df(test_dataset):
+    metadata_df = test_dataset.metadata_df
+
+    assert isinstance(metadata_df, pd.DataFrame)
+    assert len(metadata_df) == len(test_dataset)
+    assert metadata_df.shape[1] > 0
 
 
 @pytest.fixture

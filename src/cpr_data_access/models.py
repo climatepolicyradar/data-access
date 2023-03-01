@@ -16,6 +16,7 @@ from pydantic import (
     root_validator,
     PrivateAttr,
 )
+import pandas as pd
 
 import cpr_data_access.data_adaptors as adaptors
 from cpr_data_access.parser_models import (
@@ -525,6 +526,18 @@ class Dataset:
             ]
 
         return self
+
+    @property
+    def metadata_df(self) -> pd.DataFrame:
+        """Return a dataframe of document metadata"""
+
+        return pd.DataFrame(
+            [
+                doc.dict(exclude={"text_blocks", "document_metadata"})
+                | doc.document_metadata.dict()
+                for doc in self.documents
+            ]
+        )
 
     def load_from_remote(
         self,
