@@ -49,15 +49,13 @@ class S3DataAdaptor(DataAdaptor):
             )
             dataset_key = f"s3://{dataset_key}"
 
-        if not dataset_key.endswith("/"):
-            dataset_key = f"{dataset_key}/"
+        if dataset_key.endswith("/"):
+            dataset_key = dataset_key[:-1]
 
         s3_objects = _get_s3_keys_with_prefix(dataset_key)
 
         if len(s3_objects) == 0:
-            raise ValueError(
-                f"No objects found in 'embeddings_input' folder in S3 bucket {dataset_key}."
-            )
+            raise ValueError(f"No objects found at {dataset_key}.")
 
         parsed_files = []
 
@@ -65,7 +63,7 @@ class S3DataAdaptor(DataAdaptor):
             if filename.endswith(".json"):
                 parsed_files.append(
                     ParserOutput.parse_raw(
-                        _s3_object_read_text(f"s3://{dataset_key}/{filename}")
+                        _s3_object_read_text(f"{dataset_key}/{filename.split('/')[-1]}")
                     )
                 )
 
@@ -82,12 +80,10 @@ class S3DataAdaptor(DataAdaptor):
 
         try:
             return ParserOutput.parse_raw(
-                _s3_object_read_text(
-                    f"s3://{dataset_key}/embeddings_input/{document_id}.json"
-                )
+                _s3_object_read_text(f"s3://{dataset_key}/{document_id}.json")
             )
         except ValueError as e:
-            if str(e) == f"Key embeddings_input/{document_id}.json does not exist":
+            if "does not exist" in str(e):
                 return None
             else:
                 raise e

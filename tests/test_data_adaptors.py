@@ -44,29 +44,29 @@ def test_local_data_adaptor_non_existent_data():
 
 def test_s3_data_adaptor_valid_data(s3_client):
     adaptor = S3DataAdaptor()
-    dataset = adaptor.load_dataset("test-bucket")
+    dataset = adaptor.load_dataset("test-bucket/embeddings_input")
     assert len(dataset) == 3
 
 
 def test_s3_data_adaptor_non_existent_data(s3_client):
     adaptor = S3DataAdaptor()
     with pytest.raises(ValueError, match="Bucket non-existent-bucket does not exist"):
-        _ = adaptor.load_dataset("non-existent-bucket")
+        _ = adaptor.load_dataset("non-existent-bucket/embeddings_input")
 
     with pytest.raises(
         ValueError,
-        match="No objects found in 'embeddings_input' folder in S3 bucket empty-bucket",
+        match="No objects found at s3://empty-bucket/embeddings_input.",
     ):
-        _ = adaptor.load_dataset("empty-bucket")
+        _ = adaptor.load_dataset("empty-bucket/embeddings_input")
 
 
 def test_s3_data_adaptor_get_by_id(s3_client):
     adaptor = S3DataAdaptor()
 
-    valid_doc = adaptor.get_by_id("test-bucket", "test_html")
+    valid_doc = adaptor.get_by_id("test-bucket/embeddings_input", "test_html")
     assert valid_doc
 
-    missing_doc = adaptor.get_by_id("test-bucket", "non-existent-doc")
+    missing_doc = adaptor.get_by_id("test-bucket/embeddings_input", "non-existent-doc")
     assert missing_doc is None
 
 
