@@ -30,6 +30,12 @@ def test_dataset_metadata_df(test_dataset):
     assert len(metadata_df) == len(test_dataset)
     assert metadata_df.shape[1] > 0
 
+    for col in ("text_blocks", "document_metadata"):
+        assert col not in metadata_df.columns
+
+    for col in ("num_text_blocks", "num_pages"):
+        assert col in metadata_df.columns
+
 
 @pytest.fixture
 def test_spans_valid(test_document) -> list[Span]:

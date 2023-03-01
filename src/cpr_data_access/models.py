@@ -530,14 +530,15 @@ class Dataset:
     @property
     def metadata_df(self) -> pd.DataFrame:
         """Return a dataframe of document metadata"""
+        metadata = [
+            doc.dict(exclude={"text_blocks", "document_metadata"})
+            | doc.document_metadata.dict()
+            | {"num_text_blocks": len(doc.text_blocks) if doc.text_blocks else 0}
+            | {"num_pages": len(doc.page_metadata) if doc.page_metadata else 0}
+            for doc in self.documents
+        ]
 
-        return pd.DataFrame(
-            [
-                doc.dict(exclude={"text_blocks", "document_metadata"})
-                | doc.document_metadata.dict()
-                for doc in self.documents
-            ]
-        )
+        return pd.DataFrame(metadata)
 
     def load_from_remote(
         self,
