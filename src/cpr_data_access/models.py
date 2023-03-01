@@ -451,7 +451,7 @@ class GSTDocumentMetadata(BaseModel):
     version: Optional[str]
     author_type: Optional[str]
     date: datetime.date
-    link: Optional[AnyHttpUrl]
+    link: Optional[str]
     data_error_type: Optional[
         Literal[
             "source_incorrect",
@@ -464,6 +464,7 @@ class GSTDocumentMetadata(BaseModel):
         ]
     ]
     party: Optional[str]
+    translation: Optional[str]
     topics: Optional[Sequence[str]]
 
 
