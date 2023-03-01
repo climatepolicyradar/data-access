@@ -140,15 +140,15 @@ def test_text_block_add_valid_spans(test_document, test_spans_valid):
     block_1 = test_document.text_blocks[0]
     block_2 = test_document.text_blocks[1]
 
-    block_1_span_added = block_1.add_spans([test_spans_valid[0]])
-    block_2_span_added = block_2.add_spans([test_spans_valid[1], test_spans_valid[2]])
+    block_1_span_added = block_1._add_spans([test_spans_valid[0]])
+    block_2_span_added = block_2._add_spans([test_spans_valid[1], test_spans_valid[2]])
 
     assert len(block_1_span_added.spans) == 1
     assert len(block_2_span_added.spans) == 2
 
 
 def test_text_block_add_invalid_spans(test_document, test_spans_invalid, caplog):
-    text_block_with_spans = test_document.text_blocks[0].add_spans(
+    text_block_with_spans = test_document.text_blocks[0]._add_spans(
         [test_spans_invalid[0]], raise_on_error=False
     )
 
@@ -157,7 +157,7 @@ def test_text_block_add_invalid_spans(test_document, test_spans_invalid, caplog)
     assert "WARNING" in caplog.text
 
     # This won't add the text block, as the text block hash is incorrect
-    text_block_with_spans = test_document.text_blocks[1].add_spans(
+    text_block_with_spans = test_document.text_blocks[1]._add_spans(
         [test_spans_invalid[1]], raise_on_error=False
     )
     assert len(text_block_with_spans.spans) == 0
@@ -177,7 +177,7 @@ def test_add_spans_empty_text_block(
     all_spans = test_spans_valid + test_spans_invalid
 
     with pytest.raises(ValueError):
-        text_block.add_spans(all_spans, raise_on_error=raise_on_error)
+        text_block._add_spans(all_spans, raise_on_error=raise_on_error)
 
 
 @pytest.mark.parametrize("raise_on_error", [True, False])
