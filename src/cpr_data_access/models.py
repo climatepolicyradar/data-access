@@ -457,53 +457,52 @@ class Dataset:
         self.document_model = document_model
         self.documents = documents
 
-        self.cdn_domain = kwargs.get("cdn_domain")
+        if self.document_model == CPRDocument:
+            if not kwargs.get("cdn_domain"):
+                LOGGER.warning(
+                    "cdn_domain has not been set. Defaulting to `cdn.climatepolicyradar.org`."
+                )
+
+            self.cdn_domain = kwargs.get("cdn_domain", "cdn.climatepolicyradar.org")
+
+    def _load(
+        self,
+        adaptor: adaptors.DataAdaptor,
+        name_or_path: str,
+        limit: Optional[int] = None,
+    ):
+        """Load data from any adaptor."""
+
+        parser_outputs = adaptor.load_dataset(name_or_path, limit)
+        self.documents = [
+            self.document_model.from_parser_output(doc) for doc in parser_outputs
+        ]
+
+        if self.document_model == CPRDocument:
+            self.documents = [
+                doc.with_document_url(cdn_domain=self.cdn_domain)  # type: ignore
+                for doc in self.documents
+            ]
+
+        return self
 
     def load_from_remote(
-        self, bucket_name: str, limit: Optional[int] = None, **kwargs
+        self,
+        bucket_name: str,
+        limit: Optional[int] = None,
     ) -> "Dataset":
         """Load data from s3"""
 
-        parser_outputs = adaptors.S3DataAdaptor().load_dataset(bucket_name, limit)
-        self.documents = [
-            self.document_model.from_parser_output(doc) for doc in parser_outputs
-        ]
-
-        if "cdn_domain" in kwargs:
-            if self.document_model == CPRDocument:
-                self.documents = [
-                    doc.with_document_url(cdn_domain=self.cdn_domain)  # type: ignore
-                    for doc in self.documents
-                ]
-            else:
-                raise ValueError(
-                    "cdn_domain was provided as a keyword argument and can only can only be set for CPRDocument"
-                )
-
-        return self
+        return self._load(adaptors.S3DataAdaptor(), bucket_name, limit)
 
     def load_from_local(
-        self, folder_path: str, limit: Optional[int] = None, **kwargs
+        self,
+        folder_path: str,
+        limit: Optional[int] = None,
     ) -> "Dataset":
         """Load data from local copy of an s3 directory"""
 
-        parser_outputs = adaptors.LocalDataAdaptor().load_dataset(folder_path, limit)
-        self.documents = [
-            self.document_model.from_parser_output(doc) for doc in parser_outputs
-        ]
-
-        if "cdn_domain" in kwargs:
-            if self.document_model == CPRDocument:
-                self.documents = [
-                    doc.with_document_url(cdn_domain=self.cdn_domain)  # type: ignore
-                    for doc in self.documents
-                ]
-            else:
-                raise ValueError(
-                    "cdn_domain was provided as a keyword argument and can only can only be set for CPRDocument"
-                )
-
-        return self
+        return self._load(adaptors.LocalDataAdaptor(), folder_path, limit)
 
     @classmethod
     def save(cls, path: Path):
