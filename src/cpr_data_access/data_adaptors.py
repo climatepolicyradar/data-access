@@ -3,11 +3,14 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 from pathlib import Path
+import logging
 
 from tqdm.auto import tqdm
 
 from cpr_data_access.s3 import _get_s3_keys_with_prefix, _s3_object_read_text
 from cpr_data_access.parser_models import ParserOutput
+
+LOGGER = logging.getLogger(__name__)
 
 
 class DataAdaptor(ABC):
@@ -35,11 +38,21 @@ class S3DataAdaptor(DataAdaptor):
         """
         Load entire dataset from S3.
 
-        :param dataset_key: S3 bucket
+        :param dataset_key: path to S3 directory. Should start with 's3://'
         :param limit: optionally limit number of documents loaded. Defaults to None
         :return List[ParserOutput]: list of parser outputs
         """
-        s3_objects = _get_s3_keys_with_prefix(f"s3://{dataset_key}/embeddings_input")
+        if not dataset_key.startswith("s3://"):
+            LOGGER.warning(
+                f"Dataset key {dataset_key} does not start with 's3://'. "
+                "Assuming it is an S3 bucket."
+            )
+            dataset_key = f"s3://{dataset_key}"
+
+        if not dataset_key.endswith("/"):
+            dataset_key = f"{dataset_key}/"
+
+        s3_objects = _get_s3_keys_with_prefix(dataset_key)
 
         if len(s3_objects) == 0:
             raise ValueError(

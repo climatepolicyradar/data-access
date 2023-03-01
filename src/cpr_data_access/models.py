@@ -206,6 +206,12 @@ class PageMetadata(BaseModel):
     dimensions: Tuple[float, float]
 
 
+class BaseMetadata(BaseModel):
+    """Metadata that we expect to appear in every document. Should be kept minimal."""
+
+    geography: Optional[str]
+
+
 class BaseDocument(BaseModel):
     """Base model for a document."""
 
@@ -221,7 +227,7 @@ class BaseDocument(BaseModel):
     page_metadata: Optional[
         Sequence[PageMetadata]
     ]  # Properties such as page numbers and dimensions for paged documents
-    document_metadata: BaseModel
+    document_metadata: BaseMetadata
 
     @classmethod
     def from_parser_output(
@@ -521,12 +527,12 @@ class Dataset:
 
     def load_from_remote(
         self,
-        bucket_name: str,
+        dataset_key: str,
         limit: Optional[int] = None,
     ) -> "Dataset":
-        """Load data from s3"""
+        """Load data from s3. `dataset_key` is the path to the folder in s3, and should include the s3:// prefix."""
 
-        return self._load(adaptors.S3DataAdaptor(), bucket_name, limit)
+        return self._load(adaptors.S3DataAdaptor(), dataset_key, limit)
 
     def load_from_local(
         self,
