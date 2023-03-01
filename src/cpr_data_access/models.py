@@ -141,7 +141,7 @@ class TextBlock(BaseModel):
         """Return all spans in the text block."""
         return self._spans
 
-    def add_spans(
+    def _add_spans(
         self, spans: Sequence[Span], raise_on_error: bool = False
     ) -> "TextBlock":
         """
@@ -415,7 +415,7 @@ class Document(BaseModel):
         for span in spans_unique:
             for idx in self._text_block_idx_hash_map[span.text_block_text_hash]:
                 try:
-                    self.text_blocks[idx].add_spans(
+                    self.text_blocks[idx]._add_spans(
                         [span], raise_on_error=raise_on_error
                     )
                 except Exception as e:
