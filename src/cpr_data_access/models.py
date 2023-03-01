@@ -435,49 +435,73 @@ class CPRDocument(BaseDocument):
 
 
 class CPRDocumentWithURL(BaseDocument):
-    """Document with a document_url field"""
+    """CPR Document with a document_url field"""
 
     document_url: Optional[AnyHttpUrl]
 
 
 class Dataset:
-    """Helper class for accessing the entire corpus."""
+    """
+    Helper class for accessing the entire corpus.
+
+    :param document_model: pydantic model to use for documents
+    :param documents: list of documents to add. Recommended to use `Dataset.load_from_remote` or `Dataset.load_from_local` instead. Defaults to []
+    """
 
     def __init__(
         self,
-        cdn_domain: str = "cdn.climatepolicyradar.org",
-        documents: Sequence[Union[CPRDocument, CPRDocumentWithURL]] = [],
+        document_model: type[AnyDocument],
+        documents: Sequence[AnyDocument] = [],
+        **kwargs,
     ):
-        self.cdn_domain = cdn_domain
+        self.document_model = document_model
         self.documents = documents
 
+        self.cdn_domain = kwargs.get("cdn_domain")
+
     def load_from_remote(
-        self, bucket_name: str, limit: Optional[int] = None
+        self, bucket_name: str, limit: Optional[int] = None, **kwargs
     ) -> "Dataset":
         """Load data from s3"""
 
         parser_outputs = adaptors.S3DataAdaptor().load_dataset(bucket_name, limit)
         self.documents = [
-            CPRDocument.from_parser_output(doc).with_document_url(
-                cdn_domain=self.cdn_domain
-            )
-            for doc in parser_outputs
+            self.document_model.from_parser_output(doc) for doc in parser_outputs
         ]
+
+        if "cdn_domain" in kwargs:
+            if self.document_model == CPRDocument:
+                self.documents = [
+                    doc.with_document_url(cdn_domain=self.cdn_domain)  # type: ignore
+                    for doc in self.documents
+                ]
+            else:
+                raise ValueError(
+                    "cdn_domain was provided as a keyword argument and can only can only be set for CPRDocument"
+                )
 
         return self
 
     def load_from_local(
-        self, folder_path: str, limit: Optional[int] = None
+        self, folder_path: str, limit: Optional[int] = None, **kwargs
     ) -> "Dataset":
         """Load data from local copy of an s3 directory"""
 
         parser_outputs = adaptors.LocalDataAdaptor().load_dataset(folder_path, limit)
         self.documents = [
-            CPRDocument.from_parser_output(doc).with_document_url(
-                cdn_domain=self.cdn_domain
-            )
-            for doc in parser_outputs
+            self.document_model.from_parser_output(doc) for doc in parser_outputs
         ]
+
+        if "cdn_domain" in kwargs:
+            if self.document_model == CPRDocument:
+                self.documents = [
+                    doc.with_document_url(cdn_domain=self.cdn_domain)  # type: ignore
+                    for doc in self.documents
+                ]
+            else:
+                raise ValueError(
+                    "cdn_domain was provided as a keyword argument and can only can only be set for CPRDocument"
+                )
 
         return self
 
@@ -500,19 +524,20 @@ class Dataset:
         """
 
         if callable(value):
-            return Dataset(
-                documents=[
-                    doc for doc in self.documents if value(getattr(doc, attribute))
-                ],
-                cdn_domain=self.cdn_domain,
-            )
+            documents = [
+                doc for doc in self.documents if value(getattr(doc, attribute))
+            ]
+
         else:
-            return Dataset(
-                documents=[
-                    doc for doc in self.documents if getattr(doc, attribute) == value
-                ],
-                cdn_domain=self.cdn_domain,
-            )
+            documents = [
+                doc for doc in self.documents if getattr(doc, attribute) == value
+            ]
+
+        instance_attributes = {
+            k: v for k, v in self.__dict__.items() if k != "documents"
+        }
+
+        return Dataset(**instance_attributes, documents=documents)
 
     def filter_by_language(self, language: str) -> "Dataset":
         """Return documents whose only language is the given language."""

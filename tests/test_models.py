@@ -7,7 +7,9 @@ from cpr_data_access.models import Dataset, CPRDocument, Span
 @pytest.fixture
 def test_dataset() -> Dataset:
     """Create dataset load_from_local and use as a fixture."""
-    dataset = Dataset().load_from_local("tests/test_data/valid")
+    dataset = Dataset(document_model=CPRDocument).load_from_local(
+        "tests/test_data/valid"
+    )
 
     return dataset
 
