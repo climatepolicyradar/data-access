@@ -1,6 +1,6 @@
 """Data models for data access."""
 
-from typing import Sequence, Optional, List, Tuple, Any, Union
+from typing import Sequence, Optional, List, Tuple, Any, Union, TypeVar, Literal
 from pathlib import Path
 from enum import Enum
 import datetime
@@ -25,6 +25,8 @@ from cpr_data_access.parser_models import (
 )
 
 LOGGER = logging.getLogger(__name__)
+
+AnyDocument = TypeVar("AnyDocument", bound="BaseDocument")
 
 
 class Span(BaseModel):
@@ -204,36 +206,14 @@ class PageMetadata(BaseModel):
     dimensions: Tuple[float, float]
 
 
-class DocumentMetadata(BaseModel):
-    """Metadata about a document."""
+class BaseDocument(BaseModel):
+    """Base model for a document."""
 
-    publication_ts: Optional[datetime.datetime]
-    geography: str
-    category: str
-    source: str
-    type: str
-    sectors: Sequence[str]
-
-
-class Document(BaseModel):
-    """
-    Document data model. Note this is very similar to the ParserOutput model.
-
-    Special cases for content types:
-    - HTML: all text blocks have page_number == -1, block type == BlockType.TEXT, type_confidence == 1.0 and coords == None
-    - PDF: all documents have has_valid_text == True
-    - no content type: all documents have has_valid_text == False
-    """
-
-    document_id: str  # import ID
+    document_id: str
     document_name: str
-    document_description: str
     document_source_url: Optional[AnyHttpUrl]
-    document_cdn_object: Optional[str]
     document_content_type: Optional[str]
     document_md5_sum: Optional[str]
-    document_slug: str
-    document_metadata: DocumentMetadata
     languages: Optional[Sequence[str]]
     translated: bool
     has_valid_text: bool
@@ -241,9 +221,12 @@ class Document(BaseModel):
     page_metadata: Optional[
         Sequence[PageMetadata]
     ]  # Properties such as page numbers and dimensions for paged documents
+    document_metadata: BaseModel
 
     @classmethod
-    def from_parser_output(cls, parser_document: ParserOutput) -> "Document":  # type: ignore
+    def from_parser_output(
+        cls: type[AnyDocument], parser_document: ParserOutput
+    ) -> AnyDocument:
         """Load from document parser output"""
 
         if parser_document.document_content_type is None:
@@ -277,38 +260,20 @@ class Document(BaseModel):
                 f"Unsupported content type: {parser_document.document_content_type}"
             )
 
-        return Document(
-            document_id=parser_document.document_id,
-            document_name=parser_document.document_name,
-            document_description=parser_document.document_description,
-            document_source_url=parser_document.document_source_url,
-            document_cdn_object=parser_document.document_cdn_object,
-            document_content_type=parser_document.document_content_type,
-            document_md5_sum=parser_document.document_md5_sum,
-            document_slug=parser_document.document_slug,
-            document_metadata=DocumentMetadata.parse_obj(
-                parser_document.document_metadata
-            ),
-            languages=parser_document.languages,
-            translated=parser_document.translated,
-            has_valid_text=has_valid_text,
-            text_blocks=text_blocks,
-            page_metadata=page_metadata,
-        )
+        parser_document_data = parser_document.dict()
+        metadata = {"document_metadata": parser_document.document_metadata}
+        text_and_page_data = {
+            "text_blocks": text_blocks,
+            "page_metadata": page_metadata,
+            "has_valid_text": has_valid_text,
+        }
 
-    def with_document_url(self, cdn_domain: str) -> "DocumentWithURL":
-        """
-        Return a document with a URL set. This is the CDN URL if there is a CDN object, otherwise the source URL.
-
-        :param cdn_domain: domain of CPR CDN
-        """
-
-        document_url = self.document_source_url if self.document_cdn_object is None else f"https://{cdn_domain}/{self.document_cdn_object}"  # type: ignore
-
-        return DocumentWithURL(**self.dict(), document_url=document_url)  # type: ignore
+        return cls.parse_obj(parser_document_data | metadata | text_and_page_data)
 
     @classmethod
-    def load_from_remote(cls, bucket_name: str, document_id: str) -> "Document":
+    def load_from_remote(
+        cls: type[AnyDocument], bucket_name: str, document_id: str
+    ) -> AnyDocument:
         """
         Load document from s3
 
@@ -323,10 +288,12 @@ class Document(BaseModel):
         if parser_output is None:
             raise ValueError(f"Document with id {document_id} not found")
 
-        return Document.from_parser_output(parser_output)
+        return cls.from_parser_output(parser_output)
 
     @classmethod
-    def load_from_local(cls, path: str, document_id: str) -> "Document":
+    def load_from_local(
+        cls: type[AnyDocument], path: str, document_id: str
+    ) -> AnyDocument:
         """
         Load document from local directory
 
@@ -341,7 +308,7 @@ class Document(BaseModel):
         if parser_output is None:
             raise ValueError(f"Document with id {document_id} not found")
 
-        return Document.from_parser_output(parser_output)
+        return cls.from_parser_output(parser_output)
 
     @property
     def text(self) -> str:
@@ -370,8 +337,8 @@ class Document(BaseModel):
         return hash_map
 
     def add_spans(
-        self, spans: Sequence[Span], raise_on_error: bool = False
-    ) -> "Document":
+        self: AnyDocument, spans: Sequence[Span], raise_on_error: bool = False
+    ) -> AnyDocument:
         """
         Add spans to text blocks in the document.
 
@@ -429,52 +396,146 @@ class Document(BaseModel):
         return self
 
 
-class DocumentWithURL(Document):
-    """Document with a document_url field"""
+class CPRDocumentMetadata(BaseModel):
+    """Metadata about a document in the CPR tool."""
+
+    publication_ts: Optional[datetime.datetime]
+    geography: str
+    category: str
+    source: str
+    type: str
+    sectors: Sequence[str]
+
+
+class CPRDocument(BaseDocument):
+    """
+    Data for a document in the CPR tool (app.climatepolicyradar.org). Note this is very similar to the ParserOutput model.
+
+    Special cases for content types:
+    - HTML: all text blocks have page_number == -1, block type == BlockType.TEXT, type_confidence == 1.0 and coords == None
+    - PDF: all documents have has_valid_text == True
+    - no content type: all documents have has_valid_text == False
+    """
+
+    document_description: str
+    document_cdn_object: Optional[str]
+    document_metadata: CPRDocumentMetadata
+    document_slug: str
+
+    def with_document_url(self, cdn_domain: str) -> "CPRDocumentWithURL":
+        """
+        Return a document with a URL set. This is the CDN URL if there is a CDN object, otherwise the source URL.
+
+        :param cdn_domain: domain of CPR CDN
+        """
+
+        document_url = self.document_source_url if self.document_cdn_object is None else f"https://{cdn_domain}/{self.document_cdn_object}"  # type: ignore
+
+        return CPRDocumentWithURL(**self.dict(), document_url=document_url)  # type: ignore
+
+
+class GSTDocumentMetadata(BaseModel):
+    """Metadata for a document in the Global Stocktake dataset."""
+
+    source: str
+    author: str
+    validation_status: Literal["validated", "not validated", "error"]
+    theme: Optional[str]
+    type: Optional[str]
+    version: Optional[str]
+    author_type: Optional[str]
+    date: datetime.date
+    link: Optional[AnyHttpUrl]
+    data_error_type: Optional[
+        Literal[
+            "source_incorrect",
+            "outdated",
+            "missing",
+            "duplicate",
+            "synthesis_error",
+            "metadata_error",
+            "incorrect_document",
+        ]
+    ]
+    party: Optional[str]
+    topics: Optional[Sequence[str]]
+
+
+class GSTDocument(BaseDocument):
+    """Data model for a document in the Global Stocktake dataset."""
+
+    document_metadata: GSTDocumentMetadata
+
+
+class CPRDocumentWithURL(BaseDocument):
+    """CPR Document with a document_url field"""
 
     document_url: Optional[AnyHttpUrl]
 
 
 class Dataset:
-    """Helper class for accessing the entire corpus."""
+    """
+    Helper class for accessing the entire corpus.
+
+    :param document_model: pydantic model to use for documents
+    :param documents: list of documents to add. Recommended to use `Dataset.load_from_remote` or `Dataset.load_from_local` instead. Defaults to []
+    """
 
     def __init__(
         self,
-        cdn_domain: str = "cdn.climatepolicyradar.org",
-        documents: Sequence[Document] = [],
+        document_model: type[AnyDocument],
+        documents: Sequence[AnyDocument] = [],
+        **kwargs,
     ):
-        self.cdn_domain = cdn_domain
+        self.document_model = document_model
         self.documents = documents
 
+        if self.document_model == CPRDocument:
+            if not kwargs.get("cdn_domain"):
+                LOGGER.warning(
+                    "cdn_domain has not been set. Defaulting to `cdn.climatepolicyradar.org`."
+                )
+
+            self.cdn_domain = kwargs.get("cdn_domain", "cdn.climatepolicyradar.org")
+
+    def _load(
+        self,
+        adaptor: adaptors.DataAdaptor,
+        name_or_path: str,
+        limit: Optional[int] = None,
+    ):
+        """Load data from any adaptor."""
+
+        parser_outputs = adaptor.load_dataset(name_or_path, limit)
+        self.documents = [
+            self.document_model.from_parser_output(doc) for doc in parser_outputs
+        ]
+
+        if self.document_model == CPRDocument:
+            self.documents = [
+                doc.with_document_url(cdn_domain=self.cdn_domain)  # type: ignore
+                for doc in self.documents
+            ]
+
+        return self
+
     def load_from_remote(
-        self, bucket_name: str, limit: Optional[int] = None
+        self,
+        bucket_name: str,
+        limit: Optional[int] = None,
     ) -> "Dataset":
         """Load data from s3"""
 
-        parser_outputs = adaptors.S3DataAdaptor().load_dataset(bucket_name, limit)
-        self.documents = [
-            Document.from_parser_output(doc).with_document_url(
-                cdn_domain=self.cdn_domain
-            )
-            for doc in parser_outputs
-        ]
-
-        return self
+        return self._load(adaptors.S3DataAdaptor(), bucket_name, limit)
 
     def load_from_local(
-        self, folder_path: str, limit: Optional[int] = None
+        self,
+        folder_path: str,
+        limit: Optional[int] = None,
     ) -> "Dataset":
         """Load data from local copy of an s3 directory"""
 
-        parser_outputs = adaptors.LocalDataAdaptor().load_dataset(folder_path, limit)
-        self.documents = [
-            Document.from_parser_output(doc).with_document_url(
-                cdn_domain=self.cdn_domain
-            )
-            for doc in parser_outputs
-        ]
-
-        return self
+        return self._load(adaptors.LocalDataAdaptor(), folder_path, limit)
 
     @classmethod
     def save(cls, path: Path):
@@ -495,19 +556,20 @@ class Dataset:
         """
 
         if callable(value):
-            return Dataset(
-                documents=[
-                    doc for doc in self.documents if value(getattr(doc, attribute))
-                ],
-                cdn_domain=self.cdn_domain,
-            )
+            documents = [
+                doc for doc in self.documents if value(getattr(doc, attribute))
+            ]
+
         else:
-            return Dataset(
-                documents=[
-                    doc for doc in self.documents if getattr(doc, attribute) == value
-                ],
-                cdn_domain=self.cdn_domain,
-            )
+            documents = [
+                doc for doc in self.documents if getattr(doc, attribute) == value
+            ]
+
+        instance_attributes = {
+            k: v for k, v in self.__dict__.items() if k != "documents"
+        }
+
+        return Dataset(**instance_attributes, documents=documents)
 
     def filter_by_language(self, language: str) -> "Dataset":
         """Return documents whose only language is the given language."""

@@ -1,21 +1,23 @@
 import pytest
 
 from cpr_data_access.parser_models import ParserOutput
-from cpr_data_access.models import Dataset, Document, Span
+from cpr_data_access.models import Dataset, CPRDocument, Span
 
 
 @pytest.fixture
 def test_dataset() -> Dataset:
     """Create dataset load_from_local and use as a fixture."""
-    dataset = Dataset().load_from_local("tests/test_data/valid")
+    dataset = Dataset(document_model=CPRDocument).load_from_local(
+        "tests/test_data/valid"
+    )
 
     return dataset
 
 
 @pytest.fixture
-def test_document() -> Document:
+def test_document() -> CPRDocument:
     """Test PDF document."""
-    return Document.from_parser_output(
+    return CPRDocument.from_parser_output(
         ParserOutput.parse_file("tests/test_data/valid/test_pdf.json")
     )
 
