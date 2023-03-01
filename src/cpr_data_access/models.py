@@ -1,6 +1,6 @@
 """Data models for data access."""
 
-from typing import Sequence, Optional, List, Tuple, Any, Union, TypeVar
+from typing import Sequence, Optional, List, Tuple, Any, Union, TypeVar, Literal
 from pathlib import Path
 from enum import Enum
 import datetime
@@ -432,6 +432,39 @@ class CPRDocument(BaseDocument):
         document_url = self.document_source_url if self.document_cdn_object is None else f"https://{cdn_domain}/{self.document_cdn_object}"  # type: ignore
 
         return CPRDocumentWithURL(**self.dict(), document_url=document_url)  # type: ignore
+
+
+class GSTDocumentMetadata(BaseModel):
+    """Metadata for a document in the Global Stocktake dataset."""
+
+    source: str
+    author: str
+    validation_status: Literal["validated", "not validated", "error"]
+    theme: Optional[str]
+    type: Optional[str]
+    version: Optional[str]
+    author_type: Optional[str]
+    date: datetime.date
+    link: Optional[AnyHttpUrl]
+    data_error_type: Optional[
+        Literal[
+            "source_incorrect",
+            "outdated",
+            "missing",
+            "duplicate",
+            "synthesis_error",
+            "metadata_error",
+            "incorrect_document",
+        ]
+    ]
+    party: Optional[str]
+    topics: Optional[Sequence[str]]
+
+
+class GSTDocument(BaseDocument):
+    """Data model for a document in the Global Stocktake dataset."""
+
+    document_metadata: GSTDocumentMetadata
 
 
 class CPRDocumentWithURL(BaseDocument):
