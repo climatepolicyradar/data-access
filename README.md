@@ -20,10 +20,10 @@ Individual documents can be loaded from an S3 bucket or local directory.
 from cpr_data_access.models import CPRDocument, GSTDocument
 
 # Load CPR document from S3
-document = CPRDocument.load_from_remote(dataset_key="cpr-data", document_id="1234")
+document = CPRDocument.load_from_remote(dataset_key="s3://cpr-data", document_id="1234")
 
 # Load GST document from local
-document = GSTDocument.load_from_local(dataset_key="~/data", document_id="1234")
+document = GSTDocument.load_from_local(folder_path="~/data", document_id="1234")
 ```
 
 ### Datasets
@@ -34,10 +34,10 @@ Once provided with a document model, JSON-serialised documents can be loaded fro
 from cpr_data_access.models import Dataset, CPRDocument, GSTDocument
 
 # Load from remote, or 
-dataset = Dataset(document_model=CPRDocument).load_from_remote(dataset_key="cpr-data", limit=1000)
+dataset = Dataset(document_model=CPRDocument).load_from_remote(dataset_key="s3://cpr-data", limit=1000)
 
 # load from local
-dataset = Dataset(document_model=GSTDocument).load_from_local(dataset_key="~/data")
+dataset = Dataset(document_model=GSTDocument).load_from_local(folder_path="~/data")
 
 # Using the dataset
 len(dataset)

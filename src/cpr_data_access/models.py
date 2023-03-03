@@ -16,6 +16,7 @@ from pydantic import (
     root_validator,
     PrivateAttr,
 )
+import pandas as pd
 
 import cpr_data_access.data_adaptors as adaptors
 from cpr_data_access.parser_models import (
@@ -206,6 +207,12 @@ class PageMetadata(BaseModel):
     dimensions: Tuple[float, float]
 
 
+class BaseMetadata(BaseModel):
+    """Metadata that we expect to appear in every document. Should be kept minimal."""
+
+    geography: Optional[str]
+
+
 class BaseDocument(BaseModel):
     """Base model for a document."""
 
@@ -221,7 +228,7 @@ class BaseDocument(BaseModel):
     page_metadata: Optional[
         Sequence[PageMetadata]
     ]  # Properties such as page numbers and dimensions for paged documents
-    document_metadata: BaseModel
+    document_metadata: BaseMetadata
 
     @classmethod
     def from_parser_output(
@@ -445,7 +452,7 @@ class GSTDocumentMetadata(BaseModel):
     version: Optional[str]
     author_type: Optional[str]
     date: datetime.date
-    link: Optional[AnyHttpUrl]
+    link: Optional[str]
     data_error_type: Optional[
         Literal[
             "source_incorrect",
@@ -458,6 +465,7 @@ class GSTDocumentMetadata(BaseModel):
         ]
     ]
     party: Optional[str]
+    translation: Optional[str]
     topics: Optional[Sequence[str]]
 
 
@@ -519,14 +527,27 @@ class Dataset:
 
         return self
 
+    @property
+    def metadata_df(self) -> pd.DataFrame:
+        """Return a dataframe of document metadata"""
+        metadata = [
+            doc.dict(exclude={"text_blocks", "document_metadata"})
+            | doc.document_metadata.dict()
+            | {"num_text_blocks": len(doc.text_blocks) if doc.text_blocks else 0}
+            | {"num_pages": len(doc.page_metadata) if doc.page_metadata else 0}
+            for doc in self.documents
+        ]
+
+        return pd.DataFrame(metadata)
+
     def load_from_remote(
         self,
-        bucket_name: str,
+        dataset_key: str,
         limit: Optional[int] = None,
     ) -> "Dataset":
-        """Load data from s3"""
+        """Load data from s3. `dataset_key` is the path to the folder in s3, and should include the s3:// prefix."""
 
-        return self._load(adaptors.S3DataAdaptor(), bucket_name, limit)
+        return self._load(adaptors.S3DataAdaptor(), dataset_key, limit)
 
     def load_from_local(
         self,
