@@ -538,7 +538,12 @@ class Dataset:
             for doc in self.documents
         ]
 
-        return pd.DataFrame(metadata)
+        metadata_df = pd.DataFrame(metadata)
+
+        if "publication_ts" in metadata_df.columns:
+            metadata_df["publication_year"] = metadata_df["publication_ts"].dt.year
+
+        return metadata_df
 
     def load_from_remote(
         self,

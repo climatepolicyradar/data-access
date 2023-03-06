@@ -36,7 +36,7 @@ def test_dataset_metadata_df(test_dataset):
     for col in ("num_text_blocks", "num_pages"):
         assert col in metadata_df.columns
 
-    for key in CPRDocumentMetadata.__fields__.keys():
+    for key in CPRDocumentMetadata.__fields__.keys() | {"publication_year"}:
         assert key in metadata_df.columns
 
 
