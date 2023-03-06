@@ -475,7 +475,7 @@ class GSTDocument(BaseDocument):
     document_metadata: GSTDocumentMetadata
 
 
-class CPRDocumentWithURL(BaseDocument):
+class CPRDocumentWithURL(CPRDocument):
     """CPR Document with a document_url field"""
 
     document_url: Optional[AnyHttpUrl]
