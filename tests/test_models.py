@@ -251,3 +251,26 @@ def test_span_validation(test_spans_valid):
     for span in test_spans_valid:
         assert span.id.isupper()
         assert span.type.isupper()
+
+
+def test_document_get_text_block_window(test_document):
+    text_block = test_document.text_blocks[3]
+    window = test_document.get_text_block_window(text_block, (-2, 2))
+    assert window == test_document.text_blocks[1:6]
+
+    text_block = test_document.text_blocks[0]
+    window = test_document.get_text_block_window(text_block, (-2, 2))
+    assert window == test_document.text_blocks[:3]
+
+    with pytest.raises(ValueError):
+        test_document.get_text_block_window(text_block, (2, 2))
+
+    with pytest.raises(ValueError):
+        test_document.get_text_block_window(text_block, (2, -2))
+
+
+def test_document_get_text_window(test_document):
+    text_block = test_document.text_blocks[3]
+    text_window = test_document.get_text_window(text_block, (-2, 2))
+    assert isinstance(text_window, str)
+    assert len(text_window) > len(text_block.to_string())
