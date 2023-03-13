@@ -393,6 +393,71 @@ class BaseDocument(BaseModel):
 
         return self
 
+    def get_text_block_window(
+        self, text_block: TextBlock, window_range: tuple[int, int]
+    ) -> Sequence[TextBlock]:
+        """
+        Get a window of text blocks around a given text block.
+
+        :param str text_block: text block
+        :param tuple[int, int] window_range: start and end index of text blocks to get relative to the given text block (inclusive).
+         The first value should be negative. Fewer text blocks may be returned if the window reaches beyond start or end of the document.
+        :return list[TextBlock]: list of text blocks
+        """
+
+        if self.text_blocks is None:
+            raise ValueError("Document has no text blocks")
+
+        if text_block not in self.text_blocks:
+            raise ValueError("Text block not in document")
+
+        if window_range[0] > 0:
+            raise ValueError("Window range start index should be negative")
+
+        if window_range[1] < 0:
+            raise ValueError("Window range end index should be positive")
+
+        text_block_idx = self.text_blocks.index(text_block)
+
+        start_idx = max(0, text_block_idx + window_range[0])
+        end_idx = min(len(self.text_blocks), text_block_idx + window_range[1] + 1)
+
+        return self.text_blocks[start_idx:end_idx]
+
+    def get_text_window(
+        self, text_block: TextBlock, window_range: tuple[int, int]
+    ) -> str:
+        """
+        Get text of the text block, and a window of text blocks around it. Useful to add context around a given text block.
+
+        :param str text_block: text block
+        :param tuple[int, int] window_range: start and end index of text blocks to get relative to the given text block (inclusive).
+         The first value should be negative. Fewer text blocks may be returned if the window reaches beyond start or end of the document.
+        :return str: text
+        """
+
+        return " ".join(
+            [
+                tb.to_string()
+                for tb in self.get_text_block_window(text_block, window_range)
+            ]
+        )
+
+    def text_block_before(self, text_block: TextBlock) -> Optional[TextBlock]:
+        """Get the text block before the given text block. Returns None if there is no text block before."""
+        if blocks_before := self.get_text_block_window(text_block, (-1, 0)):
+            return blocks_before[0]
+
+        return None
+
+    def text_block_after(self, text_block: TextBlock) -> Optional[TextBlock]:
+        """Get the text block after the given text block. Returns None if there is no text block after."""
+
+        if blocks_after := self.get_text_block_window(text_block, (0, 1)):
+            return blocks_after[0]
+
+        return None
+
 
 class CPRDocumentMetadata(BaseModel):
     """Metadata about a document in the CPR tool."""
