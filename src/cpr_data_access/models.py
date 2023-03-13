@@ -36,7 +36,6 @@ class Span(BaseModel):
 
     The following validation is performed on creation of a `Span` instance:
     - checking that `start_idx` and `end_idx` are consistent with the length of `text`
-    - checking that the span's `text` value appears from indices `start_idx` to `end_idx` in `sentence`
 
     Properties:
     - document_id: document ID containing text block that span is in
@@ -72,14 +71,6 @@ class Span(BaseModel):
         if values["start_idx"] + len(values["text"]) != values["end_idx"]:
             raise ValueError(
                 "Values of 'start_idx', 'end_idx' and 'text' are not consistent. 'end_idx' should be 'start_idx' + len('text')."
-            )
-
-        if (
-            values["sentence"][values["start_idx"] : values["end_idx"]]
-            != values["text"]
-        ):
-            raise ValueError(
-                f"The span's 'text' value does not seem to appear in 'sentence' from the values set by 'start_idx' and 'end_idx'. Span text according to 'start_idx' and 'end_idx' is: {values['sentence'][values['start_idx']:values['end_idx']]}"
             )
 
         values["type"] = values["type"].upper().replace(" ", "_")
