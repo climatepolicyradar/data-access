@@ -200,7 +200,6 @@ def test_add_spans_empty_text_block(
 
 @pytest.mark.parametrize("raise_on_error", [True, False])
 def test_document_add_valid_spans(test_document, test_spans_valid, raise_on_error):
-
     document_with_spans = test_document.add_spans(
         test_spans_valid, raise_on_error=raise_on_error
     )
