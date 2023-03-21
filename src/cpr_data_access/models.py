@@ -18,6 +18,7 @@ from pydantic import (
 )
 import pandas as pd
 
+from datasets import Dataset as HFDataset
 import cpr_data_access.data_adaptors as adaptors
 from cpr_data_access.parser_models import (
     ParserOutput,
@@ -125,9 +126,9 @@ class TextBlock(BaseModel):
         text_utf8 = self.to_string().encode("utf-8")
 
         return (
-            hashlib.md5(text_utf8).hexdigest()
-            + "__"
-            + hashlib.sha256(text_utf8).hexdigest()
+                hashlib.md5(text_utf8).hexdigest()
+                + "__"
+                + hashlib.sha256(text_utf8).hexdigest()
         )
 
     @property
@@ -136,7 +137,7 @@ class TextBlock(BaseModel):
         return self._spans
 
     def _add_spans(
-        self, spans: Sequence[Span], raise_on_error: bool = False
+            self, spans: Sequence[Span], raise_on_error: bool = False
     ) -> "TextBlock":
         """
         Add spans to the text block.
@@ -223,7 +224,7 @@ class BaseDocument(BaseModel):
 
     @classmethod
     def from_parser_output(
-        cls: type[AnyDocument], parser_document: ParserOutput
+            cls: type[AnyDocument], parser_document: ParserOutput
     ) -> AnyDocument:
         """Load from document parser output"""
 
@@ -250,8 +251,10 @@ class BaseDocument(BaseModel):
 
         elif parser_document.document_content_type == CONTENT_TYPE_PDF:
             has_valid_text = True
-            text_blocks = [TextBlock.parse_obj(block) for block in (parser_document.pdf_data.text_blocks)]  # type: ignore
-            page_metadata = [PageMetadata.parse_obj(meta) for meta in parser_document.pdf_data.page_metadata]  # type: ignore
+            text_blocks = [TextBlock.parse_obj(block) for block in
+                           (parser_document.pdf_data.text_blocks)]  # type: ignore
+            page_metadata = [PageMetadata.parse_obj(meta) for meta in
+                             parser_document.pdf_data.page_metadata]  # type: ignore
 
         else:
             raise ValueError(
@@ -270,7 +273,7 @@ class BaseDocument(BaseModel):
 
     @classmethod
     def load_from_remote(
-        cls: type[AnyDocument], bucket_name: str, document_id: str
+            cls: type[AnyDocument], bucket_name: str, document_id: str
     ) -> AnyDocument:
         """
         Load document from s3
@@ -290,7 +293,7 @@ class BaseDocument(BaseModel):
 
     @classmethod
     def load_from_local(
-        cls: type[AnyDocument], path: str, document_id: str
+            cls: type[AnyDocument], path: str, document_id: str
     ) -> AnyDocument:
         """
         Load document from local directory
@@ -335,7 +338,7 @@ class BaseDocument(BaseModel):
         return hash_map
 
     def add_spans(
-        self: AnyDocument, spans: Sequence[Span], raise_on_error: bool = False
+            self: AnyDocument, spans: Sequence[Span], raise_on_error: bool = False
     ) -> AnyDocument:
         """
         Add spans to text blocks in the document.
@@ -394,7 +397,7 @@ class BaseDocument(BaseModel):
         return self
 
     def get_text_block_window(
-        self, text_block: TextBlock, window_range: tuple[int, int]
+            self, text_block: TextBlock, window_range: tuple[int, int]
     ) -> Sequence[TextBlock]:
         """
         Get a window of text blocks around a given text block.
@@ -425,7 +428,7 @@ class BaseDocument(BaseModel):
         return self.text_blocks[start_idx:end_idx]
 
     def get_text_window(
-        self, text_block: TextBlock, window_range: tuple[int, int]
+            self, text_block: TextBlock, window_range: tuple[int, int]
     ) -> str:
         """
         Get text of the text block, and a window of text blocks around it. Useful to add context around a given text block.
@@ -537,6 +540,10 @@ class CPRDocumentWithURL(CPRDocument):
     document_url: Optional[AnyHttpUrl]
 
 
+class DataNotLoadedException(Exception):
+    pass
+
+
 class Dataset:
     """
     Helper class for accessing the entire corpus.
@@ -546,10 +553,10 @@ class Dataset:
     """
 
     def __init__(
-        self,
-        document_model: type[AnyDocument],
-        documents: Sequence[AnyDocument] = [],
-        **kwargs,
+            self,
+            document_model: type[AnyDocument],
+            documents: Sequence[AnyDocument] = [],
+            **kwargs,
     ):
         self.document_model = document_model
         self.documents = documents
@@ -563,10 +570,10 @@ class Dataset:
             self.cdn_domain = kwargs.get("cdn_domain", "cdn.climatepolicyradar.org")
 
     def _load(
-        self,
-        adaptor: adaptors.DataAdaptor,
-        name_or_path: str,
-        limit: Optional[int] = None,
+            self,
+            adaptor: adaptors.DataAdaptor,
+            name_or_path: str,
+            limit: Optional[int] = None,
     ):
         """Load data from any adaptor."""
 
@@ -602,18 +609,18 @@ class Dataset:
         return metadata_df
 
     def load_from_remote(
-        self,
-        dataset_key: str,
-        limit: Optional[int] = None,
+            self,
+            dataset_key: str,
+            limit: Optional[int] = None,
     ) -> "Dataset":
         """Load data from s3. `dataset_key` is the path to the folder in s3, and should include the s3:// prefix."""
 
         return self._load(adaptors.S3DataAdaptor(), dataset_key, limit)
 
     def load_from_local(
-        self,
-        folder_path: str,
-        limit: Optional[int] = None,
+            self,
+            folder_path: str,
+            limit: Optional[int] = None,
     ) -> "Dataset":
         """Load data from local copy of an s3 directory"""
 
@@ -658,13 +665,13 @@ class Dataset:
         return self.filter("languages", [language])
 
     def sample_text(
-        self, n: int, document_ids: Optional[Sequence[str]], replace: bool = False
+            self, n: int, document_ids: Optional[Sequence[str]], replace: bool = False
     ):
         """Randomly sample a number of text blocks. Used for e.g. negative sampling for text classification."""
         raise NotImplementedError
 
     def get_all_text_blocks(
-        self, with_document_context: bool = False
+            self, with_document_context: bool = False
     ) -> Union[List[TextBlock], Tuple[List[TextBlock], dict]]:
         """
         Return all text blocks in the dataset.
@@ -686,3 +693,71 @@ class Dataset:
                         output_values.append(block)
 
         return output_values
+
+    def _create_text_block_doc(self, doc: AnyDocument, block: TextBlock) -> dict[str, Any]:
+        """
+        Create a text block doc by creating a dict from the text block and its source doc metadata.
+
+        The idea is that the metadata is replicated for each text block to allow for
+        easy indexing and filtering.
+
+        :param doc: Document instance
+        :param block: TextBlock instance from the document
+        :return: Flattened document and text block as a dictionary
+        """
+        doc_metadata = doc.document_metadata.dict()
+        text = block.to_string()
+        block_type = block.type.name
+        block_id = block.text_block_id
+        flattened_doc = {
+            "text_block_id": block_id,
+            "text": text,
+            "type": block_type,
+            "language": block.language,
+            "type_confidence": block.type_confidence,
+            "page_number": block.page_number,
+            "coords": block.coords,
+            "document_id": doc.document_id,
+            "document_name": doc.document_name,
+            "document_source_url": doc.document_source_url,
+            "document_content_type": doc.document_content_type,
+            "document_md5_sum": doc.document_md5_sum,
+            "languages": doc.languages,
+            "translated": doc.translated,
+            "has_valid_text": doc.has_valid_text,
+        }
+        flattened_doc.update(doc_metadata)
+
+        if self.document_model == CPRDocument:
+            flattened_doc['document_url'] = doc.document_url
+            flattened_doc['document_cdn_object'] = doc.document_cdn_object
+            flattened_doc['document_description'] = doc.document_description
+            flattened_doc['document_slug'] = doc.document_slug
+
+        return flattened_doc
+
+    def _flatten_structure(self) -> List[dict[str, Any]]:
+        """
+        Flatten the structure of the dataset, returning a list of dictionaries
+        representing the documents and their text blocks.
+
+        The metadata is replicated for each text block to allow for easy indexing and filtering.
+
+        :return: List of flattened documents and text blocks as dictionaries
+        """
+        flattened_docs = [
+            self._create_text_block_doc(doc, block)
+            for doc in self.documents if doc.text_blocks is not None
+            for block in doc.text_blocks
+        ]
+        return flattened_docs
+
+    def to_huggingface(self) -> HFDataset:
+        """
+        Convert to a huggingface dataset to get access to the huggingface datasets API.
+
+        :return: Huggingface dataset
+        """
+        flattened_docs = self._flatten_structure()
+        hf_dataset = HFDataset.from_dict({k: [d[k] for d in flattened_docs] for k in flattened_docs[0]})
+        return hf_dataset
