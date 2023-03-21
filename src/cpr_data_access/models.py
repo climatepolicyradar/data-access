@@ -709,6 +709,7 @@ class Dataset:
         text = block.to_string()
         block_type = block.type.name
         block_id = block.text_block_id
+
         flattened_doc = {
             "text_block_id": block_id,
             "text": text,
