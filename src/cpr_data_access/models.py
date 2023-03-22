@@ -268,8 +268,8 @@ class BaseDocument(BaseModel):
         parser_document_data = parser_document.dict()
         metadata = {"document_metadata": parser_document.document_metadata}
         text_and_page_data = {
-            "text_blocks": text_blocks,
-            "page_metadata": page_metadata,
+            "text_blocks": text_blocks,  # type: ignore
+            "page_metadata": page_metadata,  # type: ignore
             "has_valid_text": has_valid_text,
         }
 
@@ -561,20 +561,6 @@ def create_text_block_and_document_dict(
     text = block.to_string()
     block_type = block.type.name
     block_id = block.text_block_id
-    {
-        "coords",
-        "text_block_id",
-        "text",
-        "source",
-        "page_number",
-        "type_confidence",
-        "sectors",
-        "type",
-        "geography",
-        "language",
-        "category",
-        "publication_ts",
-    }
     flattened_doc = {
         "text_block_id": block_id,
         "text": text,
