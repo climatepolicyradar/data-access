@@ -775,7 +775,6 @@ class Dataset:
 
         :return: Huggingface dataset
         """
-        # HFDataset.from_dict({k: [d[k] for d in flattened_docs] for k in flattened_docs[0]})
         flattened_docs = self._flatten_structure_to_list_of_dicts()
         document_keys = flattened_docs[0]  # .keys()
         hf_dataset = HFDataset.from_dict(
