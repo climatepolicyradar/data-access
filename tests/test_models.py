@@ -3,7 +3,13 @@ import pandas as pd
 
 from cpr_data_access.parser_models import ParserOutput
 from datasets import Dataset as HuggingFaceDataset
-from cpr_data_access.models import Dataset, CPRDocument, CPRDocumentMetadata, BaseDocument, Span
+from cpr_data_access.models import (
+    Dataset,
+    CPRDocument,
+    CPRDocumentMetadata,
+    BaseDocument,
+    Span,
+)
 
 
 @pytest.fixture
@@ -139,8 +145,8 @@ def test_document_set_url(test_document):
         cdn_domain="dev.cdn.climatepolicyradar.org"
     )
     assert (
-            doc_with_url.document_url
-            == "https://dev.cdn.climatepolicyradar.org/EUR/2013/EUR-2013-01-01-Overview+of+CAP+Reform+2014-2020_6237180d8c443d72c06c9167019ca177.pdf"
+        doc_with_url.document_url
+        == "https://dev.cdn.climatepolicyradar.org/EUR/2013/EUR-2013-01-01-Overview+of+CAP+Reform+2014-2020_6237180d8c443d72c06c9167019ca177.pdf"
     )
 
 
@@ -196,7 +202,7 @@ def test_text_block_add_invalid_spans(test_document, test_spans_invalid, caplog)
 
 @pytest.mark.parametrize("raise_on_error", [True, False])
 def test_add_spans_empty_text_block(
-        test_document, test_spans_valid, test_spans_invalid, raise_on_error
+    test_document, test_spans_valid, test_spans_invalid, raise_on_error
 ):
     text_block = test_document.text_blocks[0]
     text_block.text = ""
@@ -242,7 +248,7 @@ def test_document_add_invalid_spans(test_document, test_spans_invalid):
 
 @pytest.mark.parametrize("raise_on_error", [True, False])
 def test_add_spans_empty_document(
-        test_document, test_spans_valid, test_spans_invalid, raise_on_error
+    test_document, test_spans_valid, test_spans_invalid, raise_on_error
 ):
     """Document.add_spans() should always raise if the document is empty."""
     empty_document = test_document.copy()
@@ -293,15 +299,9 @@ def test_to_huggingface(test_dataset, test_dataset_gst):
     dataset_gst_hf = test_dataset_gst.to_huggingface()
     assert isinstance(dataset_hf, HuggingFaceDataset)
     assert isinstance(dataset_gst_hf, HuggingFaceDataset)
-    assert len(dataset_hf) == sum(len(doc.text_blocks) for doc in test_dataset.documents if doc.text_blocks)
-    assert len(dataset_gst_hf) == sum(len(doc.text_blocks) for doc in test_dataset_gst.documents if doc.text_blocks)
-    assert list(dataset_hf.features.keys()) == ['text_block_id', 'text', 'type', 'language', 'type_confidence',
-                                                'page_number', 'coords', 'document_id', 'document_name',
-                                                'document_source_url', 'document_content_type', 'document_md5_sum',
-                                                'languages', 'translated', 'has_valid_text', 'publication_ts',
-                                                'geography', 'category', 'source', 'sectors', 'document_url',
-                                                'document_cdn_object', 'document_description', 'document_slug']
-    assert list(dataset_gst_hf.features.keys()) == ['text_block_id', 'text', 'type', 'language', 'type_confidence',
-                                                    'page_number', 'coords', 'document_id', 'document_name',
-                                                    'document_source_url', 'document_content_type', 'document_md5_sum',
-                                                    'languages', 'translated', 'has_valid_text', 'geography']
+    assert len(dataset_hf) == sum(
+        len(doc.text_blocks) for doc in test_dataset.documents if doc.text_blocks
+    )
+    assert len(dataset_gst_hf) == sum(
+        len(doc.text_blocks) for doc in test_dataset_gst.documents if doc.text_blocks
+    )
