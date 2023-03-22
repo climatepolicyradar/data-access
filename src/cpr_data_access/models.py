@@ -253,12 +253,12 @@ class BaseDocument(BaseModel):
             has_valid_text = True
             text_blocks = [
                 TextBlock.parse_obj(block)
-                for block in (parser_document.pdf_data.text_blocks)
-            ]  # type: ignore
+                for block in (parser_document.pdf_data.text_blocks)  # type: ignore
+            ]
             page_metadata = [
                 PageMetadata.parse_obj(meta)
-                for meta in parser_document.pdf_data.page_metadata
-            ]  # type: ignore
+                for meta in parser_document.pdf_data.page_metadata  # type: ignore
+            ]
 
         else:
             raise ValueError(
