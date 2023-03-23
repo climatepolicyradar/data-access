@@ -6,6 +6,7 @@ from enum import Enum
 import datetime
 import hashlib
 import logging
+import itertools
 
 from pydantic import (
     BaseModel,
@@ -17,6 +18,7 @@ from pydantic import (
     PrivateAttr,
 )
 import pandas as pd
+from tqdm.auto import tqdm
 
 import cpr_data_access.data_adaptors as adaptors
 from cpr_data_access.parser_models import (
@@ -149,10 +151,6 @@ class TextBlock(BaseModel):
         :raises ValueError: if the text block has no text
         :return: text block with spans added
         """
-
-        LOGGER.warning(
-            "This method should not be used if adding spans to a document as it does not check that the document ID of the span matches document. Use `Document.add_spans` instead."
-        )
 
         block_text_hash = self.text_hash
 
@@ -584,6 +582,20 @@ class Dataset:
         return self
 
     @property
+    def _document_id_idx_hash_map(self) -> dict[str, set[int]]:
+        """Return a map of document IDs to indices."""
+
+        hash_map: dict[str, set[int]] = dict()
+
+        for idx, document in enumerate(self.documents):
+            if document.document_id in hash_map:
+                hash_map[document.document_id].add(idx)
+            else:
+                hash_map[document.document_id] = {idx}
+
+        return hash_map
+
+    @property
     def metadata_df(self) -> pd.DataFrame:
         """Return a dataframe of document metadata"""
         metadata = [
@@ -686,3 +698,33 @@ class Dataset:
                         output_values.append(block)
 
         return output_values
+
+    def add_spans(
+        self, spans: Sequence[Span], raise_on_error: bool = False
+    ) -> "Dataset":
+        """
+        Add spans to documents in the dataset overlap with.
+
+        :param Sequence[Span] spans: sequence of span objects
+        :param bool raise_on_error: whether to raise if there is an error with matching spans to any documents. Defaults to False
+        :return Dataset: dataset with spans added
+        """
+
+        spans_sorted = sorted(spans, key=lambda x: x.document_id)
+
+        for document_id, document_spans in tqdm(
+            itertools.groupby(spans_sorted, key=lambda x: x.document_id), unit="docs"
+        ):
+            # find document index in dataset with matching document_id
+            idxs = self._document_id_idx_hash_map.get(document_id, set())
+
+            if len(idxs) == 0:
+                LOGGER.warning(f"Could not find document with id {document_id}")
+                continue
+
+            for idx in idxs:
+                self.documents[idx].add_spans(
+                    list(document_spans), raise_on_error=raise_on_error
+                )
+
+        return self
