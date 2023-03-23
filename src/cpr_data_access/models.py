@@ -1,6 +1,6 @@
 """Data models for data access."""
 
-from typing import Sequence, Optional, List, Tuple, Any, Union, TypeVar, Literal
+from typing import Sequence, Optional, List, Tuple, Any, Union, TypeVar, Literal, cast
 from pathlib import Path
 from enum import Enum
 import datetime
@@ -18,6 +18,7 @@ from pydantic import (
 )
 import pandas as pd
 
+from datasets import Dataset as HFDataset
 import cpr_data_access.data_adaptors as adaptors
 from cpr_data_access.parser_models import (
     ParserOutput,
@@ -250,8 +251,14 @@ class BaseDocument(BaseModel):
 
         elif parser_document.document_content_type == CONTENT_TYPE_PDF:
             has_valid_text = True
-            text_blocks = [TextBlock.parse_obj(block) for block in (parser_document.pdf_data.text_blocks)]  # type: ignore
-            page_metadata = [PageMetadata.parse_obj(meta) for meta in parser_document.pdf_data.page_metadata]  # type: ignore
+            text_blocks = [
+                TextBlock.parse_obj(block)
+                for block in (parser_document.pdf_data.text_blocks)  # type: ignore
+            ]
+            page_metadata = [
+                PageMetadata.parse_obj(meta)
+                for meta in parser_document.pdf_data.page_metadata  # type: ignore
+            ]
 
         else:
             raise ValueError(
@@ -261,8 +268,8 @@ class BaseDocument(BaseModel):
         parser_document_data = parser_document.dict()
         metadata = {"document_metadata": parser_document.document_metadata}
         text_and_page_data = {
-            "text_blocks": text_blocks,
-            "page_metadata": page_metadata,
+            "text_blocks": text_blocks,  # type: ignore
+            "page_metadata": page_metadata,  # type: ignore
             "has_valid_text": has_valid_text,
         }
 
@@ -537,6 +544,51 @@ class CPRDocumentWithURL(CPRDocument):
     document_url: Optional[AnyHttpUrl]
 
 
+def create_text_block_and_document_dict(
+    doc: Union[BaseDocument, CPRDocument], block: TextBlock
+) -> dict[str, Any]:
+    """
+    Create a text block doc by creating a dict from the text block and its source doc metadata.
+
+    The idea is that the metadata is replicated for each text block to allow for
+    easy indexing and filtering.
+
+    :param doc: Document instance
+    :param block: TextBlock instance from the document
+    :return: Flattened document and text block as a dictionary
+    """
+    doc_metadata = doc.document_metadata.dict()
+    text = block.to_string()
+    block_type = block.type.name
+    block_id = block.text_block_id
+    flattened_doc = {
+        "text_block_id": block_id,
+        "text": text,
+        "type": block_type,
+        "language": block.language,
+        "type_confidence": block.type_confidence,
+        "page_number": block.page_number,
+        "coords": block.coords,
+        "document_id": doc.document_id,
+        "document_name": doc.document_name,
+        "document_source_url": doc.document_source_url,
+        "document_content_type": doc.document_content_type,
+        "document_md5_sum": doc.document_md5_sum,
+        "languages": doc.languages,
+        "translated": doc.translated,
+        "has_valid_text": doc.has_valid_text,
+    }
+    flattened_doc.update(doc_metadata)
+
+    if type(doc) == CPRDocument:
+        doc = cast(CPRDocument, doc)
+        flattened_doc["document_cdn_object"] = doc.document_cdn_object
+        flattened_doc["document_description"] = doc.document_description
+        flattened_doc["document_slug"] = doc.document_slug
+
+    return flattened_doc
+
+
 class Dataset:
     """
     Helper class for accessing the entire corpus.
@@ -686,3 +738,35 @@ class Dataset:
                         output_values.append(block)
 
         return output_values
+
+    def _flatten_structure_to_list_of_dicts(self) -> List[dict[str, Any]]:
+        """
+        Flatten dataset to list of dictionaries.
+
+        The metadata is replicated for each text block to allow for easy indexing and filtering.
+
+        :return: List of flattened documents and text blocks as dictionaries
+        """
+        flattened_docs = [
+            create_text_block_and_document_dict(doc, block)
+            for doc in self.documents
+            if doc.text_blocks is not None
+            for block in doc.text_blocks
+        ]
+        return flattened_docs
+
+    def to_huggingface(self) -> HFDataset:
+        """
+        Convert to a huggingface dataset to get access to the huggingface datasets API.
+
+        :return: Huggingface dataset
+        """
+        flattened_docs = self._flatten_structure_to_list_of_dicts()
+        document_keys = flattened_docs[0]  # .keys()
+        hf_dataset = HFDataset.from_dict(
+            {
+                key: [document[key] for document in flattened_docs]
+                for key in document_keys
+            }
+        )
+        return hf_dataset
