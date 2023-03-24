@@ -15,8 +15,10 @@ from pydantic import (
     confloat,
     conint,
     root_validator,
-    PrivateAttr,
 )
+from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import String, Column, JSON
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 import pandas as pd
 from tqdm.auto import tqdm
 
@@ -32,7 +34,7 @@ LOGGER = logging.getLogger(__name__)
 AnyDocument = TypeVar("AnyDocument", bound="BaseDocument")
 
 
-class Span(BaseModel):
+class Span(SQLModel, table=True):
     """
     Annotation with a type and ID made to a span of text in a document.
 
@@ -51,6 +53,9 @@ class Span(BaseModel):
     - annotator: name of annotator
     """
 
+    db_id: Optional[int] = Field(
+        default=None, primary_key=True
+    )  # FIXME: better primary key?
     document_id: str
     text_block_text_hash: str
     type: str
@@ -61,6 +66,8 @@ class Span(BaseModel):
     sentence: str
     pred_probability: confloat(ge=0, le=1)  # type: ignore
     annotator: str
+    text_block_db_id: Optional[int] = Field(default="", foreign_key="textblock.id")
+    text_block: "TextBlock" = Relationship(back_populates="_spans")
 
     def __hash__(self):
         """Make hashable."""
@@ -97,17 +104,24 @@ class BlockType(str, Enum):
     AMBIGUOUS = "Ambiguous"
 
 
-class TextBlock(BaseModel):
+class TextBlock(SQLModel, table=True):
     """Text block data model. Generic across content types"""
 
-    text: Sequence[str]
+    id: Optional[int] = Field(
+        default=None, primary_key=True
+    )  # FIXME: better primary key?
+    text: Sequence[str] = Field(default_factory=list, sa_column=Column(ARRAY(String)))
     text_block_id: str
     language: Optional[str]
     type: BlockType
     type_confidence: confloat(ge=0, le=1)  # type: ignore
     page_number: conint(ge=-1)  # type: ignore
-    coords: Optional[List[Tuple[float, float]]]
-    _spans: list[Span] = PrivateAttr(default_factory=list)
+    coords: Optional[List[Tuple[float, float]]] = Field(
+        default_factory=list, sa_column=Column(JSONB)
+    )
+    _spans: list[Span] = Relationship(back_populates="text_block")
+    document_id: str = Field(default="", foreign_key="document.document_id")
+    document: "BaseDocument" = Relationship(back_populates="text_blocks")
 
     def to_string(self) -> str:
         """Return text in a clean format"""
@@ -202,10 +216,12 @@ class BaseMetadata(BaseModel):
     geography: Optional[str]
 
 
-class BaseDocument(BaseModel):
+class BaseDocument(SQLModel, table=True):
     """Base model for a document."""
 
-    document_id: str
+    __tablename__: str = "document"
+
+    document_id: str = Field(primary_key=True)
     document_name: str
     document_source_url: Optional[AnyHttpUrl]
     document_content_type: Optional[str]
@@ -213,11 +229,13 @@ class BaseDocument(BaseModel):
     languages: Optional[Sequence[str]]
     translated: bool
     has_valid_text: bool
-    text_blocks: Optional[Sequence[TextBlock]]  # None if there is no content type
-    page_metadata: Optional[
-        Sequence[PageMetadata]
-    ]  # Properties such as page numbers and dimensions for paged documents
-    document_metadata: BaseMetadata
+    text_blocks: Optional[Sequence[TextBlock]] = Relationship(back_populates="document")
+    page_metadata: Optional[Sequence[PageMetadata]] = Field(
+        default_factory=list, sa_column=Column(ARRAY(JSON))
+    )
+    document_metadata: BaseMetadata = Field(
+        default_factory=dict, sa_column=Column(JSON)
+    )
 
     @classmethod
     def from_parser_output(
@@ -457,7 +475,7 @@ class BaseDocument(BaseModel):
         return None
 
 
-class CPRDocumentMetadata(BaseModel):
+class CPRDocumentMetadata(SQLModel):
     """Metadata about a document in the CPR tool."""
 
     publication_ts: Optional[datetime.datetime]
@@ -465,7 +483,9 @@ class CPRDocumentMetadata(BaseModel):
     category: str
     source: str
     type: str
-    sectors: Sequence[str]
+    sectors: Sequence[str] = Field(
+        default_factory=list, sa_column=Column(ARRAY(String))
+    )
 
 
 class CPRDocument(BaseDocument):
@@ -480,7 +500,9 @@ class CPRDocument(BaseDocument):
 
     document_description: str
     document_cdn_object: Optional[str]
-    document_metadata: CPRDocumentMetadata
+    cpr_document_metadata: CPRDocumentMetadata = Field(
+        default_factory=dict, sa_column=Column(JSONB), alias="document_metadata"
+    )  # FIXME: can we still access CPRDocument.document_metadata via python?
     document_slug: str
 
     def with_document_url(self, cdn_domain: str) -> "CPRDocumentWithURL":
@@ -495,7 +517,7 @@ class CPRDocument(BaseDocument):
         return CPRDocumentWithURL(**self.dict(), document_url=document_url)  # type: ignore
 
 
-class GSTDocumentMetadata(BaseModel):
+class GSTDocumentMetadata(SQLModel):
     """Metadata for a document in the Global Stocktake dataset."""
 
     source: str
@@ -526,7 +548,9 @@ class GSTDocumentMetadata(BaseModel):
 class GSTDocument(BaseDocument):
     """Data model for a document in the Global Stocktake dataset."""
 
-    document_metadata: GSTDocumentMetadata
+    gst_document_metadata: GSTDocumentMetadata = Field(
+        default_factory=dict, sa_column=Column(JSONB), alias="document_metadata"
+    )  # FIXME: can we still access GSTDocument.document_metadata via python?
 
 
 class CPRDocumentWithURL(CPRDocument):
