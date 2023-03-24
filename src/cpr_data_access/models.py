@@ -233,9 +233,6 @@ class BaseDocument(SQLModel, table=True):
     page_metadata: Optional[Sequence[PageMetadata]] = Field(
         default_factory=list, sa_column=Column(ARRAY(JSON))
     )
-    document_metadata: BaseMetadata = Field(
-        default_factory=dict, sa_column=Column(JSON)
-    )
 
     @classmethod
     def from_parser_output(
@@ -475,6 +472,14 @@ class BaseDocument(SQLModel, table=True):
         return None
 
 
+class Document(BaseDocument):
+    """Generic document with as few as possible assumptions about metadata."""
+
+    document_metadata: BaseMetadata = Field(
+        default_factory=dict, sa_column=Column(JSON)
+    )
+
+
 class CPRDocumentMetadata(SQLModel):
     """Metadata about a document in the CPR tool."""
 
@@ -500,9 +505,9 @@ class CPRDocument(BaseDocument):
 
     document_description: str
     document_cdn_object: Optional[str]
-    cpr_document_metadata: CPRDocumentMetadata = Field(
-        default_factory=dict, sa_column=Column(JSONB), alias="document_metadata"
-    )  # FIXME: can we still access CPRDocument.document_metadata via python?
+    document_metadata: CPRDocumentMetadata = Field(
+        default_factory=dict, sa_column=Column(JSON)
+    )
     document_slug: str
 
     def with_document_url(self, cdn_domain: str) -> "CPRDocumentWithURL":
@@ -517,7 +522,7 @@ class CPRDocument(BaseDocument):
         return CPRDocumentWithURL(**self.dict(), document_url=document_url)  # type: ignore
 
 
-class GSTDocumentMetadata(SQLModel):
+class GSTDocumentMetadata(BaseModel):
     """Metadata for a document in the Global Stocktake dataset."""
 
     source: str
@@ -548,9 +553,9 @@ class GSTDocumentMetadata(SQLModel):
 class GSTDocument(BaseDocument):
     """Data model for a document in the Global Stocktake dataset."""
 
-    gst_document_metadata: GSTDocumentMetadata = Field(
-        default_factory=dict, sa_column=Column(JSONB), alias="document_metadata"
-    )  # FIXME: can we still access GSTDocument.document_metadata via python?
+    document_metadata: GSTDocumentMetadata = Field(
+        default_factory=dict, sa_column=Column(JSONB)
+    )
 
 
 class CPRDocumentWithURL(CPRDocument):
@@ -624,7 +629,7 @@ class Dataset:
         """Return a dataframe of document metadata"""
         metadata = [
             doc.dict(exclude={"text_blocks", "document_metadata"})
-            | doc.document_metadata.dict()
+            | doc.document_metadata.dict() # FIXME: cannot access member "document_metadata" for type "BaseDocument*"
             | {"num_text_blocks": len(doc.text_blocks) if doc.text_blocks else 0}
             | {"num_pages": len(doc.page_metadata) if doc.page_metadata else 0}
             for doc in self.documents
