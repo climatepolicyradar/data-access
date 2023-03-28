@@ -2,7 +2,6 @@
 
 from typing import Sequence, Optional, List, Tuple, Any, Union, TypeVar, Literal, cast
 from pathlib import Path
-from enum import Enum
 import datetime
 import hashlib
 import logging
@@ -24,6 +23,7 @@ from cpr_data_access.parser_models import (
     ParserOutput,
     CONTENT_TYPE_HTML,
     CONTENT_TYPE_PDF,
+    BlockType,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -78,22 +78,6 @@ class Span(BaseModel):
         values["id"] = values["id"].upper().replace(" ", "_")
 
         return values
-
-
-class BlockType(str, Enum):
-    """
-    List of possible block types from the PubLayNet model.
-
-    https://layout-parser.readthedocs.io/en/latest/notes/modelzoo.html#model-label-map
-    """
-
-    TEXT = "Text"
-    TITLE = "Title"
-    LIST = "List"
-    TABLE = "Table"
-    FIGURE = "Figure"
-    INFERRED = "Inferred from gaps"
-    AMBIGUOUS = "Ambiguous"
 
 
 class TextBlock(BaseModel):

@@ -28,6 +28,7 @@ class BlockType(str, Enum):
     FIGURE = "Figure"
     INFERRED = "Inferred from gaps"
     AMBIGUOUS = "Ambiguous"  # TODO: remove this when OCRProcessor._infer_block_type is implemented
+    GOOGLE_BLOCK = "Google Text Block"
 
 
 class TextBlock(BaseModel):
