@@ -498,7 +498,7 @@ class GSTDocumentMetadata(BaseModel):
     type: Optional[str]
     version: Optional[str]
     author_type: Optional[str]
-    date: datetime.date
+    date: Optional[datetime.datetime] = None
     link: Optional[str]
     data_error_type: Optional[
         Literal[
@@ -510,7 +510,7 @@ class GSTDocumentMetadata(BaseModel):
             "metadata_error",
             "incorrect_document",
         ]
-    ]
+    ] = None
     party: Optional[str]
     translation: Optional[str]
     topics: Optional[Sequence[str]]
