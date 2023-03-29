@@ -261,6 +261,24 @@ def test_add_spans_empty_document(
         empty_document.add_spans(all_spans, raise_on_error=raise_on_error)
 
 
+@pytest.mark.parametrize("raise_on_error", [True, False])
+def test_dataset_add_spans(test_dataset, test_spans_valid, raise_on_error):
+    dataset_with_spans = test_dataset.add_spans(
+        test_spans_valid, raise_on_error=raise_on_error
+    )
+    added_spans = [
+        span
+        for document in dataset_with_spans.documents
+        if document.text_blocks is not None
+        for text_block in document.text_blocks
+        for span in text_block.spans
+    ]
+
+    assert len(added_spans) == len(test_spans_valid)
+    # Check that all spans are unique
+    assert len(set(added_spans)) == len(test_spans_valid)
+
+
 def test_span_validation(test_spans_valid):
     """Test that spans produce uppercase span IDs and types."""
     for span in test_spans_valid:

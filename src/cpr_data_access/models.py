@@ -1,5 +1,6 @@
 """Data models for data access."""
 
+import itertools
 from typing import Sequence, Optional, List, Tuple, Any, Union, TypeVar, Literal, cast
 from pathlib import Path
 import datetime
@@ -16,6 +17,7 @@ from pydantic import (
     PrivateAttr,
 )
 import pandas as pd
+from tqdm.auto import tqdm
 
 from datasets import Dataset as HFDataset
 import cpr_data_access.data_adaptors as adaptors
@@ -620,6 +622,20 @@ class Dataset:
         return self
 
     @property
+    def _document_id_idx_hash_map(self) -> dict[str, set[int]]:
+        """Return a map of document IDs to indices."""
+
+        hash_map: dict[str, set[int]] = dict()
+
+        for idx, document in enumerate(self.documents):
+            if document.document_id in hash_map:
+                hash_map[document.document_id].add(idx)
+            else:
+                hash_map[document.document_id] = {idx}
+
+        return hash_map
+
+    @property
     def metadata_df(self) -> pd.DataFrame:
         """Return a dataframe of document metadata"""
         metadata = [
@@ -654,6 +670,36 @@ class Dataset:
         """Load data from local copy of an s3 directory"""
 
         return self._load(adaptors.LocalDataAdaptor(), folder_path, limit)
+
+    def add_spans(
+        self, spans: Sequence[Span], raise_on_error: bool = False
+    ) -> "Dataset":
+        """
+        Add spans to documents in the dataset overlap with.
+
+        :param Sequence[Span] spans: sequence of span objects
+        :param bool raise_on_error: whether to raise if there is an error with matching spans to any documents. Defaults to False
+        :return Dataset: dataset with spans added
+        """
+
+        spans_sorted = sorted(spans, key=lambda x: x.document_id)
+
+        for document_id, document_spans in tqdm(
+            itertools.groupby(spans_sorted, key=lambda x: x.document_id), unit="docs"
+        ):
+            # find document index in dataset with matching document_id
+            idxs = self._document_id_idx_hash_map.get(document_id, set())
+
+            if len(idxs) == 0:
+                LOGGER.warning(f"Could not find document with id {document_id}")
+                continue
+
+            for idx in idxs:
+                self.documents[idx].add_spans(
+                    list(document_spans), raise_on_error=raise_on_error
+                )
+
+        return self
 
     @classmethod
     def save(cls, path: Path):
