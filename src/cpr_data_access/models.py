@@ -672,13 +672,17 @@ class Dataset:
         return self._load(adaptors.LocalDataAdaptor(), folder_path, limit)
 
     def add_spans(
-        self, spans: Sequence[Span], raise_on_error: bool = False
+        self,
+        spans: Sequence[Span],
+        raise_on_error: bool = False,
+        warn_on_error: bool = True,
     ) -> "Dataset":
         """
         Add spans to documents in the dataset overlap with.
 
         :param Sequence[Span] spans: sequence of span objects
         :param bool raise_on_error: whether to raise if there is an error with matching spans to any documents. Defaults to False
+        :param bool warn_on_error: whether to warn if there is an error with matching spans to any documents. Defaults to True
         :return Dataset: dataset with spans added
         """
 
@@ -691,7 +695,8 @@ class Dataset:
             idxs = self._document_id_idx_hash_map.get(document_id, set())
 
             if len(idxs) == 0:
-                LOGGER.warning(f"Could not find document with id {document_id}")
+                if warn_on_error:
+                    LOGGER.warning(f"Could not find document with id {document_id}")
                 continue
 
             for idx in idxs:
