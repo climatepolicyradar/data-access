@@ -137,10 +137,6 @@ class TextBlock(BaseModel):
         :return: text block with spans added
         """
 
-        LOGGER.warning(
-            "This method should not be used if adding spans to a document as it does not check that the document ID of the span matches document. Use `Document.add_spans` instead."
-        )
-
         block_text_hash = self.text_hash
 
         if block_text_hash == "":

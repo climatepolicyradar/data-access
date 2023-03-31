@@ -187,7 +187,6 @@ def test_text_block_add_invalid_spans(test_document, test_spans_invalid, caplog)
 
     # This will add the text block and warn that the incorrect document ID was ignored
     assert len(text_block_with_spans.spans) == 1
-    assert "WARNING" in caplog.text
 
     # This won't add the text block, as the text block hash is incorrect
     text_block_with_spans = test_document.text_blocks[1]._add_spans(
