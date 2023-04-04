@@ -27,6 +27,7 @@ from cpr_data_access.parser_models import (
     CONTENT_TYPE_PDF,
     BlockType,
 )
+from cpr_data_access.util.dependency import requires_version
 
 LOGGER = logging.getLogger(__name__)
 
@@ -167,6 +168,24 @@ class TextBlock(BaseModel):
         self._spans.extend(list(valid_spans_text_hash))
 
         return self
+
+    @requires_version("spacy>=3.0.0")
+    def display(self) -> str:
+        """
+        Use spacy to display any annotations on the text block.
+
+        :return str: HTML string of text block with annotations
+        """
+        from spacy import displacy
+
+        ents = [
+            {"start": span.start_idx, "end": span.end_idx, "label": span.type}
+            for span in self._spans
+        ]
+
+        block_object = [{"text": self.to_string(), "ents": ents, "title": None}]
+
+        return displacy.render(block_object, style="ent", manual=True)
 
 
 class PageMetadata(BaseModel):

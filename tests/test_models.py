@@ -322,3 +322,17 @@ def test_to_huggingface(test_dataset, test_dataset_gst):
     assert len(dataset_gst_hf) == sum(
         len(doc.text_blocks) for doc in test_dataset_gst.documents if doc.text_blocks
     )
+
+
+def test_display_text_block(test_document, test_spans_valid):
+    document_with_spans = test_document.add_spans(
+        test_spans_valid, raise_on_error=False
+    )
+
+    block = [block for block in document_with_spans.text_blocks if block.spans][0]
+
+    block_html = block.display()
+
+    assert isinstance(block_html, str)
+    assert len(block_html) > 0
+    assert block_html.startswith("<div")
