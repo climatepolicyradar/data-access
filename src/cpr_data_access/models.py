@@ -96,7 +96,9 @@ class TextBlock(BaseModel):
 
     def to_string(self) -> str:
         """Return text in a clean format"""
-        return " ".join([line.strip() for line in self.text])
+        return " ".join(
+            [line.replace("\n", " ").replace("  ", " ").strip() for line in self.text]
+        )
 
     @property
     def text_hash(self) -> str:
