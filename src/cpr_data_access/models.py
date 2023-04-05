@@ -124,7 +124,10 @@ class TextBlock(BaseModel):
         return self._spans
 
     def _add_spans(
-        self, spans: Sequence[Span], raise_on_error: bool = False
+        self,
+        spans: Sequence[Span],
+        raise_on_error: bool = False,
+        skip_check: bool = False,
     ) -> "TextBlock":
         """
         Add spans to the text block.
@@ -133,6 +136,7 @@ class TextBlock(BaseModel):
 
         :param spans: spans to add
         :param raise_on_error: if True, raise an error if any of the spans do not have `text_block_text_hash` equal to the text block's text hash. If False, print a warning message instead.
+        :param skip_check: if True, skip the check that the text block's text hash matches the text hash of the spans. This can be used if calling from a method that already performs this check.
         :raises ValueError: if any of the spans do not have `text_block_text_hash` equal to the text block's text hash
         :raises ValueError: if the text block has no text
         :return: text block with spans added
@@ -144,26 +148,28 @@ class TextBlock(BaseModel):
             raise ValueError("Text block has no text")
 
         spans_unique = set(spans)
-        valid_spans_text_hash = set(
-            [
-                span
-                for span in spans_unique
-                if span.text_block_text_hash == block_text_hash
-            ]
-        )
 
-        if len(valid_spans_text_hash) < len(spans_unique):
-            error_msg = (
-                "Some spans are invalid as their text does not match the text block's."
+        if skip_check:
+            valid_spans_text_hash = spans_unique
+        else:
+            valid_spans_text_hash = set(
+                [
+                    span
+                    for span in spans_unique
+                    if span.text_block_text_hash == block_text_hash
+                ]
             )
 
-            if raise_on_error:
-                raise ValueError(
-                    error_msg
-                    + " No spans have been added. Use ignore_errors=True to ignore this error and add valid spans."
-                )
-            else:
-                LOGGER.warning(error_msg + " Valid spans have been added.")
+            if len(valid_spans_text_hash) < len(spans_unique):
+                error_msg = "Some spans are invalid as their text does not match the text block's."
+
+                if raise_on_error:
+                    raise ValueError(
+                        error_msg
+                        + " No spans have been added. Use ignore_errors=True to ignore this error and add valid spans."
+                    )
+                else:
+                    LOGGER.warning(error_msg + " Valid spans have been added.")
 
         self._spans.extend(list(valid_spans_text_hash))
 
@@ -376,7 +382,7 @@ class BaseDocument(BaseModel):
             for span in spans_unique
             if span.text_block_text_hash not in self._text_block_idx_hash_map
         }:
-            error_msg = f"Span text hash does not match text block text hash for {len(invalid_spans_block_text)} spans provided."
+            error_msg = f"Span text hash is not in document for {len(invalid_spans_block_text)}/{len(spans_unique)} spans provided."
 
             if raise_on_error:
                 raise ValueError(error_msg)
@@ -389,7 +395,7 @@ class BaseDocument(BaseModel):
             for idx in self._text_block_idx_hash_map[span.text_block_text_hash]:
                 try:
                     self.text_blocks[idx]._add_spans(
-                        [span], raise_on_error=raise_on_error
+                        [span], raise_on_error=raise_on_error, skip_check=True
                     )
                 except Exception as e:
                     if raise_on_error:
