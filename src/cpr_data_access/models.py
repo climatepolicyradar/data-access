@@ -6,6 +6,7 @@ from pathlib import Path
 import datetime
 import hashlib
 import logging
+from functools import cached_property
 
 from pydantic import (
     BaseModel,
@@ -86,6 +87,9 @@ class Span(BaseModel):
 class TextBlock(BaseModel):
     """Text block data model. Generic across content types"""
 
+    class Config:  # noqa: D106
+        keep_untouched = (cached_property,)
+
     text: Sequence[str]
     text_block_id: str
     language: Optional[str]
@@ -99,7 +103,7 @@ class TextBlock(BaseModel):
         """Return text in a clean format"""
         return " ".join([line.strip() for line in self.text])
 
-    @property
+    @cached_property
     def text_hash(self) -> str:
         """
         Get hash of text block text. If the text block has no text (although this shouldn't be the case), return an empty string.
@@ -331,7 +335,7 @@ class BaseDocument(BaseModel):
 
         return " ".join([block.to_string().strip() for block in self.text_blocks])
 
-    @property
+    @cached_property
     def _text_block_idx_hash_map(self) -> dict[str, set[int]]:
         """Return a map of text block hash to text block indices."""
 
@@ -391,18 +395,21 @@ class BaseDocument(BaseModel):
 
             spans_unique = spans_unique - invalid_spans_block_text
 
-        for span in spans_unique:
-            for idx in self._text_block_idx_hash_map[span.text_block_text_hash]:
+        spans_unique = sorted(spans_unique, key=lambda span: span.text_block_text_hash)
+
+        for block_text_hash, spans in itertools.groupby(spans_unique, key=lambda span: span.text_block_text_hash):  # type: ignore
+            idxs = self._text_block_idx_hash_map[block_text_hash]
+            for idx in idxs:
                 try:
                     self.text_blocks[idx]._add_spans(
-                        [span], raise_on_error=raise_on_error, skip_check=True
+                        spans, raise_on_error=raise_on_error, skip_check=True
                     )
                 except Exception as e:
                     if raise_on_error:
                         raise e
                     else:
                         LOGGER.warning(
-                            f"Error adding span {span} to text block {self.text_blocks[idx]}: {e}"
+                            f"Error adding span {spans} to text block {self.text_blocks[idx]}: {e}"
                         )
 
         return self
@@ -604,6 +611,9 @@ class Dataset:
     :param documents: list of documents to add. Recommended to use `Dataset.load_from_remote` or `Dataset.load_from_local` instead. Defaults to []
     """
 
+    class Config:  # noqa: D106
+        keep_untouched = (cached_property,)
+
     def __init__(
         self,
         document_model: type[AnyDocument],
@@ -642,7 +652,7 @@ class Dataset:
 
         return self
 
-    @property
+    @cached_property
     def _document_id_idx_hash_map(self) -> dict[str, set[int]]:
         """Return a map of document IDs to indices."""
 
