@@ -28,7 +28,6 @@ from cpr_data_access.parser_models import (
     CONTENT_TYPE_PDF,
     BlockType,
 )
-from cpr_data_access.util.dependency import requires_version
 
 LOGGER = logging.getLogger(__name__)
 
@@ -179,14 +178,18 @@ class TextBlock(BaseModel):
 
         return self
 
-    @requires_version("spacy>=3.0.0")
     def display(self) -> str:
         """
         Use spacy to display any annotations on the text block.
 
         :return str: HTML string of text block with annotations
         """
-        from spacy import displacy
+        try:
+            from spacy import displacy
+        except ImportError as e:
+            raise ImportError(
+                "spacy is required to use the display method. Please install it with `pip install spacy`."
+            ) from e
 
         ents = [
             {"start": span.start_idx, "end": span.end_idx, "label": span.type}
