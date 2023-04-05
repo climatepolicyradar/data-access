@@ -187,7 +187,6 @@ def test_text_block_add_invalid_spans(test_document, test_spans_invalid, caplog)
 
     # This will add the text block and warn that the incorrect document ID was ignored
     assert len(text_block_with_spans.spans) == 1
-    assert "WARNING" in caplog.text
 
     # This won't add the text block, as the text block hash is incorrect
     text_block_with_spans = test_document.text_blocks[1]._add_spans(
@@ -261,6 +260,24 @@ def test_add_spans_empty_document(
         empty_document.add_spans(all_spans, raise_on_error=raise_on_error)
 
 
+@pytest.mark.parametrize("raise_on_error", [True, False])
+def test_dataset_add_spans(test_dataset, test_spans_valid, raise_on_error):
+    dataset_with_spans = test_dataset.add_spans(
+        test_spans_valid, raise_on_error=raise_on_error
+    )
+    added_spans = [
+        span
+        for document in dataset_with_spans.documents
+        if document.text_blocks is not None
+        for text_block in document.text_blocks
+        for span in text_block.spans
+    ]
+
+    assert len(added_spans) == len(test_spans_valid)
+    # Check that all spans are unique
+    assert len(set(added_spans)) == len(test_spans_valid)
+
+
 def test_span_validation(test_spans_valid):
     """Test that spans produce uppercase span IDs and types."""
     for span in test_spans_valid:
@@ -305,3 +322,17 @@ def test_to_huggingface(test_dataset, test_dataset_gst):
     assert len(dataset_gst_hf) == sum(
         len(doc.text_blocks) for doc in test_dataset_gst.documents if doc.text_blocks
     )
+
+
+def test_display_text_block(test_document, test_spans_valid):
+    document_with_spans = test_document.add_spans(
+        test_spans_valid, raise_on_error=False
+    )
+
+    block = [block for block in document_with_spans.text_blocks if block.spans][0]
+
+    block_html = block.display()
+
+    assert isinstance(block_html, str)
+    assert len(block_html) > 0
+    assert block_html.startswith("<div")

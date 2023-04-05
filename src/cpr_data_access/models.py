@@ -1,10 +1,12 @@
 """Data models for data access."""
 
+import itertools
 from typing import Sequence, Optional, List, Tuple, Any, Union, TypeVar, Literal, cast
 from pathlib import Path
 import datetime
 import hashlib
 import logging
+from functools import cached_property
 
 from pydantic import (
     BaseModel,
@@ -16,6 +18,7 @@ from pydantic import (
     PrivateAttr,
 )
 import pandas as pd
+from tqdm.auto import tqdm
 
 from datasets import Dataset as HFDataset
 import cpr_data_access.data_adaptors as adaptors
@@ -83,6 +86,9 @@ class Span(BaseModel):
 class TextBlock(BaseModel):
     """Text block data model. Generic across content types"""
 
+    class Config:  # noqa: D106
+        keep_untouched = (cached_property,)
+
     text: Sequence[str]
     text_block_id: str
     language: Optional[str]
@@ -96,7 +102,7 @@ class TextBlock(BaseModel):
         """Return text in a clean format"""
         return " ".join([line.strip() for line in self.text])
 
-    @property
+    @cached_property
     def text_hash(self) -> str:
         """
         Get hash of text block text. If the text block has no text (although this shouldn't be the case), return an empty string.
@@ -121,7 +127,10 @@ class TextBlock(BaseModel):
         return self._spans
 
     def _add_spans(
-        self, spans: Sequence[Span], raise_on_error: bool = False
+        self,
+        spans: Sequence[Span],
+        raise_on_error: bool = False,
+        skip_check: bool = False,
     ) -> "TextBlock":
         """
         Add spans to the text block.
@@ -130,14 +139,11 @@ class TextBlock(BaseModel):
 
         :param spans: spans to add
         :param raise_on_error: if True, raise an error if any of the spans do not have `text_block_text_hash` equal to the text block's text hash. If False, print a warning message instead.
+        :param skip_check: if True, skip the check that the text block's text hash matches the text hash of the spans. This can be used if calling from a method that already performs this check.
         :raises ValueError: if any of the spans do not have `text_block_text_hash` equal to the text block's text hash
         :raises ValueError: if the text block has no text
         :return: text block with spans added
         """
-
-        LOGGER.warning(
-            "This method should not be used if adding spans to a document as it does not check that the document ID of the span matches document. Use `Document.add_spans` instead."
-        )
 
         block_text_hash = self.text_hash
 
@@ -145,30 +151,54 @@ class TextBlock(BaseModel):
             raise ValueError("Text block has no text")
 
         spans_unique = set(spans)
-        valid_spans_text_hash = set(
-            [
-                span
-                for span in spans_unique
-                if span.text_block_text_hash == block_text_hash
-            ]
-        )
 
-        if len(valid_spans_text_hash) < len(spans_unique):
-            error_msg = (
-                "Some spans are invalid as their text does not match the text block's."
+        if skip_check:
+            valid_spans_text_hash = spans_unique
+        else:
+            valid_spans_text_hash = set(
+                [
+                    span
+                    for span in spans_unique
+                    if span.text_block_text_hash == block_text_hash
+                ]
             )
 
-            if raise_on_error:
-                raise ValueError(
-                    error_msg
-                    + " No spans have been added. Use ignore_errors=True to ignore this error and add valid spans."
-                )
-            else:
-                LOGGER.warning(error_msg + " Valid spans have been added.")
+            if len(valid_spans_text_hash) < len(spans_unique):
+                error_msg = "Some spans are invalid as their text does not match the text block's."
+
+                if raise_on_error:
+                    raise ValueError(
+                        error_msg
+                        + " No spans have been added. Use ignore_errors=True to ignore this error and add valid spans."
+                    )
+                else:
+                    LOGGER.warning(error_msg + " Valid spans have been added.")
 
         self._spans.extend(list(valid_spans_text_hash))
 
         return self
+
+    def display(self) -> str:
+        """
+        Use spacy to display any annotations on the text block.
+
+        :return str: HTML string of text block with annotations
+        """
+        try:
+            from spacy import displacy
+        except ImportError as e:
+            raise ImportError(
+                "spacy is required to use the display method. Please install it with `pip install spacy`."
+            ) from e
+
+        ents = [
+            {"start": span.start_idx, "end": span.end_idx, "label": span.type}
+            for span in self._spans
+        ]
+
+        block_object = [{"text": self.to_string(), "ents": ents, "title": None}]
+
+        return displacy.render(block_object, style="ent", manual=True)
 
 
 class PageMetadata(BaseModel):
@@ -308,7 +338,7 @@ class BaseDocument(BaseModel):
 
         return " ".join([block.to_string().strip() for block in self.text_blocks])
 
-    @property
+    @cached_property
     def _text_block_idx_hash_map(self) -> dict[str, set[int]]:
         """Return a map of text block hash to text block indices."""
 
@@ -359,7 +389,7 @@ class BaseDocument(BaseModel):
             for span in spans_unique
             if span.text_block_text_hash not in self._text_block_idx_hash_map
         }:
-            error_msg = f"Span text hash does not match text block text hash for {len(invalid_spans_block_text)} spans provided."
+            error_msg = f"Span text hash is not in document for {len(invalid_spans_block_text)}/{len(spans_unique)} spans provided."
 
             if raise_on_error:
                 raise ValueError(error_msg)
@@ -368,18 +398,21 @@ class BaseDocument(BaseModel):
 
             spans_unique = spans_unique - invalid_spans_block_text
 
-        for span in spans_unique:
-            for idx in self._text_block_idx_hash_map[span.text_block_text_hash]:
+        spans_unique = sorted(spans_unique, key=lambda span: span.text_block_text_hash)
+
+        for block_text_hash, spans in itertools.groupby(spans_unique, key=lambda span: span.text_block_text_hash):  # type: ignore
+            idxs = self._text_block_idx_hash_map[block_text_hash]
+            for idx in idxs:
                 try:
                     self.text_blocks[idx]._add_spans(
-                        [span], raise_on_error=raise_on_error
+                        spans, raise_on_error=raise_on_error, skip_check=True
                     )
                 except Exception as e:
                     if raise_on_error:
                         raise e
                     else:
                         LOGGER.warning(
-                            f"Error adding span {span} to text block {self.text_blocks[idx]}: {e}"
+                            f"Error adding span {spans} to text block {self.text_blocks[idx]}: {e}"
                         )
 
         return self
@@ -498,7 +531,7 @@ class GSTDocumentMetadata(BaseModel):
     type: Optional[str]
     version: Optional[str]
     author_type: Optional[str]
-    date: datetime.date
+    date: Optional[datetime.datetime] = None
     link: Optional[str]
     data_error_type: Optional[
         Literal[
@@ -510,7 +543,7 @@ class GSTDocumentMetadata(BaseModel):
             "metadata_error",
             "incorrect_document",
         ]
-    ]
+    ] = None
     party: Optional[str]
     translation: Optional[str]
     topics: Optional[Sequence[str]]
@@ -581,6 +614,9 @@ class Dataset:
     :param documents: list of documents to add. Recommended to use `Dataset.load_from_remote` or `Dataset.load_from_local` instead. Defaults to []
     """
 
+    class Config:  # noqa: D106
+        keep_untouched = (cached_property,)
+
     def __init__(
         self,
         document_model: type[AnyDocument],
@@ -619,6 +655,20 @@ class Dataset:
 
         return self
 
+    @cached_property
+    def _document_id_idx_hash_map(self) -> dict[str, set[int]]:
+        """Return a map of document IDs to indices."""
+
+        hash_map: dict[str, set[int]] = dict()
+
+        for idx, document in enumerate(self.documents):
+            if document.document_id in hash_map:
+                hash_map[document.document_id].add(idx)
+            else:
+                hash_map[document.document_id] = {idx}
+
+        return hash_map
+
     @property
     def metadata_df(self) -> pd.DataFrame:
         """Return a dataframe of document metadata"""
@@ -654,6 +704,41 @@ class Dataset:
         """Load data from local copy of an s3 directory"""
 
         return self._load(adaptors.LocalDataAdaptor(), folder_path, limit)
+
+    def add_spans(
+        self,
+        spans: Sequence[Span],
+        raise_on_error: bool = False,
+        warn_on_error: bool = True,
+    ) -> "Dataset":
+        """
+        Add spans to documents in the dataset overlap with.
+
+        :param Sequence[Span] spans: sequence of span objects
+        :param bool raise_on_error: whether to raise if there is an error with matching spans to any documents. Defaults to False
+        :param bool warn_on_error: whether to warn if there is an error with matching spans to any documents. Defaults to True
+        :return Dataset: dataset with spans added
+        """
+
+        spans_sorted = sorted(spans, key=lambda x: x.document_id)
+
+        for document_id, document_spans in tqdm(
+            itertools.groupby(spans_sorted, key=lambda x: x.document_id), unit="docs"
+        ):
+            # find document index in dataset with matching document_id
+            idxs = self._document_id_idx_hash_map.get(document_id, set())
+
+            if len(idxs) == 0:
+                if warn_on_error:
+                    LOGGER.warning(f"Could not find document with id {document_id}")
+                continue
+
+            for idx in idxs:
+                self.documents[idx].add_spans(
+                    list(document_spans), raise_on_error=raise_on_error
+                )
+
+        return self
 
     @classmethod
     def save(cls, path: Path):
