@@ -527,8 +527,8 @@ class GSTDocumentMetadata(BaseModel):
     source: str
     author: str
     validation_status: Literal["validated", "not validated", "error"]
-    theme: Optional[str]
-    type: Optional[str]
+    themes: Optional[Sequence[str]]
+    types: Optional[Sequence[str]]
     version: Optional[str]
     author_type: Optional[str]
     date: Optional[datetime.datetime] = None
