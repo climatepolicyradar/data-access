@@ -525,7 +525,7 @@ class GSTDocumentMetadata(BaseModel):
     """Metadata for a document in the Global Stocktake dataset."""
 
     source: str
-    author: str
+    author: Sequence[str]
     validation_status: Literal["validated", "not validated", "error"]
     themes: Optional[Sequence[str]]
     types: Optional[Sequence[str]]
