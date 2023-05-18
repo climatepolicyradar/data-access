@@ -178,7 +178,37 @@ class TextBlock(BaseModel):
 
         return self
 
-    def display(self) -> str:
+    @staticmethod
+    def character_idx_to_token_idx(doc, char_idx: int) -> int:
+        """
+        Convert a character index to a token index in a spacy doc.
+
+        The token index returned is the index of the token that contains the character index.
+
+        :param doc: spacy doc object
+        :param char_idx: character index
+        :return: token index
+        """
+
+        if char_idx < 0:
+            raise ValueError("Character index must be positive.")
+
+        if char_idx > len(doc.text):
+            raise ValueError(
+                "Character index must be less than the length of the document."
+            )
+
+        for token in doc:
+            if char_idx > token.idx:
+                continue
+            if char_idx == token.idx:
+                return token.i
+            if char_idx < token.idx:
+                return token.i - 1
+
+        return -1
+
+    def display(self, style: Literal["ent", "span"] = "span", nlp=None) -> str:
         """
         Use spacy to display any annotations on the text block.
 
@@ -191,14 +221,50 @@ class TextBlock(BaseModel):
                 "spacy is required to use the display method. Please install it with `pip install spacy`."
             ) from e
 
-        ents = [
-            {"start": span.start_idx, "end": span.end_idx, "label": span.type}
-            for span in self._spans
-        ]
+        if style == "ent":
+            ents = [
+                {"start": span.start_idx, "end": span.end_idx, "label": span.type}
+                for span in self._spans
+            ]
 
-        block_object = [{"text": self.to_string(), "ents": ents, "title": None}]
+            block_object = [{"text": self.to_string(), "ents": ents, "title": None}]
 
-        return displacy.render(block_object, style="ent", manual=True)
+            return displacy.render(block_object, style="ent", manual=True)
+
+        elif style == "span":
+            if nlp is None:
+                raise ValueError(
+                    "Spacy pipeline object is required to use the display method with style='span'."
+                )
+
+            # FIXME: we should store tokens in the text block object rather than creating them here
+            spacy_doc = nlp(self.to_string())
+            block_tokens = [tok.text for tok in spacy_doc]
+
+            ents = [
+                {
+                    "start_token": self.character_idx_to_token_idx(
+                        spacy_doc, span.start_idx
+                    ),
+                    "end_token": self.character_idx_to_token_idx(
+                        spacy_doc, span.end_idx
+                    )
+                    + 1,
+                    "label": span.type,
+                }
+                for span in self._spans
+            ]
+
+            block_object = [
+                {
+                    "text": self.to_string(),
+                    "spans": ents,
+                    "tokens": block_tokens,
+                    "title": None,
+                }
+            ]
+
+            return displacy.render(block_object, style="span", manual=True)
 
 
 class PageMetadata(BaseModel):
