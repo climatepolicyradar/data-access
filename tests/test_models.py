@@ -331,7 +331,8 @@ def test_display_text_block(test_document, test_spans_valid):
 
     block = [block for block in document_with_spans.text_blocks if block.spans][0]
 
-    block_html = block.display()
+    # TODO: test 'span' as well as 'ent' display style
+    block_html = block.display("ent")
 
     assert isinstance(block_html, str)
     assert len(block_html) > 0
