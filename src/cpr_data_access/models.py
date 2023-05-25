@@ -596,8 +596,7 @@ class GSTDocumentMetadata(BaseModel):
     themes: Optional[Sequence[str]]
     types: Optional[Sequence[str]]
     version: Optional[str]
-    author_type: Optional[str]
-    date: Optional[datetime.datetime] = None
+    date: datetime.date
     link: Optional[str]
     data_error_type: Optional[
         Literal[
@@ -610,8 +609,8 @@ class GSTDocumentMetadata(BaseModel):
             "incorrect_document",
         ]
     ] = None
-    party: Optional[str]
-    translation: Optional[str]
+    author_is_party: bool
+    document_variant: Optional[str]
     topics: Optional[Sequence[str]]
 
 
