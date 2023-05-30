@@ -206,7 +206,8 @@ class TextBlock(BaseModel):
             if char_idx < token.idx:
                 return token.i - 1
 
-        return -1
+        # Return last token index if character index is at the end of the document
+        return len(doc) - 1
 
     def display(self, style: Literal["ent", "span"] = "span", nlp=None) -> str:
         """
