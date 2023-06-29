@@ -837,7 +837,10 @@ class Dataset:
 
         return output_values
 
-    def _doc_to_text_block_dicts(self, document: AnyDocument) -> list[dict[str, Any]]:
+    def _doc_to_text_block_dicts(
+        self,
+        document: Union[BaseDocument, GSTDocument, CPRDocument, CPRDocumentWithURL],
+    ) -> list[dict[str, Any]]:
         """
         Create a list of dictionaries with document metadata and text block metadata for each text block in a document.
 
