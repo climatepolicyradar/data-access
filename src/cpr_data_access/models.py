@@ -841,7 +841,7 @@ class Dataset:
         """
         Create a list of dictionaries with document metadata and text block metadata for each text block in a document.
 
-        :return List[dict[str, Any]]: _description_
+        :return List[dict[str, Any]]: list of dictionaries with document metadata and text block metadata
         """
 
         if document.text_blocks is None:
