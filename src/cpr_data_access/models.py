@@ -621,6 +621,8 @@ class GSTDocumentMetadata(BaseModel):
     ] = None
     author_is_party: bool
     document_variant: Optional[str]
+    document_family_id: str
+    document_family_slug: str
 
 
 class GSTDocument(BaseDocument):
