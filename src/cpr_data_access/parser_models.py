@@ -202,13 +202,13 @@ class ParserOutput(BaseModel):
 
         :return: Sequence[TextBlock]
         """
-
         if self.document_content_type == CONTENT_TYPE_HTML:
-            return self.html_data.text_blocks  # type: ignore
+            html_data: HTMLData = self.html_data
+            return html_data.text_blocks
         elif self.document_content_type == CONTENT_TYPE_PDF:
-            return self.pdf_data.text_blocks  # type: ignore
-        else:
-            return []
+            pdf_data: PDFData = self.pdf_data
+            return pdf_data.text_blocks
+        return []
 
     def to_string(self) -> str:  # type: ignore
         """Return the text blocks in the parser output as a string"""
