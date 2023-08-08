@@ -857,6 +857,20 @@ files = [
 data = ["language-data (>=1.1,<2.0)"]
 
 [[package]]
+name = "langdetect"
+version = "1.0.9"
+description = "Language detection library ported from Google's language-detection."
+optional = false
+python-versions = "*"
+files = [
+    {file = "langdetect-1.0.9-py2-none-any.whl", hash = "sha256:7cbc0746252f19e76f77c0b1690aadf01963be835ef0cd4b56dddf2a8f1dfc2a"},
+    {file = "langdetect-1.0.9.tar.gz", hash = "sha256:cbc1fef89f8d062739774bd51eda3da3274006b3661d199c2655f6b3f6d605a0"},
+]
+
+[package.dependencies]
+six = "*"
+
+[[package]]
 name = "markupsafe"
 version = "2.1.1"
 description = "Safely add untrusted strings to HTML/XML markup."
@@ -1388,7 +1402,7 @@ name = "pycparser"
 version = "2.21"
 description = "C parser in Python"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+python-versions = "*"
 files = [
     {file = "pycparser-2.21-py2.py3-none-any.whl", hash = "sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9"},
     {file = "pycparser-2.21.tar.gz", hash = "sha256:e644fdec12f7872f86c58ff790da456218b10f863970249516d60a5eaca77206"},
@@ -2279,4 +2293,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "e63cced537c9d6892010b0276ad946b36f1426a007882becc171762c021e29f3"
+content-hash = "a3e7ee9ac2731325679a7501c6d23371e076d085d2a13fcc4a2f64d5574d9766"
