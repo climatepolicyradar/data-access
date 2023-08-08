@@ -34,13 +34,15 @@ class BlockType(str, Enum):
     TABLE = "Table"
     FIGURE = "Figure"
     INFERRED = "Inferred from gaps"
-    AMBIGUOUS = "Ambiguous"  # TODO: remove this when OCRProcessor._infer_block_type is implemented
+    # TODO: remove this when OCRProcessor._infer_block_type is implemented
+    AMBIGUOUS = "Ambiguous"
     GOOGLE_BLOCK = "Google Text Block"
     AZURE_PAGE_HEADER = "pageHeader"
     AZURE_PAGE_FOOTER = "pageFooter"
     AZURE_TITLE = "title"
     AZURE_SECTION_HEADING = "sectionHeading"
     AZURE_PAGE_NUMBER = "pageNumber"
+    AZURE_DOCUMENT_HEADER = "Document Header"
 
 
 class TextBlock(BaseModel):
