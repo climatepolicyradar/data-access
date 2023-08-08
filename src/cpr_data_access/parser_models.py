@@ -194,9 +194,11 @@ class ParserOutput(BaseModel):
         return values
 
     @property
-    def text_blocks(self) -> Sequence[TextBlock]:  # type: ignore
+    def text_blocks(self) -> Sequence[TextBlock]:
         """
-        Return the text blocks in the document. These could differ in format depending on the content type.
+        Return the text blocks in the document.
+
+        These could differ in format depending on the content type.
 
         :return: Sequence[TextBlock]
         """
@@ -205,6 +207,8 @@ class ParserOutput(BaseModel):
             return self.html_data.text_blocks  # type: ignore
         elif self.document_content_type == CONTENT_TYPE_PDF:
             return self.pdf_data.text_blocks  # type: ignore
+        else:
+            return []
 
     def to_string(self) -> str:  # type: ignore
         """Return the text blocks in the parser output as a string"""
