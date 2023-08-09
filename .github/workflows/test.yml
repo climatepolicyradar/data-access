@@ -28,8 +28,6 @@ jobs:
         run: |
           poetry run python -m pytest -vvv
 
-          steps:
-
       - name: Check code contains no FIXME's
         run: |
           git grep -r --no-color ${case_sensitive} --line-number -e "FIXME" :^.github
