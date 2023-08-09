@@ -303,7 +303,7 @@ class TextBlock(BaseModel):
                     "Spacy pipeline object is required to use the display method with style='span'."
                 )
 
-            # FIXME: we should store tokens in the text block object rather than creating them here
+            # TODO: we should store tokens in the text block object rather than creating them here
             spacy_doc = nlp(self.to_string())
             block_tokens = [tok.text for tok in spacy_doc]
 
