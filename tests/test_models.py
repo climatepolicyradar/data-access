@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 import pandas as pd
 
@@ -6,6 +8,9 @@ from datasets import Dataset as HuggingFaceDataset
 from cpr_data_access.models import (
     Dataset,
     BaseDocument,
+    GSTDocument,
+    CPRDocument,
+    CPRDocumentMetadata,
     Span,
 )
 
@@ -13,19 +18,30 @@ from cpr_data_access.models import (
 @pytest.fixture
 def test_dataset() -> Dataset:
     """Create dataset load_from_local and use as a fixture."""
-    # FIXME: re-enable once a dataset can be loaded with a CPR document
-    dataset = Dataset(document_model=BaseDocument).load_from_local(
-        "tests/test_data/valid"
+    dataset = (
+        Dataset(document_model=BaseDocument)
+        .load_from_local("tests/test_data/valid")
+        .add_metadata(
+            target_model=CPRDocument,
+            metadata_csv_path=Path("tests/test_data/CPR_metadata.csv"),
+        )
     )
 
+    assert len(dataset) == 3
     return dataset
 
 
 @pytest.fixture
 def test_dataset_gst() -> Dataset:
-    dataset = Dataset(document_model=BaseDocument).load_from_local(
-        "tests/test_data/valid_gst"
+    dataset = (
+        Dataset(document_model=BaseDocument)
+        .load_from_local("tests/test_data/valid_gst")
+        .add_metadata(
+            target_model=GSTDocument,
+            metadata_csv_path=Path("tests/test_data/GST_metadata.csv"),
+        )
     )
+    assert len(dataset) == 1
     return dataset
 
 
@@ -51,8 +67,8 @@ def test_dataset_metadata_df(test_dataset):
         assert col in metadata_df.columns
 
     # FIXME: re-enable once we have a fixture to load a CPR document
-    # for key in BaseMetadata.__fields__.keys() | {"publication_year"}:
-    #     assert key in metadata_df.columns
+    for key in CPRDocumentMetadata.__fields__.keys() | {"publication_year"}:
+        assert key in metadata_df.columns
 
 
 @pytest.fixture
