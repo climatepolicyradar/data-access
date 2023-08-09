@@ -699,7 +699,7 @@ class Dataset:
 
     def __init__(
         self,
-        document_model: type[AnyDocument],
+        document_model: type[AnyDocument] = BaseDocument,
         documents: Sequence[AnyDocument] = [],
         **kwargs,
     ):
