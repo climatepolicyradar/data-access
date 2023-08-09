@@ -37,12 +37,12 @@ class BlockType(str, Enum):
     # TODO: remove this when OCRProcessor._infer_block_type is implemented
     AMBIGUOUS = "Ambiguous"
     GOOGLE_BLOCK = "Google Text Block"
-    AZURE_PAGE_HEADER = "pageHeader"
-    AZURE_PAGE_FOOTER = "pageFooter"
-    AZURE_TITLE = "title"
-    AZURE_SECTION_HEADING = "sectionHeading"
-    AZURE_PAGE_NUMBER = "pageNumber"
-    AZURE_DOCUMENT_HEADER = "Document Header"
+    PAGE_HEADER = "pageHeader"
+    PAGE_FOOTER = "pageFooter"
+    TITLE_LOWER_CASE = "title"
+    SECTION_HEADING = "sectionHeading"
+    PAGE_NUMBER = "pageNumber"
+    DOCUMENT_HEADER = "Document Header"
 
 
 class TextBlock(BaseModel):
