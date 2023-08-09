@@ -48,9 +48,11 @@ def test_dataset_gst() -> Dataset:
 def test_document(test_dataset) -> BaseDocument:
     """Test PDF document."""
 
-    return [doc for doc in test_dataset if doc.document_id == "CCLW.executive.1003.0"][
-        0
-    ]
+    return [
+        doc
+        for doc in test_dataset.documents
+        if doc.document_id == "CCLW.executive.1003.0"
+    ][0]
 
 
 def test_dataset_metadata_df(test_dataset):
