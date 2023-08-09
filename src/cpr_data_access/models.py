@@ -562,12 +562,24 @@ class BaseDocument(BaseModel):
 class CPRDocumentMetadata(BaseModel):
     """Metadata about a document in the CPR tool."""
 
+    # NOTE: this is duplicated in the GST document metadata model intentionally,
+    # as the BaseMetadata model should be kept in sync with the parser output model.
     publication_ts: Optional[datetime.datetime]
     geography: str
+    geography_iso: str
+    slug: str
     category: str
     source: str
     type: str
     sectors: Sequence[str]
+    collection_id: Optional[str]
+    collection_name: Optional[str]
+    family_id: str
+    family_name: str
+    family_slug: str
+    role: Optional[str]
+    variant: Optional[str]
+    status: str
 
 
 class CPRDocument(BaseDocument):
@@ -602,27 +614,22 @@ class GSTDocumentMetadata(BaseModel):
 
     source: str
     author: Sequence[str]
+    geography_iso: str
     validation_status: Literal["validated", "not validated", "error"]
     themes: Optional[Sequence[str]]
     types: Optional[Sequence[str]]
     version: Optional[str]
     date: datetime.date
     link: Optional[str]
-    data_error_type: Optional[
-        Literal[
-            "source_incorrect",
-            "outdated",
-            "missing",
-            "duplicate",
-            "synthesis_error",
-            "metadata_error",
-            "incorrect_document",
-        ]
-    ] = None
     author_is_party: bool
-    document_variant: Optional[str]
-    document_family_id: str
-    document_family_slug: str
+    collection_id: Optional[str]
+    collection_name: Optional[str]
+    family_id: str
+    family_name: str
+    family_slug: str
+    role: Optional[str]
+    variant: Optional[str]
+    status: str
 
 
 class GSTDocument(BaseDocument):
