@@ -654,17 +654,6 @@ class CPRDocument(BaseDocument):
     document_cdn_object: Optional[str]
     document_metadata: CPRDocumentMetadata
 
-    def with_document_url(self, cdn_domain: str) -> "CPRDocumentWithURL":
-        """
-        Return a document with a URL set. This is the CDN URL if there is a CDN object, otherwise the source URL.
-
-        :param cdn_domain: domain of CPR CDN
-        """
-
-        document_url = self.document_source_url if self.document_cdn_object is None else f"https://{cdn_domain}/{self.document_cdn_object}"  # type: ignore
-
-        return CPRDocumentWithURL(**self.dict(), document_url=document_url)  # type: ignore
-
 
 class GSTDocumentMetadata(BaseModel):
     """Metadata for a document in the Global Stocktake dataset."""

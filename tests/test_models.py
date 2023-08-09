@@ -3,7 +3,6 @@ from pathlib import Path
 import pytest
 import pandas as pd
 
-from cpr_data_access.parser_models import ParserOutput
 from datasets import Dataset as HuggingFaceDataset
 from cpr_data_access.models import (
     Dataset,
@@ -46,11 +45,10 @@ def test_dataset_gst() -> Dataset:
 
 
 @pytest.fixture
-def test_document() -> BaseDocument:
+def test_document(test_dataset) -> BaseDocument:
     """Test PDF document."""
-    return BaseDocument.from_parser_output(
-        ParserOutput.parse_file("tests/test_data/valid/test_pdf.json")
-    )
+
+    return test_dataset.documents[0]
 
 
 def test_dataset_metadata_df(test_dataset):
@@ -66,7 +64,6 @@ def test_dataset_metadata_df(test_dataset):
     for col in ("num_text_blocks", "num_pages"):
         assert col in metadata_df.columns
 
-    # FIXME: re-enable once we have a fixture to load a CPR document
     for key in CPRDocumentMetadata.__fields__.keys() | {"publication_year"}:
         assert key in metadata_df.columns
 
@@ -154,17 +151,6 @@ def test_dataset_filter_by_language(test_dataset):
     assert len(dataset) == 2
     assert dataset.documents[0].languages == ["en"]
     assert dataset.documents[1].languages == ["en"]
-
-
-# FIXME: re-enable once we have a fixture to load a CPR document
-# def test_document_set_url(test_document):
-#     doc_with_url = test_document.with_document_url(
-#         cdn_domain="dev.cdn.climatepolicyradar.org"
-#     )
-#     assert (
-#         doc_with_url.document_url
-#         == "https://dev.cdn.climatepolicyradar.org/EUR/2013/EUR-2013-01-01-Overview+of+CAP+Reform+2014-2020_6237180d8c443d72c06c9167019ca177.pdf"
-#     )
 
 
 def test_dataset_get_all_text_blocks(test_dataset):
