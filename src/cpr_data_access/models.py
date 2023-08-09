@@ -87,6 +87,8 @@ def _load_and_validate_metadata_csv(
     }
 
     if target_model == CPRDocument:
+        metadata_df["Sectors"] = metadata_df["Sectors"].fillna("")
+
         cpr_expected_cols = expected_cols | cclw_expected_cols
         if missing_cols := cpr_expected_cols - set(metadata_df.columns):
             raise ValueError(f"Metadata CSV is missing columns {missing_cols}")
@@ -861,7 +863,8 @@ class Dataset:
                     category=new_metadata_dict.pop("Category"),
                     type=new_metadata_dict.pop("Document Type"),
                     sectors=[
-                        s.strip() for s in new_metadata_dict.pop("Sectors").split(";")
+                        s.strip()
+                        for s in new_metadata_dict.get("Sectors", "").split(";")
                     ],
                     status=new_metadata_dict.pop("CPR Document Status"),
                     collection_id=new_metadata_dict.pop("CPR Collection ID"),
