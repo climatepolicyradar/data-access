@@ -4,14 +4,9 @@ import logging
 import logging.config
 from datetime import date
 from enum import Enum
-from typing import Optional, Sequence, Tuple, List
+from typing import Optional, Sequence, Tuple, List, Union
 from collections import Counter
-from pydantic import (
-    BaseModel,
-    AnyHttpUrl,
-    Field,
-    root_validator
-)
+from pydantic import BaseModel, AnyHttpUrl, Field, root_validator
 from langdetect import DetectorFactory
 from langdetect import detect
 
@@ -203,11 +198,11 @@ class ParserOutput(BaseModel):
         :return: Sequence[TextBlock]
         """
         if self.document_content_type == CONTENT_TYPE_HTML:
-            html_data: HTMLData = self.html_data
-            return html_data.text_blocks
+            html_data: Union[HTMLData, None] = self.html_data
+            return html_data.text_blocks if html_data else []
         elif self.document_content_type == CONTENT_TYPE_PDF:
-            pdf_data: PDFData = self.pdf_data
-            return pdf_data.text_blocks
+            pdf_data: Union[PDFData, None] = self.pdf_data
+            return pdf_data.text_blocks if pdf_data else []
         return []
 
     def to_string(self) -> str:  # type: ignore
