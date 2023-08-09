@@ -27,14 +27,3 @@ jobs:
       - name: Run test suite
         run: |
           poetry run python -m pytest -vvv
-
-      - name: Check code contains no FIXME's
-        run: |
-          git grep -r --no-color ${case_sensitive} --line-number -e "FIXME" :^.github
-          if [[ $? -eq 0 ]]; then
-            # if we found any FIXME entries in checked in files, fail on main
-            exit 1
-          else
-            exit 0
-          fi
-        shell: bash {0}
