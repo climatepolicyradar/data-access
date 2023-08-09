@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Optional, Sequence, Tuple, List, Union
 from collections import Counter
 from pydantic import BaseModel, AnyHttpUrl, Field, root_validator
-from langdetect import DetectorFactory
+from langdetect import DetectorFactory, LangDetectException
 from langdetect import detect
 
 logger = logging.getLogger(__name__)
@@ -231,8 +231,15 @@ class ParserOutput(BaseModel):
         DetectorFactory.seed = 0
 
         if len(self.text_blocks) > 0:
-            detected_language = detect(self.to_string())
-            self.languages = [detected_language]
+            try:
+                detected_language = detect(self.to_string())
+            except LangDetectException:
+                logger.warning(
+                    "Language detection failed for document with id %s",
+                    self.document_id,
+                )
+                detected_language = None
+            self.languages = [detected_language] if detected_language else []
             for text_block in self.text_blocks:
                 text_block.language = detected_language
 
