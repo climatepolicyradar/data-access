@@ -2,11 +2,8 @@ name: Tag Package
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    tags:
+      - v*
 
 jobs:
   tag-pull-requests-and-merges-to-main:
