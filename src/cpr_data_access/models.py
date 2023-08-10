@@ -823,13 +823,17 @@ class Dataset:
         return self
 
     def add_metadata(
-        self, target_model: type[AnyDocument], metadata_csv_path: Path
+        self,
+        target_model: type[AnyDocument],
+        metadata_csv_path: Path,
+        force_all_documents_have_metadata: bool = True,
     ) -> "Dataset":
         """
         Convert all documents in the dataset to the target model, by adding metadata from the metadata CSV.
 
         :param target_model: model to convert documents in dataset to
         :param metadata_csv_path: path to metadata CSV
+        :param force_all_documents_have_metadata: whether to raise an error if any documents in the dataset do not have metadata in the CSV. **Warning: if set to false, the output dataset may have fewer documents than before running this function.** Defaults to True
         :return self:
         """
 
@@ -843,9 +847,12 @@ class Dataset:
 
         for document in self.documents:
             if document.document_id not in metadata_df["CPR Document ID"].tolist():
-                raise Exception(
-                    f"No document exists in the scraper data with ID equal to the document's: {document.document_id}"
-                )
+                if force_all_documents_have_metadata:
+                    raise Exception(
+                        f"No document exists in the scraper data with ID equal to the document's: {document.document_id}"
+                    )
+                else:
+                    continue
 
             doc_dict = document.dict(
                 exclude={"document_metadata", "_text_block_idx_hash_map"}
