@@ -43,6 +43,64 @@ LOGGER = logging.getLogger(__name__)
 AnyDocument = TypeVar("AnyDocument", bound="BaseDocument")
 
 
+def _load_and_validate_metadata_csv(
+    metadata_csv_path: Path, target_model: type[AnyDocument]
+) -> pd.DataFrame:
+    """Load a metadata CSV, raising a ValueError if it does not exist or doesn't have the expected columns."""
+    if not metadata_csv_path.exists():
+        raise ValueError(f"metadata_csv_path {metadata_csv_path} does not exist")
+
+    if not metadata_csv_path.is_file() or not metadata_csv_path.suffix == ".csv":
+        raise ValueError(f"metadata_csv_path {metadata_csv_path} must be a csv file")
+
+    metadata_df = pd.read_csv(metadata_csv_path)
+
+    expected_cols = {
+        "Geography",
+        "Geography ISO",
+        "CPR Document Slug",
+        "Category",
+        "CPR Collection ID",
+        "CPR Family ID",
+        "CPR Family Slug",
+        "CPR Document Status",
+    }
+
+    cclw_expected_cols = {
+        "Sectors",
+        "Collection name",
+        "Document Type",
+        "Family name",
+        "Document role",
+        "Document variant",
+    }
+
+    gst_expected_cols = {
+        "Author",
+        "Author Type",
+        "Date",
+        "Documents",  # URL
+        "Submission Type",  # Document Type
+        "Family Name",
+        "Document Role",
+        "Document Variant",
+    }
+
+    if target_model == CPRDocument:
+        metadata_df["Sectors"] = metadata_df["Sectors"].fillna("")
+
+        cpr_expected_cols = expected_cols | cclw_expected_cols
+        if missing_cols := cpr_expected_cols - set(metadata_df.columns):
+            raise ValueError(f"Metadata CSV is missing columns {missing_cols}")
+
+    if target_model == GSTDocument:
+        gst_expected_cols = expected_cols | gst_expected_cols
+        if missing_cols := gst_expected_cols - set(metadata_df.columns):
+            raise ValueError(f"Metadata CSV is missing columns {missing_cols}")
+
+    return metadata_df
+
+
 class Span(BaseModel):
     """
     Annotation with a type and ID made to a span of text in a document.
@@ -247,7 +305,7 @@ class TextBlock(BaseModel):
                     "Spacy pipeline object is required to use the display method with style='span'."
                 )
 
-            # FIXME: we should store tokens in the text block object rather than creating them here
+            # TODO: we should store tokens in the text block object rather than creating them here
             spacy_doc = nlp(self.to_string())
             block_tokens = [tok.text for tok in spacy_doc]
 
@@ -293,6 +351,7 @@ class BaseMetadata(BaseModel):
     """Metadata that we expect to appear in every document. Should be kept minimal."""
 
     geography: Optional[str]
+    publication_ts: Optional[datetime.datetime]
 
 
 class BaseDocument(BaseModel):
@@ -562,12 +621,24 @@ class BaseDocument(BaseModel):
 class CPRDocumentMetadata(BaseModel):
     """Metadata about a document in the CPR tool."""
 
-    publication_ts: Optional[datetime.datetime]
+    # NOTE: this is duplicated in the GST document metadata model intentionally,
+    # as the BaseMetadata model should be kept in sync with the parser output model.
     geography: str
+    geography_iso: str
+    slug: str
     category: str
     source: str
     type: str
     sectors: Sequence[str]
+    collection_id: Optional[str]
+    collection_name: Optional[str]
+    family_id: str
+    family_name: str
+    family_slug: str
+    role: Optional[str]
+    variant: Optional[str]
+    status: str
+    publication_ts: Optional[datetime.datetime]
 
 
 class CPRDocument(BaseDocument):
@@ -581,20 +652,9 @@ class CPRDocument(BaseDocument):
     """
 
     document_description: str
+    document_slug: str
     document_cdn_object: Optional[str]
     document_metadata: CPRDocumentMetadata
-    document_slug: str
-
-    def with_document_url(self, cdn_domain: str) -> "CPRDocumentWithURL":
-        """
-        Return a document with a URL set. This is the CDN URL if there is a CDN object, otherwise the source URL.
-
-        :param cdn_domain: domain of CPR CDN
-        """
-
-        document_url = self.document_source_url if self.document_cdn_object is None else f"https://{cdn_domain}/{self.document_cdn_object}"  # type: ignore
-
-        return CPRDocumentWithURL(**self.dict(), document_url=document_url)  # type: ignore
 
 
 class GSTDocumentMetadata(BaseModel):
@@ -602,27 +662,18 @@ class GSTDocumentMetadata(BaseModel):
 
     source: str
     author: Sequence[str]
-    validation_status: Literal["validated", "not validated", "error"]
-    themes: Optional[Sequence[str]]
+    geography_iso: str
     types: Optional[Sequence[str]]
-    version: Optional[str]
     date: datetime.date
     link: Optional[str]
-    data_error_type: Optional[
-        Literal[
-            "source_incorrect",
-            "outdated",
-            "missing",
-            "duplicate",
-            "synthesis_error",
-            "metadata_error",
-            "incorrect_document",
-        ]
-    ] = None
     author_is_party: bool
-    document_variant: Optional[str]
-    document_family_id: str
-    document_family_slug: str
+    collection_id: Optional[str]
+    family_id: str
+    family_name: str
+    family_slug: str
+    role: Optional[str]
+    variant: Optional[str]
+    status: str
 
 
 class GSTDocument(BaseDocument):
@@ -650,7 +701,7 @@ class Dataset:
 
     def __init__(
         self,
-        document_model: type[AnyDocument],
+        document_model: type[AnyDocument] = BaseDocument,
         documents: Sequence[AnyDocument] = [],
         **kwargs,
     ):
@@ -768,6 +819,118 @@ class Dataset:
                 self.documents[idx].add_spans(
                     list(document_spans), raise_on_error=raise_on_error
                 )
+
+        return self
+
+    def add_metadata(
+        self,
+        target_model: type[AnyDocument],
+        metadata_csv_path: Path,
+        force_all_documents_have_metadata: bool = True,
+    ) -> "Dataset":
+        """
+        Convert all documents in the dataset to the target model, by adding metadata from the metadata CSV.
+
+        :param target_model: model to convert documents in dataset to
+        :param metadata_csv_path: path to metadata CSV
+        :param force_all_documents_have_metadata: whether to raise an error if any documents in the dataset do not have metadata in the CSV. **Warning: if set to false, the output dataset may have fewer documents than before running this function.** Defaults to True
+        :return self:
+        """
+
+        if target_model not in {CPRDocument, GSTDocument}:
+            raise ValueError("target_model must be one of {CPRDocument, GSTDocument}")
+
+        # Raises ValueError if metadata CSV doesn't contain the required columns
+        metadata_df = _load_and_validate_metadata_csv(metadata_csv_path, target_model)
+
+        new_documents = []
+
+        for document in self.documents:
+            if document.document_id not in metadata_df["CPR Document ID"].tolist():
+                if force_all_documents_have_metadata:
+                    raise Exception(
+                        f"No document exists in the scraper data with ID equal to the document's: {document.document_id}"
+                    )
+                else:
+                    continue
+
+            doc_dict = document.dict(
+                exclude={"document_metadata", "_text_block_idx_hash_map"}
+            )
+            new_metadata_dict = metadata_df.loc[
+                metadata_df["CPR Document ID"] == document.document_id
+            ].to_dict(orient="records")[0]
+
+            if target_model == CPRDocument:
+                doc_metadata = CPRDocumentMetadata(
+                    source="CPR",
+                    geography=new_metadata_dict.pop("Geography"),
+                    geography_iso=new_metadata_dict.pop("Geography ISO"),
+                    slug=new_metadata_dict["CPR Document Slug"],
+                    category=new_metadata_dict.pop("Category"),
+                    type=new_metadata_dict.pop("Document Type"),
+                    sectors=[
+                        s.strip()
+                        for s in new_metadata_dict.get("Sectors", "").split(";")
+                    ],
+                    status=new_metadata_dict.pop("CPR Document Status"),
+                    collection_id=new_metadata_dict.pop("CPR Collection ID"),
+                    collection_name=new_metadata_dict.pop("Collection name"),
+                    family_id=new_metadata_dict.pop("CPR Family ID"),
+                    family_name=new_metadata_dict.pop("Family name"),
+                    family_slug=new_metadata_dict.pop("CPR Family Slug"),
+                    role=new_metadata_dict.pop("Document role"),
+                    variant=new_metadata_dict.pop("Document variant"),
+                    # NOTE: we incorrectly use the "publication_ts" value from the parser output rather than the correct
+                    # document date (calculated from events in product). When we upgrade to Vespa we should use the correct
+                    # date.
+                    publication_ts=document.document_metadata.publication_ts,
+                )
+
+                metadata_at_cpr_document_root = {
+                    "document_description": new_metadata_dict.pop("Family summary"),
+                    "document_slug": new_metadata_dict["CPR Document Slug"],
+                }
+
+                new_documents.append(
+                    CPRDocument(
+                        **(doc_dict | metadata_at_cpr_document_root),
+                        document_metadata=doc_metadata,
+                    )
+                )
+
+            elif target_model == GSTDocument:
+                doc_metadata = GSTDocumentMetadata(
+                    source="GST-related documents",
+                    geography_iso=new_metadata_dict.pop("Geography ISO"),
+                    types=[
+                        s.strip()
+                        for s in new_metadata_dict.pop("Submission Type").split(",")
+                    ],
+                    date=new_metadata_dict.pop("Date"),
+                    link=new_metadata_dict.pop("Documents"),
+                    author_is_party=new_metadata_dict.pop("Author Type") == "Party",
+                    collection_id=new_metadata_dict.pop("CPR Collection ID"),
+                    family_id=new_metadata_dict.pop("CPR Family ID"),
+                    family_name=new_metadata_dict.pop("Family Name"),
+                    family_slug=new_metadata_dict.pop("CPR Family Slug"),
+                    role=new_metadata_dict.pop("Document Role"),
+                    variant=new_metadata_dict.pop("Document Variant"),
+                    status=new_metadata_dict.pop("CPR Document Status"),
+                    author=[
+                        s.strip() for s in new_metadata_dict.pop("Author").split(",")
+                    ],
+                )
+
+                # TODO: changing the document title manually should only need to be done because we're using old parser outputs.
+                # Eventually the clean title should come from the new parser outputs.
+                doc_dict["document_name"] = new_metadata_dict["Document Title"]
+
+                new_documents.append(
+                    GSTDocument(**doc_dict, document_metadata=doc_metadata)
+                )
+
+        self.documents = new_documents
 
         return self
 
