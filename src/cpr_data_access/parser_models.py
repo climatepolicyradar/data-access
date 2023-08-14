@@ -171,7 +171,7 @@ class ParserOutput(BaseModel):
             values["document_content_type"] == CONTENT_TYPE_HTML
             and values["html_data"] is None
         ):
-            raise ValueError("html_metadata must be set for HTML documents")
+            raise ValueError("html_data must be set for HTML documents")
 
         if (
             values["document_content_type"] == CONTENT_TYPE_PDF
@@ -183,7 +183,7 @@ class ParserOutput(BaseModel):
             values["html_data"] is not None or values["pdf_data"] is not None
         ):
             raise ValueError(
-                "html_metadata and pdf_metadata must be null for documents with no content type."
+                "html_data and pdf_data must be null for documents with no content type."
             )
 
         return values
