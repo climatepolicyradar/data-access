@@ -72,9 +72,13 @@ def test_parser_output_object(parser_output_json):
         "html_data and pdf_data must be null for documents with no content type."
     ) in str(context.exception)
 
-
     # Test the text blocks property
-
-
+    assert ParserOutput.parse_obj(parser_output_json).text_blocks != []
+    parser_output_no_data = parser_output_json.copy()
+    parser_output_no_data["pdf_data"] = None
+    parser_output_no_data["document_content_type"] = None
+    assert ParserOutput.parse_obj(parser_output_no_data).text_blocks == []
 
     # Test the to string method
+    assert ParserOutput.parse_obj(parser_output_json).to_string() is not ""
+    assert ParserOutput.parse_obj(parser_output_no_data).to_string() is ""
