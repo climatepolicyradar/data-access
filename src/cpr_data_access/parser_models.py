@@ -166,12 +166,20 @@ class ParserOutput(BaseModel):
 
     @root_validator
     def check_html_pdf_metadata(cls, values):
-        """Check that html_data is set if content_type is HTML, or pdf_data is set if content_type is PDF."""
+        """
+        Validate the relationship between content-type and the data that is set.
+
+        Check that html_data is set if content_type is HTML, or pdf_data is set if
+        content_type is PDF.
+
+        Check that if the content-type is not HTML or PDF, then html_data and pdf_data
+        are both null.
+        """
         if (
             values["document_content_type"] == CONTENT_TYPE_HTML
             and values["html_data"] is None
         ):
-            raise ValueError("html_metadata must be set for HTML documents")
+            raise ValueError("html_data must be set for HTML documents")
 
         if (
             values["document_content_type"] == CONTENT_TYPE_PDF
@@ -179,11 +187,12 @@ class ParserOutput(BaseModel):
         ):
             raise ValueError("pdf_data must be set for PDF documents")
 
-        if values["document_content_type"] is None and (
-            values["html_data"] is not None or values["pdf_data"] is not None
-        ):
+        if values["document_content_type"] not in {
+            CONTENT_TYPE_HTML,
+            CONTENT_TYPE_PDF,
+        } and (values["html_data"] is not None or values["pdf_data"] is not None):
             raise ValueError(
-                "html_metadata and pdf_metadata must be null for documents with no content type."
+                "html_data and pdf_data must be null for documents with no content type."
             )
 
         return values
