@@ -5,7 +5,7 @@ import pydantic
 from cpr_data_access.parser_models import (
     ParserOutput,
     CONTENT_TYPE_PDF,
-    CONTENT_TYPE_HTML
+    CONTENT_TYPE_HTML,
 )
 
 
@@ -80,5 +80,5 @@ def test_parser_output_object(parser_output_json):
     assert ParserOutput.parse_obj(parser_output_no_data).text_blocks == []
 
     # Test the to string method
-    assert ParserOutput.parse_obj(parser_output_json).to_string() is not ""
-    assert ParserOutput.parse_obj(parser_output_no_data).to_string() is ""
+    assert ParserOutput.parse_obj(parser_output_json).to_string() != ""
+    assert ParserOutput.parse_obj(parser_output_no_data).to_string() == ""
