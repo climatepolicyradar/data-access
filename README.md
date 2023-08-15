@@ -23,7 +23,7 @@ To manage metadata, documents need to be loaded into a `Dataset` object.
 from cpr_data_access.models import Dataset, CPRDocument, GSTDocument
 
 dataset = Dataset().load_from_local("path/to/data", limit=1000)
-all([isinstance(document, BaseDocument) for document in dataset])
+print(all([isinstance(document, BaseDocument) for document in dataset]))
 > True
 
 dataset_with_metadata = dataset.add_metadata(
@@ -31,7 +31,7 @@ dataset_with_metadata = dataset.add_metadata(
     metadata_csv="path/to/metadata.csv",
 )
 
-all([isinstance(document, CPRDocument) for document in dataset_with_metadata])
+print(all([isinstance(document, CPRDocument) for document in dataset_with_metadata]))
 > True
 ```
 
