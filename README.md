@@ -23,16 +23,14 @@ To manage metadata, documents need to be loaded into a `Dataset` object.
 from cpr_data_access.models import Dataset, CPRDocument, GSTDocument
 
 dataset = Dataset().load_from_local("path/to/data", limit=1000)
-print(all([isinstance(document, BaseDocument) for document in dataset]))
-> True
+assert all([isinstance(document, BaseDocument) for document in dataset])
 
 dataset_with_metadata = dataset.add_metadata(
     target_model=CPRDocument,
     metadata_csv="path/to/metadata.csv",
 )
 
-print(all([isinstance(document, CPRDocument) for document in dataset_with_metadata]))
-> True
+assert all([isinstance(document, CPRDocument) for document in dataset_with_metadata])
 ```
 
 Datasets have a number of methods for filtering and accessing documents.
