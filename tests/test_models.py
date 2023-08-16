@@ -1,13 +1,16 @@
+from pathlib import Path
+
 import pytest
 import pandas as pd
+from typing import Iterable
 
-from cpr_data_access.parser_models import ParserOutput
 from datasets import Dataset as HuggingFaceDataset
 from cpr_data_access.models import (
     Dataset,
+    BaseDocument,
+    GSTDocument,
     CPRDocument,
     CPRDocumentMetadata,
-    BaseDocument,
     Span,
 )
 
@@ -15,27 +18,42 @@ from cpr_data_access.models import (
 @pytest.fixture
 def test_dataset() -> Dataset:
     """Create dataset load_from_local and use as a fixture."""
-    dataset = Dataset(document_model=CPRDocument).load_from_local(
-        "tests/test_data/valid"
+    dataset = (
+        Dataset(document_model=BaseDocument)
+        .load_from_local("tests/test_data/valid")
+        .add_metadata(
+            target_model=CPRDocument,
+            metadata_csv_path=Path("tests/test_data/CPR_metadata.csv"),
+        )
     )
 
+    assert len(dataset) == 3
     return dataset
 
 
 @pytest.fixture
 def test_dataset_gst() -> Dataset:
-    dataset = Dataset(document_model=BaseDocument).load_from_local(
-        "tests/test_data/valid_gst"
+    dataset = (
+        Dataset(document_model=BaseDocument)
+        .load_from_local("tests/test_data/valid_gst")
+        .add_metadata(
+            target_model=GSTDocument,
+            metadata_csv_path=Path("tests/test_data/GST_metadata.csv"),
+        )
     )
+    assert len(dataset) == 1
     return dataset
 
 
 @pytest.fixture
-def test_document() -> CPRDocument:
+def test_document(test_dataset) -> BaseDocument:
     """Test PDF document."""
-    return CPRDocument.from_parser_output(
-        ParserOutput.parse_file("tests/test_data/valid/test_pdf.json")
-    )
+
+    return [
+        doc
+        for doc in test_dataset.documents
+        if doc.document_id == "CCLW.executive.1003.0"
+    ][0]
 
 
 def test_dataset_metadata_df(test_dataset):
@@ -138,16 +156,6 @@ def test_dataset_filter_by_language(test_dataset):
     assert len(dataset) == 2
     assert dataset.documents[0].languages == ["en"]
     assert dataset.documents[1].languages == ["en"]
-
-
-def test_document_set_url(test_document):
-    doc_with_url = test_document.with_document_url(
-        cdn_domain="dev.cdn.climatepolicyradar.org"
-    )
-    assert (
-        doc_with_url.document_url
-        == "https://dev.cdn.climatepolicyradar.org/EUR/2013/EUR-2013-01-01-Overview+of+CAP+Reform+2014-2020_6237180d8c443d72c06c9167019ca177.pdf"
-    )
 
 
 def test_dataset_get_all_text_blocks(test_dataset):
@@ -322,6 +330,18 @@ def test_to_huggingface(test_dataset, test_dataset_gst):
     assert len(dataset_gst_hf) == sum(
         len(doc.text_blocks) for doc in test_dataset_gst.documents if doc.text_blocks
     )
+
+
+def test_dataset_indexable(test_dataset):
+    """Tests that the dataset can be indexed to get documents"""
+    assert isinstance(test_dataset[0], BaseDocument)
+
+
+def test_dataset_iterable(test_dataset):
+    """Tests that the dataset is an iterable"""
+    assert isinstance(test_dataset, Iterable)
+    for doc in test_dataset:
+        assert isinstance(doc, BaseDocument)
 
 
 def test_display_text_block(test_document, test_spans_valid):

@@ -7,44 +7,40 @@ Internal library for persistent access to text data.
 
 ## Usage
 
-### Document models
-
-Two document models are available at the moment:
-
-* `CPRDocument` - a document from the [Climate Policy Radar tool](https://app.climatepolicyradar.org)
-* `GSTDocument` - a document from the [Global Stocktake project](https://github.com/climatepolicyradar/global-stocktake)
-
-Individual documents can be loaded from an S3 bucket or local directory.
+The base document model of this library is `BaseDocument`, which contains only the metadata fields that are used in the parser. 
 
 ``` py
-from cpr_data_access.models import CPRDocument, GSTDocument
+# document_id is also the filename stem
 
-# Load CPR document from S3
-document = CPRDocument.load_from_remote(dataset_key="s3://cpr-data", document_id="1234")
+document = BaseDocument.load_from_local(folder_path="path/to/data/", document_id="document_1234")
 
-# Load GST document from local
-document = GSTDocument.load_from_local(folder_path="~/data", document_id="1234")
+document = BaseDocument.load_from_remote(dataset_key"s3://cpr-data", document_id="document_1234")
 ```
 
-### Datasets
-
-Once provided with a document model, JSON-serialised documents can be loaded from an s3 bucket or a local directory using the `Dataset` class. These can then be used to view the documents or filter them.
+To manage metadata, documents need to be loaded into a `Dataset` object.
 
 ``` py
 from cpr_data_access.models import Dataset, CPRDocument, GSTDocument
 
-# Load from remote, or 
-dataset = Dataset(document_model=CPRDocument).load_from_remote(dataset_key="s3://cpr-data", limit=1000)
+dataset = Dataset().load_from_local("path/to/data", limit=1000)
+assert all([isinstance(document, BaseDocument) for document in dataset])
 
-# load from local
-dataset = Dataset(document_model=GSTDocument).load_from_local(folder_path="~/data")
+dataset_with_metadata = dataset.add_metadata(
+    target_model=CPRDocument,
+    metadata_csv="path/to/metadata.csv",
+)
 
-# Using the dataset
+assert all([isinstance(document, CPRDocument) for document in dataset_with_metadata])
+```
+
+Datasets have a number of methods for filtering and accessing documents.
+
+``` py
 len(dataset)
 >>> 1000
 
 dataset[0]
->>> Document(...)
+>>> CPRDocument(...)
 
 # Filtering
 dataset.filter("document_id", "1234")
