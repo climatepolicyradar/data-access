@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 import pandas as pd
+from typing import Iterable
 
 from datasets import Dataset as HuggingFaceDataset
 from cpr_data_access.models import (
@@ -329,6 +330,18 @@ def test_to_huggingface(test_dataset, test_dataset_gst):
     assert len(dataset_gst_hf) == sum(
         len(doc.text_blocks) for doc in test_dataset_gst.documents if doc.text_blocks
     )
+
+
+def test_dataset_indexable(test_dataset):
+    """Tests that the dataset can be indexed to get documents"""
+    assert isinstance(test_dataset[0], BaseDocument)
+
+
+def test_dataset_iterable(test_dataset):
+    """Tests that the dataset is an iterable"""
+    assert isinstance(test_dataset, Iterable)
+    for doc in test_dataset:
+        assert isinstance(doc, BaseDocument)
 
 
 def test_display_text_block(test_document, test_spans_valid):

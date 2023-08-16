@@ -943,6 +943,14 @@ class Dataset:
         """Number of documents in the dataset"""
         return len(self.documents)
 
+    def __getitem__(self, index: int):
+        """Get document in the dataset by index"""
+        return self.documents[index]
+
+    def __iter__(self):
+        """Iterate over the documents in the dataset"""
+        return iter(self.documents)
+
     def filter(self, attribute: str, value: Any) -> "Dataset":
         """
         Filter documents by attribute. Value can be a single value or a function returning a boolean.
