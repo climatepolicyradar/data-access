@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -32,3 +33,10 @@ def s3_client():
         s3_client.create_bucket(Bucket="empty-bucket")
 
         yield s3_client
+
+
+@pytest.fixture()
+def parser_output_json() -> dict:
+    """A dictionary representation of a parser output"""
+    with open("tests/test_data/valid/test_pdf.json") as f:
+        return json.load(f)
