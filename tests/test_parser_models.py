@@ -107,6 +107,7 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     # The test html document has invalid html data so the text blocks should be empty
     parser_output = ParserOutput.parse_obj(parser_output_json_html)
     assert parser_output.get_text_blocks() == []
-    assert parser_output.get_text_blocks(
-        including_invalid_html=True
-    ) == parser_output.text_blocks
+    assert (
+        parser_output.get_text_blocks(including_invalid_html=True)
+        == parser_output.text_blocks
+    )

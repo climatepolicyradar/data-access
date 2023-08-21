@@ -10,7 +10,8 @@ from langdetect import detect
 
 from cpr_data_access.pipeline_general_models import (
     CONTENT_TYPE_HTML,
-    CONTENT_TYPE_PDF, DocumentMetadata,
+    CONTENT_TYPE_PDF,
+    DocumentMetadata,
 )
 
 logger = logging.getLogger(__name__)
@@ -215,7 +216,7 @@ class ParserOutput(BaseModel):
 
     def get_text_blocks(self, including_invalid_html=False):
         """A method for getting text blocks with the option to include invalid html."""
-        if self.document_content_type == CONTENT_TYPE_HTML:
+        if self.document_content_type == CONTENT_TYPE_HTML and self.html_data:
             if not including_invalid_html and not self.html_data.has_valid_text:
                 return []
             else:
@@ -310,8 +311,11 @@ class ParserOutput(BaseModel):
         return self
 
     def vertically_flip_text_block_coords(self) -> "ParserOutput":
-        """Flips the coordinates of all PDF text blocks vertically. Acts in-place on
-        the coordinates in the ParserOutput object. """
+        """
+        Flips the coordinates of all PDF text blocks vertically.
+
+        Acts in-place on the coordinates in the ParserOutput object.
+        """
 
         if self.pdf_data is None:
             return self
