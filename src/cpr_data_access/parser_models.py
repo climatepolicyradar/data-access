@@ -166,7 +166,7 @@ class ParserOutput(BaseModel):
     """Base class for an output to a parser."""
 
     document_id: str
-    document_metadata: dict
+    document_metadata: BackendDocument
     document_name: str
     document_description: str
     document_source_url: Optional[AnyHttpUrl]

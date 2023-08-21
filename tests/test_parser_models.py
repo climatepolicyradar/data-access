@@ -3,13 +3,27 @@ import unittest
 import pydantic
 
 from cpr_data_access.parser_models import (
+    ParserInput,
     ParserOutput,
     CONTENT_TYPE_PDF,
     CONTENT_TYPE_HTML,
 )
 
 
-def test_parser_output_object(parser_output_json):
+def test_parser_input_object(parser_output_json) -> None:
+    """
+    Test that we can correctly instantiate the parser input object.
+
+    Also test the methods on the parser input object.
+    """
+    # Instantiate the parser input object
+    parser_input = ParserInput.parse_obj(parser_output_json)
+
+    # Test the to_json method
+    parser_input.to_json()
+
+
+def test_parser_output_object(parser_output_json) -> None:
     """
     Test that we correctly instantiate the parser output object.
 
@@ -21,7 +35,6 @@ def test_parser_output_object(parser_output_json):
 
     # Test the optional fields
     parser_output_empty_fields = parser_output_json.copy()
-    parser_output_empty_fields["document_metadata"] = {}
     parser_output_empty_fields["document_cdn_object"] = None
     parser_output_empty_fields["document_md5_sum"] = None
 

@@ -8,6 +8,27 @@
     "languages": [
         "en"
     ],
+        "document_metadata": {
+        "name": "test_pdf",
+        "description": "test_pdf_description",
+        "import_id": "CCLW.executive.1003.0",
+        "family_import_id": "CCLW.executive.1003",
+        "slug": "test_pdf",
+        "publication_ts": "2022-10-25 12:43:00.869045",
+        "source_url": "https://cdn.climatepolicyradar.org/EUR/2013/EUR-2013-01-01-Overview+of+CAP+Reform+2014-2020_6237180d8c443d72c06c9167019ca177.pdf",
+        "download_url": "https://cdn.climatepolicyradar.org/EUR/2013/EUR-2013-01-01-Overview+of+CAP+Reform+2014-2020_6237180d8c443d72c06c9167019ca177.pdf",
+        "geography": "test_geo",
+        "category": "test_category",
+        "source": "test_source",
+        "type": "test_type",
+        "sectors": ["sector1", "sector2"],
+        "languages": [
+            "en"
+        ],
+        "metadata": {
+            "test_key": "test_value"
+        }
+    },
     "translated": false,
     "document_slug": "YYY",
     "document_content_type": "text/html",
