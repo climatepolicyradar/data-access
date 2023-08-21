@@ -9,9 +9,8 @@ from langdetect import DetectorFactory, LangDetectException
 from langdetect import detect
 
 from cpr_data_access.pipeline_general_models import (
-    BackendDocument,
     CONTENT_TYPE_HTML,
-    CONTENT_TYPE_PDF,
+    CONTENT_TYPE_PDF, DocumentMetadata,
 )
 
 logger = logging.getLogger(__name__)
@@ -104,7 +103,7 @@ class ParserInput(BaseModel):
     """Base class for input to a parser."""
 
     document_id: str
-    document_metadata: BackendDocument
+    document_metadata: DocumentMetadata
     document_name: str
     document_description: str
     document_source_url: Optional[AnyHttpUrl]
@@ -123,7 +122,7 @@ class ParserInput(BaseModel):
             "document_cdn_object": self.document_cdn_object,
             "document_content_type": self.document_content_type,
             "document_md5_sum": self.document_md5_sum,
-            "document_metadata": self.document_metadata.to_json(),
+            "document_metadata": self.document_metadata.dict(),
             "document_slug": self.document_slug,
         }
 
@@ -167,7 +166,7 @@ class ParserOutput(BaseModel):
     """Base class for an output to a parser."""
 
     document_id: str
-    document_metadata: BackendDocument
+    document_metadata: DocumentMetadata
     document_name: str
     document_description: str
     document_source_url: Optional[AnyHttpUrl]
@@ -299,5 +298,34 @@ class ParserOutput(BaseModel):
                 for lang, count in lang_counter.items()
                 if count / len(all_text_block_languages) > min_language_proportion
             ]
+
+        return self
+
+    def vertically_flip_text_block_coords(self) -> "ParserOutput":
+        """Flips the coordinates of all PDF text blocks vertically. Acts in-place on
+        the coordinates in the ParserOutput object. """
+
+        if self.pdf_data is None:
+            return self
+
+        page_height_map = {
+            page.page_number: page.dimensions[1] for page in self.pdf_data.page_metadata
+        }
+
+        for text_block in self.pdf_data.text_blocks:
+            if text_block.coords is not None and text_block.page_number is not None:
+                text_block.coords = [
+                    (x, page_height_map[text_block.page_number] - y)
+                    for x, y in text_block.coords
+                ]
+
+                # flip top and bottom so y values are still increasing as you go
+                # through the coordinates list
+                text_block.coords = [
+                    text_block.coords[3],
+                    text_block.coords[2],
+                    text_block.coords[1],
+                    text_block.coords[0],
+                ]
 
         return self

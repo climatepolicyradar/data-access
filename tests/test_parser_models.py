@@ -97,3 +97,8 @@ def test_parser_output_object(parser_output_json) -> None:
     # Test the to string method
     assert ParserOutput.parse_obj(parser_output_json).to_string() != ""
     assert ParserOutput.parse_obj(parser_output_no_data).to_string() == ""
+
+    # Test the flip coords method
+    parser_output = ParserOutput.parse_obj(parser_output_json)
+    original_text_blocks = parser_output.text_blocks
+    assert parser_output.vertically_flip_text_block_coords() != original_text_blocks
