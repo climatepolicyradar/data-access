@@ -36,7 +36,14 @@ def s3_client():
 
 
 @pytest.fixture()
-def parser_output_json() -> dict:
+def parser_output_json_pdf() -> dict:
     """A dictionary representation of a parser output"""
     with open("tests/test_data/valid/test_pdf.json") as f:
+        return json.load(f)
+
+
+@pytest.fixture()
+def parser_output_json_html() -> dict:
+    """A dictionary representation of a parser output"""
+    with open("tests/test_data/valid/test_html.json") as f:
         return json.load(f)
