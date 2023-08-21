@@ -6,6 +6,12 @@ from pydantic import BaseModel, Extra, root_validator
 
 Json = dict[str, Any]
 
+CONTENT_TYPE_HTML = "text/html"
+CONTENT_TYPE_DOCX = (
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+)
+CONTENT_TYPE_PDF = "application/pdf"
+
 
 class DocumentMetadata(BaseModel, extra=Extra.allow):
     """Metadata about a document."""

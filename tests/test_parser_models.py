@@ -5,6 +5,8 @@ import pydantic
 from cpr_data_access.parser_models import (
     ParserInput,
     ParserOutput,
+)
+from cpr_data_access.pipeline_general_models import (
     CONTENT_TYPE_PDF,
     CONTENT_TYPE_HTML,
 )

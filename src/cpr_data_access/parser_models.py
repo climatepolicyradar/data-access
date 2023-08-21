@@ -1,4 +1,7 @@
-"""A copy of src/base.py from navigator-document-parser, with methods that rely on external libraries removed. These may be duplicated in models.py, but the intention is that these stay in sync with the data pipeline so we can easily update the pipeline should we decide to use these new models."""
+"""A copy of src/base.py from navigator-document-parser, with methods that rely on
+external libraries removed. These may be duplicated in models.py, but the intention is
+that these stay in sync with the data pipeline so we can easily update the pipeline
+should we decide to use these new models. """
 
 import logging
 import logging.config
@@ -10,12 +13,10 @@ from pydantic import BaseModel, AnyHttpUrl, Field, root_validator
 from langdetect import DetectorFactory, LangDetectException
 from langdetect import detect
 
-from cpr_data_access.pipeline_general_models import BackendDocument
+from cpr_data_access.pipeline_general_models import BackendDocument, CONTENT_TYPE_HTML, \
+    CONTENT_TYPE_PDF
 
 logger = logging.getLogger(__name__)
-
-CONTENT_TYPE_HTML = "text/html"
-CONTENT_TYPE_PDF = "application/pdf"
 
 
 class BlockType(str, Enum):
@@ -46,11 +47,11 @@ class TextBlock(BaseModel):
     """
     Base class for a text block.
 
-    :attribute text: list of text lines contained in the text block
-    :attribute text_block_id: unique identifier for the text block
-    :attribute language: language of the text block. 2-letter ISO code, optional.
-    :attribute type: predicted type of the text block
-    :attribute type_confidence: confidence score of the text block being of the predicted type
+    :attribute text: list of text lines contained in the text block :attribute
+    text_block_id: unique identifier for the text block :attribute language: language
+    of the text block. 2-letter ISO code, optional. :attribute type: predicted type of
+    the text block :attribute type_confidence: confidence score of the text block
+    being of the predicted type
     """
 
     text: List[str]
@@ -62,7 +63,7 @@ class TextBlock(BaseModel):
     type_confidence: float = Field(ge=0, le=1)
 
     def to_string(self) -> str:
-        """Returns the lines in a text block as a string with the lines separated by spaces."""
+        """Returns lines in a text block separated by spaces as a string."""
 
         return " ".join([line.strip() for line in self.text])
 
@@ -71,7 +72,8 @@ class HTMLTextBlock(TextBlock):
     """
     Text block parsed from an HTML document.
 
-    Type is set to "Text" with a confidence of 1.0 by default, as we do not predict types for text blocks parsed from HTML.
+    Type is set to "Text" with a confidence of 1.0 by default, as we do not predict
+    types for text blocks parsed from HTML.
     """
 
     type: BlockType = BlockType.TEXT
@@ -82,19 +84,20 @@ class PDFTextBlock(TextBlock):
     """
     Text block parsed from a PDF document.
 
-    Stores the text and positional information for a single text block extracted from a document.
+    Stores the text and positional information for a single text block extracted from
+    a document.
 
-    :attribute coords: list of coordinates of the vertices defining the boundary of the text block.
-        Each coordinate is a tuple in the format (x, y). (0, 0) is at the top left corner of
-        the page, and the positive x- and y- directions are right and down.
-    :attribute page_number: page number of the page containing the text block.
+    :attribute coords: list of coordinates of the vertices defining the boundary of
+    the text block. Each coordinate is a tuple in the format (x, y). (0, 0) is at the
+    top left corner of the page, and the positive x- and y- directions are right and
+    down. :attribute page_number: page number of the page containing the text block.
     """
 
     coords: List[Tuple[float, float]]
     page_number: int = Field(ge=0)
 
     def to_string(self) -> str:
-        """Returns the lines in a text block as a string with the lines separated by spaces."""
+        """Returns lines in a text block separated by spaces as a string."""
 
         return " ".join([line.strip() for line in self.text])
 
@@ -151,10 +154,10 @@ class PDFData(BaseModel):
     """
     Set of metadata unique to PDF documents.
 
-    :attribute pages: List of pages contained in the document
-    :attribute filename: Name of the PDF file, without extension
-    :attribute md5sum: md5sum of PDF content
-    :attribute language: list of 2-letter ISO language codes, optional. If null, the OCR processor didn't support language detection
+    :attribute pages: List of pages contained in the document :attribute filename:
+    Name of the PDF file, without extension :attribute md5sum: md5sum of PDF content
+    :attribute language: list of 2-letter ISO language codes, optional. If null,
+    the OCR processor didn't support language detection
     """
 
     page_metadata: Sequence[PDFPageMetadata]
