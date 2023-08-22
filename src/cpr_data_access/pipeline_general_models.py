@@ -71,7 +71,7 @@ class UpdateTypes(str, Enum):
     DESCRIPTION = "description"
     # IMPORT_ID = "import_id"
     # SLUG = "slug"
-    PUBLICATION_TS = "publication_ts"
+    # PUBLICATION_TS = "publication_ts"
     SOURCE_URL = "source_url"
     # TYPE = "type"
     # SOURCE = "source"
