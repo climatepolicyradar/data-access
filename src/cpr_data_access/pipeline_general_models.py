@@ -85,8 +85,8 @@ class UpdateTypes(str, Enum):
 class Update(BaseModel):
     """Results of comparing db state data against the s3 data to identify updates."""
 
-    s3_value: Optional[Union[str, datetime]]
-    db_value: Union[str, datetime]
+    s3_value: Optional[Union[str, datetime, dict]]
+    db_value: Union[str, datetime, dict]
     type: UpdateTypes
 
 
