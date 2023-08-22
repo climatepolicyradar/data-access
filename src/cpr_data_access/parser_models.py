@@ -10,7 +10,8 @@ from langdetect import detect
 
 from cpr_data_access.pipeline_general_models import (
     CONTENT_TYPE_HTML,
-    CONTENT_TYPE_PDF, BackendDocument,
+    CONTENT_TYPE_PDF,
+    BackendDocument,
 )
 
 logger = logging.getLogger(__name__)

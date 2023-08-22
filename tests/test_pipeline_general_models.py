@@ -20,8 +20,3 @@ def test_backend_document(backend_document_json) -> None:
     assert BackendDocument.parse_obj(backend_document_json).to_json() == (
         backend_document_json
     )
-
-
-
-
-
