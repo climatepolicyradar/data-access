@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Mapping, Any, List, Optional, Sequence, Union
 
-from pydantic import BaseModel, Extra, root_validator
+from pydantic import BaseModel, root_validator
 
 Json = dict[str, Any]
 
@@ -11,30 +11,6 @@ CONTENT_TYPE_DOCX = (
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 )
 CONTENT_TYPE_PDF = "application/pdf"
-
-
-class DocumentMetadata(BaseModel, extra=Extra.allow):
-    """Metadata about a document."""
-
-    metadata: Optional[Json] = {}
-    publication_ts: datetime
-    date: Optional[str] = None  # Set on import by a validator
-    geography: str
-    category: str
-    source: str
-    type: str
-
-    @root_validator
-    def convert_publication_ts_to_date(cls, values):
-        """
-        Convert publication_ts to a datetime string.
-
-        This is necessary as OpenSearch expects a date object.
-        """
-
-        values["date"] = values["publication_ts"].strftime("%d/%m/%Y")
-
-        return values
 
 
 class BackendDocument(BaseModel):
@@ -51,6 +27,7 @@ class BackendDocument(BaseModel):
     family_import_id: str
     slug: str
     publication_ts: datetime
+    date: Optional[str] = None  # Set on import by a validator
     source_url: Optional[str]
     download_url: Optional[str]
 
@@ -61,6 +38,18 @@ class BackendDocument(BaseModel):
     languages: Sequence[str]
 
     metadata: Json
+
+    @root_validator
+    def convert_publication_ts_to_date(cls, values):
+        """
+        Convert publication_ts to a datetime string.
+
+        This is necessary as OpenSearch expects a date object.
+        """
+
+        values["date"] = values["publication_ts"].strftime("%d/%m/%Y")
+
+        return values
 
     def to_json(self) -> Mapping[str, Any]:
         """Output a JSON serialising friendly dict representing this model."""

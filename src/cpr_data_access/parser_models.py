@@ -10,8 +10,7 @@ from langdetect import detect
 
 from cpr_data_access.pipeline_general_models import (
     CONTENT_TYPE_HTML,
-    CONTENT_TYPE_PDF,
-    DocumentMetadata,
+    CONTENT_TYPE_PDF, BackendDocument,
 )
 
 logger = logging.getLogger(__name__)
@@ -104,7 +103,7 @@ class ParserInput(BaseModel):
     """Base class for input to a parser."""
 
     document_id: str
-    document_metadata: DocumentMetadata
+    document_metadata: BackendDocument
     document_name: str
     document_description: str
     document_source_url: Optional[AnyHttpUrl]
@@ -123,7 +122,7 @@ class ParserInput(BaseModel):
             "document_cdn_object": self.document_cdn_object,
             "document_content_type": self.document_content_type,
             "document_md5_sum": self.document_md5_sum,
-            "document_metadata": self.document_metadata.dict(),
+            "document_metadata": self.document_metadata.to_json(),
             "document_slug": self.document_slug,
         }
 
@@ -167,7 +166,7 @@ class ParserOutput(BaseModel):
     """Base class for an output to a parser."""
 
     document_id: str
-    document_metadata: DocumentMetadata
+    document_metadata: BackendDocument
     document_name: str
     document_description: str
     document_source_url: Optional[AnyHttpUrl]
