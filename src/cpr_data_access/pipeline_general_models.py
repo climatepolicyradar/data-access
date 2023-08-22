@@ -79,7 +79,7 @@ class UpdateTypes(str, Enum):
     # GEOGRAPHY = "geography"
     # LANGUAGES = "languages"
     # DOCUMENT_STATUS = "document_status"
-    # METADATA = "metadata"
+    METADATA = "metadata"
 
 
 class Update(BaseModel):
