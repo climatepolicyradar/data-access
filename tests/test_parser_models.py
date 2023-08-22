@@ -3,13 +3,29 @@ import unittest
 import pydantic
 
 from cpr_data_access.parser_models import (
+    ParserInput,
     ParserOutput,
+)
+from cpr_data_access.pipeline_general_models import (
     CONTENT_TYPE_PDF,
     CONTENT_TYPE_HTML,
 )
 
 
-def test_parser_output_object(parser_output_json):
+def test_parser_input_object(parser_output_json_pdf) -> None:
+    """
+    Test that we can correctly instantiate the parser input object.
+
+    Also test the methods on the parser input object.
+    """
+    # Instantiate the parser input object
+    parser_input = ParserInput.parse_obj(parser_output_json_pdf)
+
+    # Test the to_json method
+    parser_input.to_json()
+
+
+def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -> None:
     """
     Test that we correctly instantiate the parser output object.
 
@@ -17,18 +33,17 @@ def test_parser_output_object(parser_output_json):
     """
 
     # Instantiate the parser output object
-    ParserOutput.parse_obj(parser_output_json)
+    ParserOutput.parse_obj(parser_output_json_pdf)
 
     # Test the optional fields
-    parser_output_empty_fields = parser_output_json.copy()
-    parser_output_empty_fields["document_metadata"] = {}
+    parser_output_empty_fields = parser_output_json_pdf.copy()
     parser_output_empty_fields["document_cdn_object"] = None
     parser_output_empty_fields["document_md5_sum"] = None
 
     ParserOutput.parse_obj(parser_output_empty_fields)
 
     # Test the check html pdf metadata method
-    parser_output_no_pdf_data = parser_output_json.copy()
+    parser_output_no_pdf_data = parser_output_json_pdf.copy()
     parser_output_no_pdf_data["pdf_data"] = None
     parser_output_no_pdf_data["document_content_type"] = CONTENT_TYPE_PDF
 
@@ -38,7 +53,7 @@ def test_parser_output_object(parser_output_json):
         ParserOutput.parse_obj(parser_output_no_pdf_data)
     assert "pdf_data must be set for PDF documents" in str(context.exception)
 
-    parser_output_no_html_data = parser_output_json.copy()
+    parser_output_no_html_data = parser_output_json_pdf.copy()
     parser_output_no_html_data["html_data"] = None
     parser_output_no_html_data["document_content_type"] = CONTENT_TYPE_HTML
 
@@ -48,7 +63,7 @@ def test_parser_output_object(parser_output_json):
         ParserOutput.parse_obj(parser_output_no_html_data)
     assert "html_data must be set for HTML documents" in str(context.exception)
 
-    parser_output_no_content_type = parser_output_json.copy()
+    parser_output_no_content_type = parser_output_json_pdf.copy()
     # PDF data is set as the default
     parser_output_no_content_type["document_content_type"] = None
 
@@ -60,7 +75,7 @@ def test_parser_output_object(parser_output_json):
         "html_data and pdf_data must be null for documents with no content type."
     ) in str(context.exception)
 
-    parser_output_not_known_content_type = parser_output_json.copy()
+    parser_output_not_known_content_type = parser_output_json_pdf.copy()
     # PDF data is set as the default
     parser_output_not_known_content_type["document_content_type"] = "not_known"
 
@@ -73,12 +88,26 @@ def test_parser_output_object(parser_output_json):
     ) in str(context.exception)
 
     # Test the text blocks property
-    assert ParserOutput.parse_obj(parser_output_json).text_blocks != []
-    parser_output_no_data = parser_output_json.copy()
+    assert ParserOutput.parse_obj(parser_output_json_pdf).text_blocks != []
+    parser_output_no_data = parser_output_json_pdf.copy()
     parser_output_no_data["pdf_data"] = None
     parser_output_no_data["document_content_type"] = None
     assert ParserOutput.parse_obj(parser_output_no_data).text_blocks == []
 
     # Test the to string method
-    assert ParserOutput.parse_obj(parser_output_json).to_string() != ""
+    assert ParserOutput.parse_obj(parser_output_json_pdf).to_string() != ""
     assert ParserOutput.parse_obj(parser_output_no_data).to_string() == ""
+
+    # Test the flip coords method
+    parser_output = ParserOutput.parse_obj(parser_output_json_pdf)
+    original_text_blocks = parser_output.text_blocks
+    assert parser_output.vertically_flip_text_block_coords() != original_text_blocks
+
+    # Test the get_text_blocks method
+    # The test html document has invalid html data so the text blocks should be empty
+    parser_output = ParserOutput.parse_obj(parser_output_json_html)
+    assert parser_output.get_text_blocks() == []
+    assert (
+        parser_output.get_text_blocks(including_invalid_html=True)
+        == parser_output.text_blocks
+    )

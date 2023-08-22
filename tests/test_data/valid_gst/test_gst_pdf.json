@@ -1,6 +1,26 @@
 {
     "document_id": "UNFCCC.party.1.0",
-    "document_metadata": {},
+    "document_metadata": {
+        "name": "test_pdf",
+        "description": "test_pdf_description",
+        "import_id": "CCLW.executive.1003.0",
+        "family_import_id": "CCLW.executive.1003",
+        "slug": "test_pdf",
+        "publication_ts": "2022-10-25 12:43:00.869045",
+        "source_url": null,
+        "download_url": null,
+        "geography": "test_geo",
+        "category": "test_category",
+        "source": "test_source",
+        "type": "test_type",
+        "sectors": ["sector1", "sector2"],
+        "languages": [
+            "en"
+        ],
+        "metadata": {
+            "test_key": "test_value"
+        }
+    },
     "document_name": "0512739_Australia-NC7-BR3-3-Aus20NC720BR3",
     "document_description": "Document relating to the global stock take.",
     "document_source_url": null,

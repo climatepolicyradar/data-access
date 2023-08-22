@@ -33,9 +33,11 @@ from datasets import Dataset as HFDataset, DatasetInfo
 import cpr_data_access.data_adaptors as adaptors
 from cpr_data_access.parser_models import (
     ParserOutput,
+    BlockType,
+)
+from cpr_data_access.pipeline_general_models import (
     CONTENT_TYPE_HTML,
     CONTENT_TYPE_PDF,
-    BlockType,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -46,7 +48,11 @@ AnyDocument = TypeVar("AnyDocument", bound="BaseDocument")
 def _load_and_validate_metadata_csv(
     metadata_csv_path: Path, target_model: type[AnyDocument]
 ) -> pd.DataFrame:
-    """Load a metadata CSV, raising a ValueError if it does not exist or doesn't have the expected columns."""
+    """
+    Load a metadata CSV
+
+    Raise a ValueError if it does not exist or doesn't have the expected columns.
+    """
     if not metadata_csv_path.exists():
         raise ValueError(f"metadata_csv_path {metadata_csv_path} does not exist")
 

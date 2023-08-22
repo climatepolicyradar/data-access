@@ -1,19 +1,20 @@
-"""A copy of src/base.py from navigator-document-parser, with methods that rely on external libraries removed. These may be duplicated in models.py, but the intention is that these stay in sync with the data pipeline so we can easily update the pipeline should we decide to use these new models."""
-
 import logging
 import logging.config
 from datetime import date
 from enum import Enum
-from typing import Optional, Sequence, Tuple, List, Union
+from typing import Optional, Sequence, Tuple, List, Union, Mapping, Any
 from collections import Counter
 from pydantic import BaseModel, AnyHttpUrl, Field, root_validator
 from langdetect import DetectorFactory, LangDetectException
 from langdetect import detect
 
-logger = logging.getLogger(__name__)
+from cpr_data_access.pipeline_general_models import (
+    CONTENT_TYPE_HTML,
+    CONTENT_TYPE_PDF,
+    BackendDocument,
+)
 
-CONTENT_TYPE_HTML = "text/html"
-CONTENT_TYPE_PDF = "application/pdf"
+logger = logging.getLogger(__name__)
 
 
 class BlockType(str, Enum):
@@ -44,11 +45,11 @@ class TextBlock(BaseModel):
     """
     Base class for a text block.
 
-    :attribute text: list of text lines contained in the text block
-    :attribute text_block_id: unique identifier for the text block
-    :attribute language: language of the text block. 2-letter ISO code, optional.
-    :attribute type: predicted type of the text block
-    :attribute type_confidence: confidence score of the text block being of the predicted type
+    :attribute text: list of text lines contained in the text block :attribute
+    text_block_id: unique identifier for the text block :attribute language: language
+    of the text block. 2-letter ISO code, optional. :attribute type: predicted type of
+    the text block :attribute type_confidence: confidence score of the text block
+    being of the predicted type
     """
 
     text: List[str]
@@ -60,7 +61,7 @@ class TextBlock(BaseModel):
     type_confidence: float = Field(ge=0, le=1)
 
     def to_string(self) -> str:
-        """Returns the lines in a text block as a string with the lines separated by spaces."""
+        """Returns lines in a text block separated by spaces as a string."""
 
         return " ".join([line.strip() for line in self.text])
 
@@ -69,7 +70,8 @@ class HTMLTextBlock(TextBlock):
     """
     Text block parsed from an HTML document.
 
-    Type is set to "Text" with a confidence of 1.0 by default, as we do not predict types for text blocks parsed from HTML.
+    Type is set to "Text" with a confidence of 1.0 by default, as we do not predict
+    types for text blocks parsed from HTML.
     """
 
     type: BlockType = BlockType.TEXT
@@ -80,19 +82,20 @@ class PDFTextBlock(TextBlock):
     """
     Text block parsed from a PDF document.
 
-    Stores the text and positional information for a single text block extracted from a document.
+    Stores the text and positional information for a single text block extracted from
+    a document.
 
-    :attribute coords: list of coordinates of the vertices defining the boundary of the text block.
-        Each coordinate is a tuple in the format (x, y). (0, 0) is at the top left corner of
-        the page, and the positive x- and y- directions are right and down.
-    :attribute page_number: page number of the page containing the text block.
+    :attribute coords: list of coordinates of the vertices defining the boundary of
+    the text block. Each coordinate is a tuple in the format (x, y). (0, 0) is at the
+    top left corner of the page, and the positive x- and y- directions are right and
+    down. :attribute page_number: page number of the page containing the text block.
     """
 
     coords: List[Tuple[float, float]]
     page_number: int = Field(ge=0)
 
     def to_string(self) -> str:
-        """Returns the lines in a text block as a string with the lines separated by spaces."""
+        """Returns lines in a text block separated by spaces as a string."""
 
         return " ".join([line.strip() for line in self.text])
 
@@ -101,7 +104,7 @@ class ParserInput(BaseModel):
     """Base class for input to a parser."""
 
     document_id: str
-    document_metadata: dict
+    document_metadata: BackendDocument
     document_name: str
     document_description: str
     document_source_url: Optional[AnyHttpUrl]
@@ -109,6 +112,20 @@ class ParserInput(BaseModel):
     document_content_type: Optional[str]
     document_md5_sum: Optional[str]
     document_slug: str
+
+    def to_json(self) -> Mapping[str, Any]:
+        """Output a JSON serialising friendly dict representing this model"""
+        return {
+            "document_name": self.document_name,
+            "document_description": self.document_description,
+            "document_id": self.document_id,
+            "document_source_url": self.document_source_url,
+            "document_cdn_object": self.document_cdn_object,
+            "document_content_type": self.document_content_type,
+            "document_md5_sum": self.document_md5_sum,
+            "document_metadata": self.document_metadata.to_json(),
+            "document_slug": self.document_slug,
+        }
 
 
 class HTMLData(BaseModel):
@@ -135,10 +152,10 @@ class PDFData(BaseModel):
     """
     Set of metadata unique to PDF documents.
 
-    :attribute pages: List of pages contained in the document
-    :attribute filename: Name of the PDF file, without extension
-    :attribute md5sum: md5sum of PDF content
-    :attribute language: list of 2-letter ISO language codes, optional. If null, the OCR processor didn't support language detection
+    :attribute pages: List of pages contained in the document :attribute filename:
+    Name of the PDF file, without extension :attribute md5sum: md5sum of PDF content
+    :attribute language: list of 2-letter ISO language codes, optional. If null,
+    the OCR processor didn't support language detection
     """
 
     page_metadata: Sequence[PDFPageMetadata]
@@ -150,7 +167,7 @@ class ParserOutput(BaseModel):
     """Base class for an output to a parser."""
 
     document_id: str
-    document_metadata: dict
+    document_metadata: BackendDocument
     document_name: str
     document_description: str
     document_source_url: Optional[AnyHttpUrl]
@@ -196,6 +213,14 @@ class ParserOutput(BaseModel):
             )
 
         return values
+
+    def get_text_blocks(self, including_invalid_html=False):
+        """A method for getting text blocks with the option to include invalid html."""
+        if self.document_content_type == CONTENT_TYPE_HTML and self.html_data:
+            if not including_invalid_html and not self.html_data.has_valid_text:
+                return []
+            else:
+                return self.text_blocks
 
     @property
     def text_blocks(self) -> Sequence[TextBlock]:
@@ -282,5 +307,37 @@ class ParserOutput(BaseModel):
                 for lang, count in lang_counter.items()
                 if count / len(all_text_block_languages) > min_language_proportion
             ]
+
+        return self
+
+    def vertically_flip_text_block_coords(self) -> "ParserOutput":
+        """
+        Flips the coordinates of all PDF text blocks vertically.
+
+        Acts in-place on the coordinates in the ParserOutput object.
+        """
+
+        if self.pdf_data is None:
+            return self
+
+        page_height_map = {
+            page.page_number: page.dimensions[1] for page in self.pdf_data.page_metadata
+        }
+
+        for text_block in self.pdf_data.text_blocks:
+            if text_block.coords is not None and text_block.page_number is not None:
+                text_block.coords = [
+                    (x, page_height_map[text_block.page_number] - y)
+                    for x, y in text_block.coords
+                ]
+
+                # flip top and bottom so y values are still increasing as you go
+                # through the coordinates list
+                text_block.coords = [
+                    text_block.coords[3],
+                    text_block.coords[2],
+                    text_block.coords[1],
+                    text_block.coords[0],
+                ]
 
         return self
