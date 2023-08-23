@@ -214,13 +214,12 @@ class ParserOutput(BaseModel):
 
         return values
 
-    def get_text_blocks(self, including_invalid_html=False):
+    def get_text_blocks(self, including_invalid_html=False) -> Sequence[TextBlock]:
         """A method for getting text blocks with the option to include invalid html."""
         if self.document_content_type == CONTENT_TYPE_HTML and self.html_data:
             if not including_invalid_html and not self.html_data.has_valid_text:
                 return []
-            else:
-                return self.text_blocks
+        return self.text_blocks
 
     @property
     def text_blocks(self) -> Sequence[TextBlock]:
