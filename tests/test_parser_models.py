@@ -111,3 +111,16 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
         parser_output.get_text_blocks(including_invalid_html=True)
         == parser_output.text_blocks
     )
+
+    # Test that the get_text_blocks method works on pdfs. This test pdf has data so we
+    # should get text blocks.
+    parser_output = ParserOutput.parse_obj(parser_output_json_pdf)
+    text_blocks_raw = parser_output.get_text_blocks()
+    assert text_blocks_raw
+    text_blocks_include_invalid = parser_output.get_text_blocks(including_invalid_html=True)
+    assert text_blocks_include_invalid
+    text_blocks_not_include_invalid = parser_output.get_text_blocks(including_invalid_html=False)
+    assert text_blocks_not_include_invalid
+    assert text_blocks_raw == text_blocks_include_invalid == text_blocks_not_include_invalid
+
+
