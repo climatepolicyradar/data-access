@@ -117,10 +117,16 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     parser_output = ParserOutput.parse_obj(parser_output_json_pdf)
     text_blocks_raw = parser_output.get_text_blocks()
     assert text_blocks_raw
-    text_blocks_include_invalid = parser_output.get_text_blocks(including_invalid_html=True)
+    text_blocks_include_invalid = parser_output.get_text_blocks(
+        including_invalid_html=True
+    )
     assert text_blocks_include_invalid
-    text_blocks_not_include_invalid = parser_output.get_text_blocks(including_invalid_html=False)
+    text_blocks_not_include_invalid = parser_output.get_text_blocks(
+        including_invalid_html=False
+    )
     assert text_blocks_not_include_invalid
-    assert text_blocks_raw == text_blocks_include_invalid == text_blocks_not_include_invalid
-
-
+    assert (
+        text_blocks_raw
+        == text_blocks_include_invalid
+        == text_blocks_not_include_invalid
+    )
