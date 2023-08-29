@@ -39,6 +39,7 @@ class BlockType(str, Enum):
     SECTION_HEADING = "sectionHeading"
     PAGE_NUMBER = "pageNumber"
     DOCUMENT_HEADER = "Document Header"
+    FOOT_NOTE = "footnote"
 
 
 class TextBlock(BaseModel):
