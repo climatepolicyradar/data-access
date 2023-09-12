@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Mapping, Any, List, Optional, Sequence, Union
 
+from deprecation import deprecated
 from pydantic import BaseModel, root_validator
 
 Json = dict[str, Any]
@@ -51,6 +52,10 @@ class BackendDocument(BaseModel):
 
         return values
 
+    @deprecated(
+        deprecated_in="0.1.4",
+        details="Not required, pydantic can safely serialise everything in this class",
+    )
     def to_json(self) -> Mapping[str, Any]:
         """Output a JSON serialising friendly dict representing this model."""
         json_dict = self.dict()

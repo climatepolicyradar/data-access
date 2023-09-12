@@ -4,14 +4,16 @@ from datetime import date
 from enum import Enum
 from typing import Optional, Sequence, Tuple, List, Union, Mapping, Any
 from collections import Counter
+
+from deprecation import deprecated
 from pydantic import BaseModel, AnyHttpUrl, Field, root_validator
-from langdetect import DetectorFactory, LangDetectException
-from langdetect import detect
+from langdetect import DetectorFactory, LangDetectException, detect
 
 from cpr_data_access.pipeline_general_models import (
     CONTENT_TYPE_HTML,
     CONTENT_TYPE_PDF,
     BackendDocument,
+    Json,
 )
 
 logger = logging.getLogger(__name__)
@@ -105,7 +107,6 @@ class ParserInput(BaseModel):
     """Base class for input to a parser."""
 
     document_id: str
-    document_metadata: BackendDocument
     document_name: str
     document_description: str
     document_source_url: Optional[AnyHttpUrl]
@@ -113,20 +114,19 @@ class ParserInput(BaseModel):
     document_content_type: Optional[str]
     document_md5_sum: Optional[str]
     document_slug: str
+    document_metadata: BackendDocument
 
+    pipeline_metadata: Json = {}  # note: defaulting to {} here is safe (pydantic)
+
+    @deprecated(
+        deprecated_in="0.1.4",
+        details="Not required, pydantic can safely serialise everything in this class",
+    )
     def to_json(self) -> Mapping[str, Any]:
         """Output a JSON serialising friendly dict representing this model"""
-        return {
-            "document_name": self.document_name,
-            "document_description": self.document_description,
-            "document_id": self.document_id,
-            "document_source_url": self.document_source_url,
-            "document_cdn_object": self.document_cdn_object,
-            "document_content_type": self.document_content_type,
-            "document_md5_sum": self.document_md5_sum,
-            "document_metadata": self.document_metadata.to_json(),
-            "document_slug": self.document_slug,
-        }
+        json_dict = self.dict()
+        json_dict["document_metadata"] = self.document_metadata.to_json()
+        return json_dict
 
 
 class HTMLData(BaseModel):
@@ -181,6 +181,7 @@ class ParserOutput(BaseModel):
     translated: bool = False
     html_data: Optional[HTMLData] = None
     pdf_data: Optional[PDFData] = None
+    pipeline_metadata: Json = {}  # note: defaulting to {} here is safe (pydantic)
 
     @root_validator
     def check_html_pdf_metadata(cls, values):
