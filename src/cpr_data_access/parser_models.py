@@ -4,9 +4,10 @@ from datetime import date
 from enum import Enum
 from typing import Optional, Sequence, Tuple, List, Union, Mapping, Any
 from collections import Counter
+
+from deprecation import deprecated
 from pydantic import BaseModel, AnyHttpUrl, Field, root_validator
-from langdetect import DetectorFactory, LangDetectException
-from langdetect import detect
+from langdetect import DetectorFactory, LangDetectException, detect
 
 from cpr_data_access.pipeline_general_models import (
     CONTENT_TYPE_HTML,
@@ -117,6 +118,10 @@ class ParserInput(BaseModel):
 
     pipeline_metadata: Json = {}  # note: defaulting to {} here is safe (pydantic)
 
+    @deprecated(
+        deprecated_in="0.1.4",
+        details="Not required, pydantic can safely serialise everything in this class"
+    )
     def to_json(self) -> Mapping[str, Any]:
         """Output a JSON serialising friendly dict representing this model"""
         json_dict = self.dict()
