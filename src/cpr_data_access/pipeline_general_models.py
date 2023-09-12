@@ -54,7 +54,7 @@ class BackendDocument(BaseModel):
 
     @deprecated(
         deprecated_in="0.1.4",
-        details="Not required, pydantic can safely serialise everything in this class"
+        details="Not required, pydantic can safely serialise everything in this class",
     )
     def to_json(self) -> Mapping[str, Any]:
         """Output a JSON serialising friendly dict representing this model."""
