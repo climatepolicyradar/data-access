@@ -164,11 +164,11 @@ class PDFData(BaseModel):
     text_blocks: Sequence[PDFTextBlock]
 
 
-class ParserOutput(BaseModel):
+class BaseParserOutput(BaseModel):
     """Base class for an output to a parser."""
 
     document_id: str
-    document_metadata: BackendDocument
+    document_metadata: dict
     document_name: str
     document_description: str
     document_source_url: Optional[AnyHttpUrl]
@@ -247,7 +247,7 @@ class ParserOutput(BaseModel):
             [text_block.to_string().strip() for text_block in self.text_blocks]
         )
 
-    def detect_and_set_languages(self) -> "ParserOutput":
+    def detect_and_set_languages(self) -> "BaseParserOutput":
         """
         Detect language of the text and set the language attribute.
 
@@ -311,7 +311,7 @@ class ParserOutput(BaseModel):
 
         return self
 
-    def vertically_flip_text_block_coords(self) -> "ParserOutput":
+    def vertically_flip_text_block_coords(self) -> "BaseParserOutput":
         """
         Flips the coordinates of all PDF text blocks vertically.
 
@@ -342,3 +342,9 @@ class ParserOutput(BaseModel):
                 ]
 
         return self
+
+
+class ParserOutput(BaseParserOutput):
+    """Output to a parser with the metadata format used by the CPR backend."""
+
+    document_metadata: BackendDocument
