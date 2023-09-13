@@ -2,7 +2,7 @@ import logging
 import logging.config
 from datetime import date
 from enum import Enum
-from typing import Optional, Sequence, Tuple, List, Union, Mapping, Any
+from typing import Any, List, Mapping, Optional, Sequence, Tuple, TypeVar, Union
 from collections import Counter
 
 from deprecation import deprecated
@@ -164,6 +164,9 @@ class PDFData(BaseModel):
     text_blocks: Sequence[PDFTextBlock]
 
 
+_PO = TypeVar("_PO", bound="BaseParserOutput")
+
+
 class BaseParserOutput(BaseModel):
     """Base class for an output to a parser."""
 
@@ -247,7 +250,7 @@ class BaseParserOutput(BaseModel):
             [text_block.to_string().strip() for text_block in self.text_blocks]
         )
 
-    def detect_and_set_languages(self) -> "BaseParserOutput":
+    def detect_and_set_languages(self: _PO) -> _PO:
         """
         Detect language of the text and set the language attribute.
 
@@ -281,8 +284,8 @@ class BaseParserOutput(BaseModel):
         return self
 
     def set_document_languages_from_text_blocks(
-        self, min_language_proportion: float = 0.4
-    ):
+        self: _PO, min_language_proportion: float = 0.4
+    ) -> _PO:
         """
         Store the document languages attribute as part of the object.
 
@@ -311,7 +314,7 @@ class BaseParserOutput(BaseModel):
 
         return self
 
-    def vertically_flip_text_block_coords(self) -> "BaseParserOutput":
+    def vertically_flip_text_block_coords(self: _PO) -> _PO:
         """
         Flips the coordinates of all PDF text blocks vertically.
 
