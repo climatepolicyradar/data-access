@@ -8,7 +8,7 @@ import logging
 from tqdm.auto import tqdm
 
 from cpr_data_access.s3 import _get_s3_keys_with_prefix, _s3_object_read_text
-from cpr_data_access.parser_models import ParserOutput
+from cpr_data_access.parser_models import BaseParserOutput
 
 LOGGER = logging.getLogger(__name__)
 
@@ -19,12 +19,14 @@ class DataAdaptor(ABC):
     @abstractmethod
     def load_dataset(
         self, dataset_key: str, limit: Optional[int] = None
-    ) -> List[ParserOutput]:
+    ) -> List[BaseParserOutput]:
         """Load entire dataset from data source."""
         raise NotImplementedError
 
     @abstractmethod
-    def get_by_id(self, dataset_key: str, document_id: str) -> Optional[ParserOutput]:
+    def get_by_id(
+        self, dataset_key: str, document_id: str
+    ) -> Optional[BaseParserOutput]:
         """Get a document by its id."""
         raise NotImplementedError
 
@@ -34,13 +36,13 @@ class S3DataAdaptor(DataAdaptor):
 
     def load_dataset(
         self, dataset_key: str, limit: Optional[int] = None
-    ) -> List[ParserOutput]:
+    ) -> List[BaseParserOutput]:
         """
         Load entire dataset from S3.
 
         :param dataset_key: path to S3 directory. Should start with 's3://'
         :param limit: optionally limit number of documents loaded. Defaults to None
-        :return List[ParserOutput]: list of parser outputs
+        :return List[BaseParserOutput]: list of parser outputs
         """
         if not dataset_key.startswith("s3://"):
             LOGGER.warning(
@@ -62,24 +64,26 @@ class S3DataAdaptor(DataAdaptor):
         for filename in tqdm(s3_objects[:limit]):
             if filename.endswith(".json"):
                 parsed_files.append(
-                    ParserOutput.parse_raw(
+                    BaseParserOutput.parse_raw(
                         _s3_object_read_text(f"{dataset_key}/{filename.split('/')[-1]}")
                     )
                 )
 
         return parsed_files
 
-    def get_by_id(self, dataset_key: str, document_id: str) -> Optional[ParserOutput]:
+    def get_by_id(
+        self, dataset_key: str, document_id: str
+    ) -> Optional[BaseParserOutput]:
         """
         Get a document by its id.
 
         :param str dataset_key: S3 bucket
         :param str document_id: import ID
-        :return Optional[ParserOutput]: None if no document was found with the ID
+        :return Optional[BaseParserOutput]: None if no document was found with the ID
         """
 
         try:
-            return ParserOutput.parse_raw(
+            return BaseParserOutput.parse_raw(
                 _s3_object_read_text(f"s3://{dataset_key}/{document_id}.json")
             )
         except ValueError as e:
@@ -96,13 +100,13 @@ class LocalDataAdaptor(DataAdaptor):
 
     def load_dataset(
         self, dataset_key: str, limit: Optional[int] = None
-    ) -> List[ParserOutput]:
+    ) -> List[BaseParserOutput]:
         """
         Load entire dataset from a local path.
 
         :param str dataset_key: path to local directory containing parser outputs/embeddings inputs
         :param limit: optionally limit number of documents loaded. Defaults to None
-        :return List[ParserOutput]: list of parser outputs
+        :return List[BaseParserOutput]: list of parser outputs
         """
 
         folder_path = Path(dataset_key).resolve()
@@ -119,17 +123,19 @@ class LocalDataAdaptor(DataAdaptor):
         parsed_files = []
 
         for file in tqdm(list(folder_path.glob("*.json"))[:limit]):
-            parsed_files.append(ParserOutput.parse_raw(file.read_text()))
+            parsed_files.append(BaseParserOutput.parse_raw(file.read_text()))
 
         return parsed_files
 
-    def get_by_id(self, dataset_key: str, document_id: str) -> Optional[ParserOutput]:
+    def get_by_id(
+        self, dataset_key: str, document_id: str
+    ) -> Optional[BaseParserOutput]:
         """
         Get a document by its id.
 
         :param str dataset_key: path to local directory containing parser outputs/embeddings inputs
         :param str document_id: import ID
-        :return Optional[ParserOutput]: None if no document was found with the ID
+        :return Optional[BaseParserOutput]: None if no document was found with the ID
         """
 
         folder_path = Path(dataset_key).resolve()
@@ -142,4 +148,4 @@ class LocalDataAdaptor(DataAdaptor):
         if not file_path.exists():
             return None
 
-        return ParserOutput.parse_raw(file_path.read_text())
+        return BaseParserOutput.parse_raw(file_path.read_text())
