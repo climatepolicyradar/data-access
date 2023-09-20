@@ -328,21 +328,27 @@ class BaseParserOutput(BaseModel):
             page.page_number: page.dimensions[1] for page in self.pdf_data.page_metadata
         }
 
-        for text_block in self.pdf_data.text_blocks:
-            if text_block.coords is not None and text_block.page_number is not None:
-                text_block.coords = [
-                    (x, page_height_map[text_block.page_number] - y)
-                    for x, y in text_block.coords
-                ]
+        try:
+            for text_block in self.pdf_data.text_blocks:
+                if text_block.coords is not None and text_block.page_number is not None:
+                    text_block.coords = [
+                        (x, page_height_map[text_block.page_number] - y)
+                        for x, y in text_block.coords
+                    ]
 
-                # flip top and bottom so y values are still increasing as you go
-                # through the coordinates list
-                text_block.coords = [
-                    text_block.coords[3],
-                    text_block.coords[2],
-                    text_block.coords[1],
-                    text_block.coords[0],
-                ]
+                    # flip top and bottom so y values are still increasing as you go
+                    # through the coordinates list
+                    text_block.coords = [
+                        text_block.coords[3],
+                        text_block.coords[2],
+                        text_block.coords[1],
+                        text_block.coords[0],
+                    ]
+        except Exception:
+            logger.exception(
+                "Error flipping text block coordinates.",
+                extra={"props": {"document_id": self.document_id}},
+            )
 
         return self
 
