@@ -349,6 +349,7 @@ class BaseParserOutput(BaseModel):
                 "Error flipping text block coordinates.",
                 extra={"props": {"document_id": self.document_id}},
             )
+            raise
 
         return self
 
