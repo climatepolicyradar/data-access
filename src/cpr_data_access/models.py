@@ -10,6 +10,7 @@ from typing import (
     Union,
     TypeVar,
     Literal,
+    Annotated
 )
 from pathlib import Path
 import datetime
@@ -21,9 +22,8 @@ from pydantic import (
     BaseModel,
     AnyHttpUrl,
     NonNegativeInt,
-    confloat,
-    conint,
     root_validator,
+    Field,
     PrivateAttr,
 )
 import pandas as pd
@@ -134,7 +134,7 @@ class Span(BaseModel):
     start_idx: int
     end_idx: int
     sentence: str
-    pred_probability: confloat(ge=0, le=1)  # type: ignore
+    pred_probability: Annotated[float, Field(ge=0, le=1)]
     annotator: str
 
     def __hash__(self):
@@ -166,8 +166,8 @@ class TextBlock(BaseModel):
     text_block_id: str
     language: Optional[str]
     type: BlockType
-    type_confidence: confloat(ge=0, le=1)  # type: ignore
-    page_number: conint(ge=-1)  # type: ignore
+    type_confidence: Annotated[float, Field(ge=0, le=1)]
+    page_number: Annotated[int, Field(ge=-1)]
     coords: Optional[List[Tuple[float, float]]]
     _spans: list[Span] = PrivateAttr(default_factory=list)
 
