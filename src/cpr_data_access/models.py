@@ -30,6 +30,7 @@ from pydantic import (
 )
 import pandas as pd
 from tqdm.auto import tqdm
+import numpy as np
 
 from datasets import Dataset as HFDataset, DatasetInfo
 import cpr_data_access.data_adaptors as adaptors
@@ -1093,3 +1094,63 @@ class Dataset:
         )
 
         return huggingface_dataset
+
+    def from_huggingface(
+        self,
+        huggingface_dataset: HFDataset,
+    ) -> "Dataset":
+        """
+        Create a dataset from a huggingface dataset.
+
+        :param HFDataset huggingface_dataset: created using `Dataset.to_huggingface()`
+        :return self: with documents loaded from huggingface dataset
+        """
+
+        document_metadata_model = self.document_model.__fields__[
+            "document_metadata"
+        ].outer_type_
+        hf_dataframe = huggingface_dataset["train"].to_pandas()
+
+        documents = []
+
+        for _, doc_df in tqdm(
+            hf_dataframe.groupby("document_id"),
+            total=hf_dataframe["document_id"].nunique(),
+        ):
+            document_text_blocks = [
+                TextBlock(
+                    text=[row["text"]],
+                    text_block_id=row["text_block_id"],
+                    language=row["language"],
+                    type=row["type"],
+                    type_confidence=row["type_confidence"],
+                    page_number=row["page_number"],
+                    coords=[tuple(c) for c in row["coords"].tolist()],  # type: ignore
+                )
+                for _, row in doc_df.iterrows()
+            ]
+
+            doc_fields = doc_df.iloc[0].to_dict()
+
+            for k, v in doc_fields.items():
+                if isinstance(v, np.ndarray):
+                    doc_fields[k] = list(v)
+
+            doc_metadata = document_metadata_model.parse_obj(
+                doc_fields
+                | {"source": "GST" if self.document_model == GSTDocument else "CPR"}
+            )
+
+            doc = self.document_model.parse_obj(
+                doc_fields
+                | {
+                    "document_metadata": doc_metadata,
+                    "text_blocks": document_text_blocks,
+                }
+            )
+
+            documents.append(doc)
+
+        self.documents = documents
+
+        return self
