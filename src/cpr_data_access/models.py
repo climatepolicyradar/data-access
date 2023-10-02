@@ -116,7 +116,11 @@ class KnowledgeBaseIDs(BaseModel):
     wikidata_id: Optional[Annotated[str, constr(regex=r"^Q\d+$")]]  # type: ignore
 
     class Config:
-        """Config."""
+        """
+        Make the model immutable and hashable.
+
+        Generates a __hash__() method for the model: see docs https://docs.pydantic.dev/1.10/usage/model_config/.
+        """
 
         frozen = True
 
