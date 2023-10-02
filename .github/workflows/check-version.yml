@@ -28,10 +28,10 @@ jobs:
         echo "PYPROJECT_VERSION=${PYPROJECT_VERSION}"
 
         GITHUB_RELEASE_VERSION=$(curl --silent "https://api.github.com/repos/climatepolicyradar/data-access/releases/latest" | jq -r '.tag_name')
-        echo "GITHUB_RELEASE_VERSION=${GITHUB_RELEASE_VERSION}"
-        
         # remove the "v" from the version
         GITHUB_RELEASE_VERSION=${GITHUB_RELEASE_VERSION:1}
+        echo "GITHUB_RELEASE_VERSION=${GITHUB_RELEASE_VERSION}"
+        
 
         if [[ $PYPROJECT_VERSION > $GITHUB_RELEASE_VERSION ]]; then
           echo "The pyproject.toml version is greater than the latest GitHub release."
