@@ -12,6 +12,7 @@ from cpr_data_access.models import (
     CPRDocument,
     CPRDocumentMetadata,
     Span,
+    KnowledgeBaseIDs,
 )
 
 
@@ -112,6 +113,10 @@ def test_spans_valid(test_document) -> list[Span]:
             type="TEST",
             pred_probability=0.99,
             annotator="pytest",
+            kb_ids=KnowledgeBaseIDs(
+                wikidata_id="Q42",
+                wikipedia_title="Douglas_Adams",
+            ),
         ),
     ]
 

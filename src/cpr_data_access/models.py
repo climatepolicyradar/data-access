@@ -10,6 +10,7 @@ from typing import (
     Union,
     TypeVar,
     Literal,
+    Annotated,
 )
 from pathlib import Path
 import datetime
@@ -25,6 +26,7 @@ from pydantic import (
     conint,
     root_validator,
     PrivateAttr,
+    constr,
 )
 import pandas as pd
 from tqdm.auto import tqdm
@@ -107,6 +109,22 @@ def _load_and_validate_metadata_csv(
     return metadata_df
 
 
+class KnowledgeBaseIDs(BaseModel):
+    """Store for knowledge base IDs."""
+
+    wikipedia_title: Optional[str]
+    wikidata_id: Optional[Annotated[str, constr(regex=r"^Q\d+$")]]  # type: ignore
+
+    class Config:
+        """
+        Make the model immutable and hashable.
+
+        Generates a __hash__() method for the model: see docs https://docs.pydantic.dev/1.10/usage/model_config/.
+        """
+
+        frozen = True
+
+
 class Span(BaseModel):
     """
     Annotation with a type and ID made to a span of text in a document.
@@ -136,6 +154,7 @@ class Span(BaseModel):
     sentence: str
     pred_probability: confloat(ge=0, le=1)  # type: ignore
     annotator: str
+    kb_ids: Optional[KnowledgeBaseIDs] = None
 
     def __hash__(self):
         """Make hashable."""
