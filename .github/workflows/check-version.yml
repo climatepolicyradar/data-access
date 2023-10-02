@@ -1,10 +1,13 @@
 name: check-pyproject-version
 
 on:
-  push:
-    branches:
-      - main
-
+    push:
+      branches:
+        - main
+    pull_request:
+      branches:
+        - main
+  
 jobs:
   check_version:
     runs-on: ubuntu-latest
