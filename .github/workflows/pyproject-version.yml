@@ -1,9 +1,12 @@
 name: pyproject_version_check
 on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
-
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
+    
 jobs:
   build:
     runs-on: ubuntu-latest
