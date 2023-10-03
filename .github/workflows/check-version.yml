@@ -14,13 +14,14 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Install dependencies
       run: |
         python -m pip install "toml==0.10.2"
 
     - name: Compare Versions
+      id: compare_versions
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
@@ -35,7 +36,17 @@ jobs:
 
         if [[ $PYPROJECT_VERSION > $GITHUB_RELEASE_VERSION ]]; then
           echo "The pyproject.toml version is greater than the latest GitHub release."
+          echo "BUMP_GITHUB_RELEASE=True" >> $GITHUB_OUTPUT
         else
           echo "The pyproject.toml version is not greater than the latest GitHub release."
           exit 1
         fi
+
+    - name: Bump GitHub Release
+      if: steps.compare_versions.outputs.BUMP_GITHUB_RELEASE == 'True'
+      run: |
+          echo "Bumping GitHub release"
+          toml set --toml-path pyproject.toml tool.poetry.version $PYPROJECT_VERSION
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
