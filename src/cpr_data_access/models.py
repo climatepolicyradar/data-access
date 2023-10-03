@@ -738,7 +738,7 @@ class Dataset:
             CPRDocument: "ClimatePolicyRadar/climate-law-and-policy-documents",
             GSTDocument: "ClimatePolicyRadar/global-stocktake-documents",
         }
-        self.hf_hub_repo = self.hf_hub_repo_map.get(self.document_model, None)  # type: ignore
+        self.hf_hub_repo = self.hf_hub_repo_map.get(self.document_model)  # type: ignore
 
         if self.document_model == CPRDocument:
             if not kwargs.get("cdn_domain"):
