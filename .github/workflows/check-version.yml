@@ -45,6 +45,9 @@ jobs:
     - name: Bump GitHub Release
       if: steps.compare_versions.outputs.BUMP_GITHUB_RELEASE == 'True'
       run: |
+          PYPROJECT_VERSION=$(python -c "import toml; print(toml.load('pyproject.toml')['tool']['poetry']['version'])")
+          echo "PYPROJECT_VERSION=${PYPROJECT_VERSION}"
+        
           echo "Bumping GitHub release to -> ${PYPROJECT_VERSION}"
           toml set --toml-path pyproject.toml tool.poetry.version ${PYPROJECT_VERSION}
 
