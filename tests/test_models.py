@@ -57,6 +57,24 @@ def test_document(test_dataset) -> BaseDocument:
     ][0]
 
 
+@pytest.fixture
+def test_huggingface_dataset_cpr() -> HuggingFaceDataset:
+    """Test HuggingFace dataset."""
+
+    return HuggingFaceDataset.from_parquet(
+        "tests/test_data/CPR_huggingface_data_sample.parquet"
+    )
+
+
+@pytest.fixture
+def test_huggingface_dataset_gst() -> HuggingFaceDataset:
+    """Test HuggingFace dataset."""
+
+    return HuggingFaceDataset.from_parquet(
+        "tests/test_data/GST_huggingface_data_sample.parquet"
+    )
+
+
 def test_dataset_metadata_df(test_dataset):
     metadata_df = test_dataset.metadata_df
 
@@ -323,7 +341,7 @@ def test_document_get_text_window(test_document):
     assert len(text_window) > len(text_block.to_string())
 
 
-def test_to_huggingface(test_dataset, test_dataset_gst):
+def test_dataset_to_huggingface(test_dataset, test_dataset_gst):
     """Test that the HuggingFace dataset can be created."""
     dataset_hf = test_dataset.to_huggingface()
     dataset_gst_hf = test_dataset_gst.to_huggingface()
@@ -334,6 +352,42 @@ def test_to_huggingface(test_dataset, test_dataset_gst):
     )
     assert len(dataset_gst_hf) == sum(
         len(doc.text_blocks) for doc in test_dataset_gst.documents if doc.text_blocks
+    )
+
+
+def test_dataset_from_huggingface_cpr(test_huggingface_dataset_cpr):
+    """Test that a CPR dataset can be created from a HuggingFace dataset."""
+    dataset = Dataset(document_model=CPRDocument).from_huggingface(
+        test_huggingface_dataset_cpr
+    )
+
+    assert isinstance(dataset, Dataset)
+    assert all(isinstance(doc, CPRDocument) for doc in dataset.documents)
+
+    # Check hugingface dataset has the same number of documents as the dataset
+    assert len(dataset) == len({d["document_id"] for d in test_huggingface_dataset_cpr})
+
+    # Check huggingface dataset has the same number of text blocks as the dataset
+    assert sum(len(doc.text_blocks or []) for doc in dataset.documents) == len(
+        test_huggingface_dataset_cpr
+    )
+
+
+def test_dataset_from_huggingface_gst(test_huggingface_dataset_gst):
+    """Test that a dataset can be created from a HuggingFace dataset."""
+    dataset = Dataset(document_model=GSTDocument).from_huggingface(
+        test_huggingface_dataset_gst
+    )
+
+    assert isinstance(dataset, Dataset)
+    assert all(isinstance(doc, GSTDocument) for doc in dataset.documents)
+
+    # Check hugingface dataset has the same number of documents as the dataset
+    assert len(dataset) == len({d["document_id"] for d in test_huggingface_dataset_gst})
+
+    # Check huggingface dataset has the same number of text blocks as the dataset
+    assert sum(len(doc.text_blocks or []) for doc in dataset.documents) == len(
+        test_huggingface_dataset_gst
     )
 
 

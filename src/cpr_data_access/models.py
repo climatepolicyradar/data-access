@@ -1113,7 +1113,7 @@ class Dataset:
         document_metadata_model = self.document_model.__fields__[
             "document_metadata"
         ].outer_type_
-        hf_dataframe = huggingface_dataset["train"].to_pandas()
+        hf_dataframe = huggingface_dataset.to_pandas()
 
         documents = []
 
@@ -1130,7 +1130,7 @@ class Dataset:
                     type=row["type"],
                     type_confidence=row["type_confidence"],
                     page_number=row["page_number"],
-                    coords=[tuple(c) for c in row["coords"].tolist()],  # type: ignore
+                    coords=[tuple(c) for c in row["coords"].tolist()] if row["coords"] is not None else None,  # type: ignore
                 )
                 for _, row in doc_df.iterrows()
             ]
