@@ -32,7 +32,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 import numpy as np
 
-from datasets import Dataset as HFDataset, DatasetInfo
+from datasets import Dataset as HFDataset, DatasetInfo, load_dataset
 import cpr_data_access.data_adaptors as adaptors
 from cpr_data_access.parser_models import (
     ParserOutput,
@@ -734,6 +734,12 @@ class Dataset:
         self.document_model = document_model
         self.documents = documents
 
+        self.hf_hub_repo_map = {
+            CPRDocument: "ClimatePolicyRadar/climate-law-and-policy-documents",
+            GSTDocument: "ClimatePolicyRadar/global-stocktake-documents",
+        }
+        self.hf_hub_repo = self.hf_hub_repo_map.get(self.document_model, None)  # type: ignore
+
         if self.document_model == CPRDocument:
             if not kwargs.get("cdn_domain"):
                 LOGGER.warning(
@@ -1036,7 +1042,7 @@ class Dataset:
 
         return output_values
 
-    def _doc_to_text_block_dicts(self, document: AnyDocument) -> list[dict[str, Any]]:
+    def _doc_to_text_block_dicts(self, document: AnyDocument) -> list[dict[str, Any]]:  # type: ignore
         """
         Create a list of dictionaries with document metadata and text block metadata for each text block in a document.
 
@@ -1120,6 +1126,7 @@ class Dataset:
         for _, doc_df in tqdm(
             hf_dataframe.groupby("document_id"),
             total=hf_dataframe["document_id"].nunique(),
+            unit="docs",
         ):
             document_text_blocks = [
                 TextBlock(
@@ -1159,3 +1166,29 @@ class Dataset:
         self.documents = documents
 
         return self
+
+    def from_hf_hub(
+        self,
+        dataset_name: Optional[str] = None,
+        dataset_version: Optional[str] = None,
+        **kwargs,
+    ) -> "Dataset":
+        """
+        Load documents from a huggingface hub dataset.
+
+        :param dataset_name: name of the dataset on huggingface hub
+        :param dataset_version: version of the dataset on huggingface hub
+        :return self: with documents loaded from huggingface dataset
+        """
+
+        if dataset_name is None:
+            dataset_name = self.hf_hub_repo
+            LOGGER.info(
+                f"Dataset name not provided. Using default dataset name {dataset_name} for document model {self.document_model}."
+            )
+
+        huggingface_dataset = load_dataset(dataset_name, dataset_version, **kwargs)[
+            "train"
+        ]
+
+        return self.from_huggingface(huggingface_dataset)
