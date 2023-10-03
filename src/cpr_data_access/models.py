@@ -1134,11 +1134,11 @@ class Dataset:
                 for _, row in doc_df.iterrows()
             ]
 
-            doc_fields = doc_df.iloc[0].to_dict()
-
-            for k, v in doc_fields.items():
-                if isinstance(v, np.ndarray):
-                    doc_fields[k] = list(v)
+            # pandas to_dict() stores sequences as numpy arrays, so we need to convert them back to lists
+            doc_fields = {
+                k: list(v) if isinstance(v, np.ndarray) else v
+                for k, v in doc_df.iloc[0].to_dict().items()
+            }
 
             doc_metadata = document_metadata_model.parse_obj(
                 doc_fields
