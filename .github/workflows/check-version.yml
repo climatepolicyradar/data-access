@@ -45,8 +45,8 @@ jobs:
     - name: Bump GitHub Release
       if: steps.compare_versions.outputs.BUMP_GITHUB_RELEASE == 'True'
       run: |
-          echo "Bumping GitHub release"
-          toml set --toml-path pyproject.toml tool.poetry.version $PYPROJECT_VERSION
+          echo "Bumping GitHub release to -> ${PYPROJECT_VERSION}"
+          toml set --toml-path pyproject.toml tool.poetry.version ${PYPROJECT_VERSION}
 
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v5
