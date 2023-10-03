@@ -1108,18 +1108,24 @@ class Dataset:
     def from_huggingface(
         self,
         huggingface_dataset: HFDataset,
+        limit: Optional[int] = None,
     ) -> "Dataset":
         """
         Create a dataset from a huggingface dataset.
 
-        :param HFDataset huggingface_dataset: created using `Dataset.to_huggingface()`
+        :param huggingface_dataset: created using `Dataset.to_huggingface()`
+        :param limit: optionally limit the number of documents to load
         :return self: with documents loaded from huggingface dataset
         """
 
         document_metadata_model = self.document_model.__fields__[
             "document_metadata"
         ].outer_type_
-        hf_dataframe = huggingface_dataset.to_pandas()
+        hf_dataframe: pd.DataFrame = huggingface_dataset.to_pandas()
+
+        if limit is not None:
+            doc_ids = hf_dataframe["document_id"].unique()[:limit]
+            hf_dataframe = hf_dataframe[hf_dataframe["document_id"].isin(doc_ids)]
 
         documents = []
 
@@ -1171,6 +1177,7 @@ class Dataset:
         self,
         dataset_name: Optional[str] = None,
         dataset_version: Optional[str] = None,
+        limit: Optional[int] = None,
         **kwargs,
     ) -> "Dataset":
         """
@@ -1178,6 +1185,7 @@ class Dataset:
 
         :param dataset_name: name of the dataset on huggingface hub
         :param dataset_version: version of the dataset on huggingface hub
+        :param limit: optionally limit the number of documents to load
         :return self: with documents loaded from huggingface dataset
         """
 
@@ -1191,4 +1199,4 @@ class Dataset:
             "train"
         ]
 
-        return self.from_huggingface(huggingface_dataset)
+        return self.from_huggingface(huggingface_dataset, limit)

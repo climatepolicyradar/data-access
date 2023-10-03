@@ -355,22 +355,26 @@ def test_dataset_to_huggingface(test_dataset, test_dataset_gst):
     )
 
 
-def test_dataset_from_huggingface_cpr(test_huggingface_dataset_cpr):
+@pytest.mark.parametrize("limit", [None, 2])
+def test_dataset_from_huggingface_cpr(test_huggingface_dataset_cpr, limit):
     """Test that a CPR dataset can be created from a HuggingFace dataset."""
     dataset = Dataset(document_model=CPRDocument).from_huggingface(
-        test_huggingface_dataset_cpr
+        test_huggingface_dataset_cpr, limit=limit
     )
 
     assert isinstance(dataset, Dataset)
     assert all(isinstance(doc, CPRDocument) for doc in dataset.documents)
 
-    # Check hugingface dataset has the same number of documents as the dataset
-    assert len(dataset) == len({d["document_id"] for d in test_huggingface_dataset_cpr})
+    if limit is None:
+        limit = len({d["document_id"] for d in test_huggingface_dataset_cpr})
 
-    # Check huggingface dataset has the same number of text blocks as the dataset
-    assert sum(len(doc.text_blocks or []) for doc in dataset.documents) == len(
-        test_huggingface_dataset_cpr
-    )
+        # Check huggingface dataset has the same number of text blocks as the dataset
+        assert sum(len(doc.text_blocks or []) for doc in dataset.documents) == len(
+            test_huggingface_dataset_cpr
+        )
+
+    # Check huggingface dataset has the same number of documents as the dataset or the set limit
+    assert len(dataset) == limit
 
 
 def test_dataset_from_huggingface_gst(test_huggingface_dataset_gst):
