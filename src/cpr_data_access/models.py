@@ -1123,6 +1123,7 @@ class Dataset:
         ):
             document_text_blocks = [
                 TextBlock(
+                    # FIXME: we aren't able to access the original text split over lines as it's not stored in the hugingface dataset
                     text=[row["text"]],
                     text_block_id=row["text_block_id"],
                     language=row["language"],
