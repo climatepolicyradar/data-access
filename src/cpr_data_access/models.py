@@ -1183,6 +1183,8 @@ class Dataset:
         """
         Load documents from a huggingface hub dataset.
 
+        Any additional keyword arguments are passed to the huggingface datasets load_dataset function.
+
         :param dataset_name: name of the dataset on huggingface hub
         :param dataset_version: version of the dataset on huggingface hub
         :param limit: optionally limit the number of documents to load
