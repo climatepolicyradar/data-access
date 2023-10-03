@@ -17,6 +17,7 @@ import datetime
 import hashlib
 import logging
 from functools import cached_property
+import os
 
 from pydantic import (
     BaseModel,
@@ -1183,7 +1184,9 @@ class Dataset:
         """
         Load documents from a huggingface hub dataset.
 
-        Any additional keyword arguments are passed to the huggingface datasets load_dataset function.
+        For private repos a token should be provided either as a `token` kwarg or as
+        environment variable HUGGINGFACE_TOKEN. Any additional keyword arguments are
+        passed to the huggingface datasets load_dataset function.
 
         :param dataset_name: name of the dataset on huggingface hub
         :param dataset_version: version of the dataset on huggingface hub
@@ -1191,14 +1194,16 @@ class Dataset:
         :return self: with documents loaded from huggingface dataset
         """
 
+        token = kwargs.get("token", os.getenv("HUGGINGFACE_TOKEN"))
+
         if dataset_name is None:
             dataset_name = self.hf_hub_repo
             LOGGER.info(
                 f"Dataset name not provided. Using default dataset name {dataset_name} for document model {self.document_model}."
             )
 
-        huggingface_dataset = load_dataset(dataset_name, dataset_version, **kwargs)[
-            "train"
-        ]
+        huggingface_dataset = load_dataset(
+            dataset_name, dataset_version, token=token, **kwargs
+        )["train"]
 
         return self.from_huggingface(huggingface_dataset, limit)
