@@ -1106,7 +1106,7 @@ class Dataset:
 
         return huggingface_dataset
 
-    def from_huggingface(
+    def _from_huggingface(
         self,
         huggingface_dataset: HFDataset,
         limit: Optional[int] = None,
@@ -1207,4 +1207,4 @@ class Dataset:
             dataset_name, dataset_version, token=token, split="train", **kwargs
         )
 
-        return self.from_huggingface(huggingface_dataset, limit)
+        return self._from_huggingface(huggingface_dataset, limit)
