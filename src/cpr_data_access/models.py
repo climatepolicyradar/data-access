@@ -720,7 +720,7 @@ class Dataset:
     Helper class for accessing the entire corpus.
 
     :param document_model: pydantic model to use for documents
-    :param documents: list of documents to add. Recommended to use `Dataset.load_from_remote` or `Dataset.load_from_local` instead. Defaults to []
+    :param documents: list of documents to add. Recommended to use `Dataset().load_from_remote` or `Dataset().load_from_local` instead. Defaults to []
     """
 
     class Config:  # noqa: D106
