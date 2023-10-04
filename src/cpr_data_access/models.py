@@ -399,6 +399,11 @@ class BaseDocument(BaseModel):
     document_metadata: BaseMetadata
 
     @classmethod
+    def get_document_metadata_model(cls: type[AnyDocument]) -> type[BaseMetadata]:
+        """Return the document metadata type for the document model"""
+        return cls.__fields__["document_metadata"].type_
+
+    @classmethod
     def from_parser_output(
         cls: type[AnyDocument], parser_document: ParserOutput
     ) -> AnyDocument:
@@ -1119,9 +1124,7 @@ class Dataset:
         :return self: with documents loaded from huggingface dataset
         """
 
-        document_metadata_model = self.document_model.__fields__[
-            "document_metadata"
-        ].outer_type_
+        document_metadata_model = self.document_model.get_document_metadata_model()
         hf_dataframe: pd.DataFrame = huggingface_dataset.to_pandas()
 
         if limit is not None:
