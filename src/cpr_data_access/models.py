@@ -1193,13 +1193,18 @@ class Dataset:
         token = kwargs.get("token", os.getenv("HUGGINGFACE_TOKEN"))
 
         if dataset_name is None:
+            if self.hf_hub_repo is None:
+                raise ValueError(
+                    f"Dataset name not provided and no default dataset name found for document model {self.document_model}. Provide a dataset name directly to this function."
+                )
+
             dataset_name = self.hf_hub_repo
             LOGGER.info(
                 f"Dataset name not provided. Using default dataset name {dataset_name} for document model {self.document_model}."
             )
 
         huggingface_dataset = load_dataset(
-            dataset_name, dataset_version, token=token, **kwargs
-        )["train"]
+            dataset_name, dataset_version, token=token, split="train", **kwargs
+        )
 
         return self.from_huggingface(huggingface_dataset, limit)
