@@ -1,5 +1,3 @@
-import unittest
-
 import pydantic
 import pytest
 
@@ -7,6 +5,7 @@ from cpr_data_access.parser_models import (
     ParserInput,
     ParserOutput,
     VerticalFlipError,
+    PDFTextBlock,
 )
 from cpr_data_access.pipeline_general_models import (
     CONTENT_TYPE_PDF,
@@ -49,11 +48,9 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     parser_output_no_pdf_data["pdf_data"] = None
     parser_output_no_pdf_data["document_content_type"] = CONTENT_TYPE_PDF
 
-    with unittest.TestCase().assertRaises(
-        pydantic.error_wrappers.ValidationError
-    ) as context:
+    with pytest.raises(pydantic.error_wrappers.ValidationError) as context:
         ParserOutput.parse_obj(parser_output_no_pdf_data)
-    assert "pdf_data must be set for PDF documents" in str(context.exception)
+    assert "pdf_data must be set for PDF documents" in str(context.value)
 
     parser_output_no_html_data = parser_output_json_pdf.copy()
     parser_output_no_html_data["html_data"] = None
@@ -67,25 +64,21 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     # PDF data is set as the default
     parser_output_no_content_type["document_content_type"] = None
 
-    with unittest.TestCase().assertRaises(
-        pydantic.error_wrappers.ValidationError
-    ) as context:
+    with pytest.raises(pydantic.error_wrappers.ValidationError) as context:
         ParserOutput.parse_obj(parser_output_no_content_type)
     assert (
         "html_data and pdf_data must be null for documents with no content type."
-    ) in str(context.exception)
+    ) in str(context.value)
 
     parser_output_not_known_content_type = parser_output_json_pdf.copy()
     # PDF data is set as the default
     parser_output_not_known_content_type["document_content_type"] = "not_known"
 
-    with unittest.TestCase().assertRaises(
-        pydantic.error_wrappers.ValidationError
-    ) as context:
+    with pytest.raises(pydantic.error_wrappers.ValidationError) as context:
         ParserOutput.parse_obj(parser_output_not_known_content_type)
     assert (
         "html_data and pdf_data must be null for documents with no content type."
-    ) in str(context.exception)
+    ) in str(context.value)
 
     # Test the text blocks property
     assert ParserOutput.parse_obj(parser_output_json_pdf).text_blocks != []
@@ -105,11 +98,12 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
 
     parser_output = ParserOutput.parse_obj(parser_output_json_pdf)
     # Set as page number that doesn't exist in the page_metadata field to throw exception
-    parser_output.text_blocks[0].page_number = 123456
+    assert isinstance(parser_output.text_blocks[0], PDFTextBlock)
+    parser_output.text_blocks[0].page_number = 123456  # type: ignore
 
-    with unittest.TestCase().assertRaises(VerticalFlipError) as context:
+    with pytest.raises(VerticalFlipError) as context:
         parser_output.vertically_flip_text_block_coords()
-    assert str(context.exception) == (
+    assert str(context.value) == (
         f"Failed to flip text blocks for {parser_output.document_id}"
     )
 
