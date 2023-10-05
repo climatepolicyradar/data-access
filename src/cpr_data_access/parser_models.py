@@ -21,10 +21,7 @@ logger = logging.getLogger(__name__)
 
 class VerticalFlipError(Exception):
     """Exception for when a vertical flip fails."""
-
-    def __init__(self, message: str):
-        super().__init__(message)
-        self.message = message
+    pass
 
 
 class BlockType(str, Enum):
@@ -327,6 +324,10 @@ class BaseParserOutput(BaseModel):
         Flips the coordinates of all PDF text blocks vertically.
 
         Acts in-place on the coordinates in the ParserOutput object.
+
+        Should the document fail to flip, a VerticalFlipError is raised. This is most
+        commonly due to a page number being referenced in a text block that doesn't
+        exist in the page_metadata mapping.
         """
 
         if self.pdf_data is None:

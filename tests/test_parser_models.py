@@ -1,6 +1,7 @@
 import unittest
 
 import pydantic
+import pytest
 
 from cpr_data_access.parser_models import (
     ParserInput,
@@ -58,11 +59,11 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     parser_output_no_html_data["html_data"] = None
     parser_output_no_html_data["document_content_type"] = CONTENT_TYPE_HTML
 
-    with unittest.TestCase().assertRaises(
+    with pytest.raises(
         pydantic.error_wrappers.ValidationError
     ) as context:
         ParserOutput.parse_obj(parser_output_no_html_data)
-    assert "html_data must be set for HTML documents" in str(context.exception)
+    assert "html_data must be set for HTML documents" in str(context.value)
 
     parser_output_no_content_type = parser_output_json_pdf.copy()
     # PDF data is set as the default
