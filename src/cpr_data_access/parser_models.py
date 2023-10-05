@@ -358,7 +358,7 @@ class BaseParserOutput(BaseModel):
                 extra={"props": {"document_id": self.document_id}},
             )
             raise VerticalFlipError(
-               f"Failed to flip text blocks for {self.document_id}"
+                f"Failed to flip text blocks for {self.document_id}"
             ) from e
 
         return self
