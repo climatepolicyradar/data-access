@@ -13,12 +13,12 @@ The base document model of this library is `BaseDocument`, which contains only t
 
 The `Dataset` class is automatically configured with the Huggingface repos we use. You can optionally provide a document limit, a dataset version, and override the repo that the data is loaded from.
 
-If the repository is private you must provide a [user access token](https://huggingface.co/docs/hub/security-tokens), either in your environment as `HUGGINGFACE_TOKEN`, or as an argument to `from_hf_hub`.
+If the repository is private you must provide a [user access token](https://huggingface.co/docs/hub/security-tokens), either in your environment as `HUGGINGFACE_TOKEN`, or as an argument to `from_huggingface`.
 
 ``` py
 from cpr_data_access.models import Dataset
 
-dataset = Dataset(GSTDocument).from_hf_hub(
+dataset = Dataset(GSTDocument).from_huggingface(
     version="d8363af072d7e0f87ec281dd5084fb3d3f4583a9", # commit hash, optional
     limit=1000,
     token="my-huggingface-token", # required for private repos if not in env

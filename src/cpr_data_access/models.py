@@ -1106,7 +1106,7 @@ class Dataset:
 
         return huggingface_dataset
 
-    def _from_huggingface(
+    def _from_huggingface_parquet(
         self,
         huggingface_dataset: HFDataset,
         limit: Optional[int] = None,
@@ -1170,7 +1170,7 @@ class Dataset:
 
         return self
 
-    def from_hf_hub(
+    def from_huggingface(
         self,
         dataset_name: Optional[str] = None,
         dataset_version: Optional[str] = None,
@@ -1207,4 +1207,4 @@ class Dataset:
             dataset_name, dataset_version, token=token, split="train", **kwargs
         )
 
-        return self._from_huggingface(huggingface_dataset, limit)
+        return self._from_huggingface_parquet(huggingface_dataset, limit)

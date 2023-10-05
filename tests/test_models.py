@@ -358,7 +358,7 @@ def test_dataset_to_huggingface(test_dataset, test_dataset_gst):
 @pytest.mark.parametrize("limit", [None, 2])
 def test_dataset_from_huggingface_cpr(test_huggingface_dataset_cpr, limit):
     """Test that a CPR dataset can be created from a HuggingFace dataset."""
-    dataset = Dataset(document_model=CPRDocument)._from_huggingface(
+    dataset = Dataset(document_model=CPRDocument)._from_huggingface_parquet(
         test_huggingface_dataset_cpr, limit=limit
     )
 
@@ -379,7 +379,7 @@ def test_dataset_from_huggingface_cpr(test_huggingface_dataset_cpr, limit):
 
 def test_dataset_from_huggingface_gst(test_huggingface_dataset_gst):
     """Test that a dataset can be created from a HuggingFace dataset."""
-    dataset = Dataset(document_model=GSTDocument)._from_huggingface(
+    dataset = Dataset(document_model=GSTDocument)._from_huggingface_parquet(
         test_huggingface_dataset_gst
     )
 
