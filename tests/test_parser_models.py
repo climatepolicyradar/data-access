@@ -59,9 +59,7 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     parser_output_no_html_data["html_data"] = None
     parser_output_no_html_data["document_content_type"] = CONTENT_TYPE_HTML
 
-    with pytest.raises(
-        pydantic.error_wrappers.ValidationError
-    ) as context:
+    with pytest.raises(pydantic.error_wrappers.ValidationError) as context:
         ParserOutput.parse_obj(parser_output_no_html_data)
     assert "html_data must be set for HTML documents" in str(context.value)
 

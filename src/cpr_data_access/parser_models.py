@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 class VerticalFlipError(Exception):
     """Exception for when a vertical flip fails."""
+
     pass
 
 
