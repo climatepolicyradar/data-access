@@ -4,7 +4,7 @@ import pydantic
 
 from cpr_data_access.parser_models import (
     ParserInput,
-    ParserOutput,
+    ParserOutput, VerticalFlipError,
 )
 from cpr_data_access.pipeline_general_models import (
     CONTENT_TYPE_PDF,
@@ -102,6 +102,16 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     parser_output = ParserOutput.parse_obj(parser_output_json_pdf)
     original_text_blocks = parser_output.text_blocks
     assert parser_output.vertically_flip_text_block_coords() != original_text_blocks
+
+    parser_output = ParserOutput.parse_obj(parser_output_json_pdf)
+    # Set as page number that doesn't exist in the page_metadata field to throw exception
+    parser_output.text_blocks[0].page_number = 123456
+
+    with unittest.TestCase().assertRaises(VerticalFlipError) as context:
+        parser_output.vertically_flip_text_block_coords()
+    assert str(context.exception) == (
+        f"Failed to flip text blocks for {parser_output.document_id}"
+    )
 
     # Test the get_text_blocks method
     # The test html document has invalid html data so the text blocks should be empty

@@ -19,6 +19,14 @@ from cpr_data_access.pipeline_general_models import (
 logger = logging.getLogger(__name__)
 
 
+class VerticalFlipError(Exception):
+    """Exception for when a vertical flip fails."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+        self.message = message
+
+
 class BlockType(str, Enum):
     """
     List of possible block types from the PubLayNet model.
@@ -344,11 +352,14 @@ class BaseParserOutput(BaseModel):
                         text_block.coords[1],
                         text_block.coords[0],
                     ]
-        except Exception:
+        except Exception as e:
             logger.exception(
                 "Error flipping text block coordinates.",
                 extra={"props": {"document_id": self.document_id}},
             )
+            raise VerticalFlipError(
+               f"Failed to flip text blocks for {self.document_id}"
+            ) from e
 
         return self
 
