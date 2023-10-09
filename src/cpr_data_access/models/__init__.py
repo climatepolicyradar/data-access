@@ -1,44 +1,39 @@
 """Data models for data access."""
 
-import itertools
-from typing import (
-    Sequence,
-    Optional,
-    List,
-    Tuple,
-    Any,
-    Union,
-    TypeVar,
-    Literal,
-    Annotated
-)
-from pathlib import Path
 import datetime
 import hashlib
+import itertools
 import logging
 from functools import cached_property
-
-from pydantic import (
-    BaseModel,
-    AnyHttpUrl,
-    NonNegativeInt,
-    root_validator,
-    Field,
-    PrivateAttr,
+from pathlib import Path
+from typing import (
+    Annotated,
+    Any,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
 )
+
 import pandas as pd
+from datasets import Dataset as HFDataset
+from datasets import DatasetInfo
+from pydantic import (
+    AnyHttpUrl,
+    BaseModel,
+    Field,
+    NonNegativeInt,
+    PrivateAttr,
+    root_validator,
+)
 from tqdm.auto import tqdm
 
-from datasets import Dataset as HFDataset, DatasetInfo
 import cpr_data_access.data_adaptors as adaptors
-from cpr_data_access.parser_models import (
-    ParserOutput,
-    BlockType,
-)
-from cpr_data_access.pipeline_general_models import (
-    CONTENT_TYPE_HTML,
-    CONTENT_TYPE_PDF,
-)
+from cpr_data_access.parser_models import BlockType, ParserOutput
+from cpr_data_access.pipeline_general_models import CONTENT_TYPE_HTML, CONTENT_TYPE_PDF
 
 LOGGER = logging.getLogger(__name__)
 
