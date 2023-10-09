@@ -25,8 +25,9 @@ class BackendDocument(BaseModel):
     name: str
     description: str
     import_id: str
-    family_import_id: str
     slug: str
+    family_import_id: str
+    family_slug: str
     publication_ts: datetime
     date: Optional[str] = None  # Set on import by a validator
     source_url: Optional[str]
@@ -46,6 +47,8 @@ class BackendDocument(BaseModel):
         Convert publication_ts to a datetime string.
 
         This is necessary as OpenSearch expects a date object.
+
+        TODO: remove when no longer using Opensearch
         """
 
         values["date"] = values["publication_ts"].strftime("%d/%m/%Y")
