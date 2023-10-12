@@ -1190,7 +1190,7 @@ class Dataset:
         :return self: with documents loaded from huggingface dataset
         """
 
-        token = kwargs.get("token", os.getenv("HUGGINGFACE_TOKEN"))
+        token = kwargs.pop("token", os.getenv("HUGGINGFACE_TOKEN"))
 
         if dataset_name is None:
             if self.hf_hub_repo is None:
