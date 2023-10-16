@@ -1009,6 +1009,10 @@ class Dataset:
 
         return Dataset(**instance_attributes, documents=documents)
 
+    def filter_by_corpus(self, corpus_name: str) -> "Dataset":
+        """"Returns documents that are source from the corpus provided as per their document-id"""
+        return self.filter("document_id", lambda x: x.lower().startswith(corpus_name.lower()))
+
     def filter_by_language(self, language: str) -> "Dataset":
         """Return documents whose only language is the given language."""
         return self.filter("languages", [language])
