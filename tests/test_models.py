@@ -183,13 +183,14 @@ def test_dataset_filter_by_language(test_dataset):
 
 def test_dataset_filter_by_corpus(test_dataset):
     """Test Dataset.filter_by_corpus"""
-    dataset = test_dataset.filter_by_corpus('UNFCCC')
+    dataset = test_dataset.filter_by_corpus("UNFCCC")
 
     assert len(dataset) == 0
 
-    dataset = test_dataset.filter_by_corpus('CCLW')
+    dataset = test_dataset.filter_by_corpus("CCLW")
 
     assert len(dataset) == 3
+
 
 def test_dataset_get_all_text_blocks(test_dataset):
     text_blocks = test_dataset.get_all_text_blocks()
