@@ -1110,6 +1110,7 @@ class Dataset:
             info=dataset_info,
         )
 
+        # Rename column to avoid confusion with the 'language' field, which is text block language
         rename_map = {
             "languages": "document_languages",
         }
