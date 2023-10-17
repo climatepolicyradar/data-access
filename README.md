@@ -16,7 +16,7 @@ The `Dataset` class is automatically configured with the Huggingface repos we us
 If the repository is private you must provide a [user access token](https://huggingface.co/docs/hub/security-tokens), either in your environment as `HUGGINGFACE_TOKEN`, or as an argument to `from_huggingface`.
 
 ``` py
-from cpr_data_access.models import Dataset
+from cpr_data_access.models import Dataset, GSTDocument
 
 dataset = Dataset(GSTDocument).from_huggingface(
     version="d8363af072d7e0f87ec281dd5084fb3d3f4583a9", # commit hash, optional
