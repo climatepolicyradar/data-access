@@ -441,7 +441,7 @@ class BaseDocument(BaseModel):
                 f"Unsupported content type: {parser_document.document_content_type}"
             )
 
-        parser_document_data = parser_document.dict()
+        parser_document_data = parser_document.dict(exclude={"html_data", "pdf_data"})
         metadata = {"document_metadata": parser_document.document_metadata}
         text_and_page_data = {
             "text_blocks": text_blocks,  # type: ignore
