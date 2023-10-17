@@ -181,6 +181,17 @@ def test_dataset_filter_by_language(test_dataset):
     assert dataset.documents[1].languages == ["en"]
 
 
+def test_dataset_filter_by_corpus(test_dataset):
+    """Test Dataset.filter_by_corpus"""
+    dataset = test_dataset.filter_by_corpus("UNFCCC")
+
+    assert len(dataset) == 0
+
+    dataset = test_dataset.filter_by_corpus("CCLW")
+
+    assert len(dataset) == 3
+
+
 def test_dataset_get_all_text_blocks(test_dataset):
     text_blocks = test_dataset.get_all_text_blocks()
     num_text_blocks = sum(
@@ -385,6 +396,8 @@ def test_dataset_from_huggingface_gst(test_huggingface_dataset_gst):
 
     assert isinstance(dataset, Dataset)
     assert all(isinstance(doc, GSTDocument) for doc in dataset.documents)
+
+    assert any(doc.languages is not None for doc in dataset.documents)
 
     # Check hugingface dataset has the same number of documents as the dataset
     assert len(dataset) == len({d["document_id"] for d in test_huggingface_dataset_gst})

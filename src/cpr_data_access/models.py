@@ -1009,6 +1009,12 @@ class Dataset:
 
         return Dataset(**instance_attributes, documents=documents)
 
+    def filter_by_corpus(self, corpus_name: str) -> "Dataset":
+        """Returns documents that are source from the corpus provided as per their document-id"""
+        return self.filter(
+            "document_id", lambda x: x.lower().startswith(corpus_name.lower())
+        )
+
     def filter_by_language(self, language: str) -> "Dataset":
         """Return documents whose only language is the given language."""
         return self.filter("languages", [language])
@@ -1104,6 +1110,13 @@ class Dataset:
             info=dataset_info,
         )
 
+        # Rename column to avoid confusion with the 'language' field, which is text block language
+        rename_map = {
+            "languages": "document_languages",
+        }
+
+        huggingface_dataset = huggingface_dataset.rename_columns(rename_map)
+
         return huggingface_dataset
 
     def _from_huggingface_parquet(
@@ -1121,15 +1134,26 @@ class Dataset:
 
         hf_dataframe: pd.DataFrame = huggingface_dataset.to_pandas()
 
+        # This undoes the renaming of columns done in to_huggingface()
+        hf_dataframe = hf_dataframe.rename(columns={"document_languages": "languages"})
+
+        # Create a dummy variable to group on combining document_id and translated.
+        # This way we get an accurate count in the progress bar.
+        hf_dataframe["_document_id_translated"] = hf_dataframe[
+            "document_id"
+        ] + hf_dataframe["translated"].astype(str)
+
         if limit is not None:
-            doc_ids = hf_dataframe["document_id"].unique()[:limit]
-            hf_dataframe = hf_dataframe[hf_dataframe["document_id"].isin(doc_ids)]
+            doc_ids = hf_dataframe["_document_id_translated"].unique()[:limit]
+            hf_dataframe = hf_dataframe[
+                hf_dataframe["_document_id_translated"].isin(doc_ids)
+            ]
 
         documents = []
 
         for _, doc_df in tqdm(
-            hf_dataframe.groupby("document_id"),
-            total=hf_dataframe["document_id"].nunique(),
+            hf_dataframe.groupby("_document_id_translated"),
+            total=hf_dataframe["_document_id_translated"].nunique(),
             unit="docs",
         ):
             document_text_blocks = [
