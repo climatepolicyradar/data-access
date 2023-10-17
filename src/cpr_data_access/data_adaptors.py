@@ -140,7 +140,7 @@ class LocalDataAdaptor(DataAdaptor):
 
         raw_files = [file.read_text() for file in file_paths]
         for raw_file_text in tqdm(
-            raw_files, desc=f"Loading files in batch {batch_idx + 1}/{num_batches}"
+            raw_files, desc=f"Loading files from directory in batch {batch_idx + 1}/{num_batches}"
         ):
             parsed_files.append(BaseParserOutput.parse_raw(raw_file_text))
 

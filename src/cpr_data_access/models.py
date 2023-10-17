@@ -760,7 +760,7 @@ class Dataset:
         parser_outputs = adaptor.load_dataset(name_or_path, limit)
         self.documents = [
             self.document_model.from_parser_output(doc)
-            for doc in tqdm(parser_outputs, desc="Parsing documents")
+            for doc in tqdm(parser_outputs, desc="Loading documents")
         ]
 
         if self.document_model == CPRDocument:
