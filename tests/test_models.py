@@ -397,6 +397,8 @@ def test_dataset_from_huggingface_gst(test_huggingface_dataset_gst):
     assert isinstance(dataset, Dataset)
     assert all(isinstance(doc, GSTDocument) for doc in dataset.documents)
 
+    assert any(doc.languages is not None for doc in dataset.documents)
+
     # Check hugingface dataset has the same number of documents as the dataset
     assert len(dataset) == len({d["document_id"] for d in test_huggingface_dataset_gst})
 
