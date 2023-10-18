@@ -197,6 +197,7 @@ class TextBlock(BaseModel):
         return " ".join([line.strip() for line in self.text])
 
     def __hash__(self) -> int:
+        """Get hash of the text-block. Based on the text and the text_block_id"""
         text_utf8 = self.to_string().encode("utf-8")
         hash_string = (
             hashlib.md5(text_utf8).hexdigest()
