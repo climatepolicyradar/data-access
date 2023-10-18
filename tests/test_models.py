@@ -433,3 +433,9 @@ def test_display_text_block(test_document, test_spans_valid):
     assert isinstance(block_html, str)
     assert len(block_html) > 0
     assert block_html.startswith("<div")
+
+
+def test_text_block_hashable(test_document):
+    doc = test_document
+
+    set(doc.text_blocks)

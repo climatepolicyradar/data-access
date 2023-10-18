@@ -196,6 +196,14 @@ class TextBlock(BaseModel):
         """Return text in a clean format"""
         return " ".join([line.strip() for line in self.text])
 
+    def __hash__(self) -> int:
+        text_utf8 = self.to_string().encode("utf-8")
+        hash_string = (
+            hashlib.md5(text_utf8).hexdigest()
+            + hashlib.md5(self.text_block_id.encode()).hexdigest()
+        )
+        return int(hash_string, 16)
+
     @cached_property
     def text_hash(self) -> str:
         """
@@ -203,7 +211,6 @@ class TextBlock(BaseModel):
 
         :return str: md5sum + "__" + sha256, or empty string if the text block has no text
         """
-
         if self.text == "":
             return ""
 
