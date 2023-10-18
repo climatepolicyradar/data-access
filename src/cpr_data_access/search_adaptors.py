@@ -94,6 +94,12 @@ class VespaSearchAdapter(SearchAdapter):
 
         families = _parse_vespa_response(vespa_response)
 
+        continuations = vespa_response.json["root"]["children"][0]["children"][0].get(
+            "continuation"
+        )
+        if continuations:
+            next_family_continuation_token = continuations.get("next")
+
         total_time_end = time.time()
 
         return SearchResponse(
@@ -101,6 +107,7 @@ class VespaSearchAdapter(SearchAdapter):
             total_time_ms=(total_time_end - total_time_start) * 1000,
             query_time_ms=(query_time_end - query_time_start) * 1000,
             families=families,
+            continuation_token=next_family_continuation_token,
         )
 
     def get_by_id(self, document_id: str) -> Hit:

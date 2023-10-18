@@ -51,6 +51,7 @@ class SearchRequestBody(BaseModel):
 
     limit: int = 10
     offset: int = 0
+    continuation_token: Optional[str] = None
 
 
 class Hit(BaseModel):
@@ -99,9 +100,9 @@ class Document(Hit):
             document_import_id=fields["documentid"],
             document_slug=fields["document_slug"],
             document_languages=fields["family_metadata"].get("language", []),
-            document_content_type=fields.get("content_type", None),
-            document_cdn_object=fields.get("cdn_object", None),
-            document_source_url=fields.get("source_url", None),
+            document_content_type=fields.get("content_type"),
+            document_cdn_object=fields.get("cdn_object"),
+            document_source_url=fields.get("source_url"),
         )
 
 
@@ -128,14 +129,14 @@ class Passage(Hit):
             document_import_id=fields["documentid"],
             document_slug=fields["document_slug"],
             document_languages=fields["family_metadata"].get("language", []),
-            document_content_type=fields.get("content_type", None),
-            document_cdn_object=fields.get("cdn_object", None),
-            document_source_url=fields.get("source_url", None),
+            document_content_type=fields.get("content_type"),
+            document_cdn_object=fields.get("cdn_object"),
+            document_source_url=fields.get("source_url"),
             text_block=fields["text_block"],
             text_block_id=fields["text_block_id"],
             text_block_type=fields["text_block_type"],
-            text_block_page=fields.get("text_block_page", None),
-            text_block_coords=fields.get("text_block_coords", None),
+            text_block_page=fields.get("text_block_page"),
+            text_block_coords=fields.get("text_block_coords"),
         )
 
 
@@ -148,5 +149,5 @@ class SearchResponse(BaseModel):
     total_hits: int
     query_time_ms: int
     total_time_ms: int
-
     families: Sequence[Family]
+    continuation_token: Optional[str]

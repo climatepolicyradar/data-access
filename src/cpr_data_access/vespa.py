@@ -79,6 +79,12 @@ def _build_yql(request: SearchRequestBody) -> str:
         else ""
     )
 
+    rendered_continuation = (
+        f"{{ 'continuations':['{request.continuation_token}'] }}"
+        if request.continuation_token
+        else ""
+    )
+
     rendered_query = f"""
         select *
         from sources family_document, document_passage
@@ -87,6 +93,7 @@ def _build_yql(request: SearchRequestBody) -> str:
         { rendered_sort }
         limit 0
         |
+        { rendered_continuation }
         all(
             group(family_import_id)
             max({request.limit})
