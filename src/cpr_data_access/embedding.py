@@ -1,16 +1,24 @@
-import numpy as np
 from typing import List, Literal
 
+import numpy as np
 from sentence_transformers import SentenceTransformer
-
 
 ModelName = Literal["msmarco-distilbert-dot-v5"]
 
-class Embedder():
+
+class Embedder:
+    """
+    Class for embedding strings using a sentence-transformers model
+    """
+
     def __init__(self, model_name: ModelName = "msmarco-distilbert-dot-v5"):
         self.model = SentenceTransformer(model_name)
-        
-    def embed(self, string: str, normalize: bool = True,) -> List[float]:
+
+    def embed(
+        self,
+        string: str,
+        normalize: bool = True,
+    ) -> List[float]:
         """
         Embed a string using a sentence-transformers model
 

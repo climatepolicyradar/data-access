@@ -1,30 +1,13 @@
 from pathlib import Path
+from typing import List, Sequence
 
 import yaml
-from vespa.application import Vespa
+from vespa.io import VespaResponse
 
-from cpr_data_access.models.search import SearchRequestBody
-from cpr_data_access.parser_models import BaseParserOutput
-
-
-def get_by_id_from_vespa(client: Vespa, document_id: str) -> BaseParserOutput:
-    """
-    Get a document by its id from vespa
-
-    :param client: Vespa client
-    :param document_id: document id
-    :return: parser output
-    """
-
-    results = client.get_data(data_id=document_id).json()
-
-    if len(results) == 0:
-        raise ValueError(f"No document found with id {document_id}")
-
-    return BaseParserOutput.parse_raw(results[0])
+from cpr_data_access.models.search import Family, Hit, SearchRequestBody
 
 
-def _find_vespa_cert_directory() -> Path:
+def _find_vespa_cert_paths() -> tuple[Path, Path]:
     vespa_directory = Path.home() / ".vespa/"
     if not vespa_directory.exists():
         raise FileNotFoundError(
@@ -38,52 +21,57 @@ def _find_vespa_cert_directory() -> Path:
         application_name = data["application"]
 
     cert_directory = vespa_directory / application_name
-    return cert_directory
+    cert_path = list(cert_directory.glob("*cert.pem"))[0]
+    key_path = list(cert_directory.glob("*key.pem"))[0]
+    return cert_path, key_path
 
 
-def _build_yql(request: SearchRequestBody, target_num_hits: int = 1000) -> str:
+def _build_yql(request: SearchRequestBody) -> str:
     """
     Build a YQL string for retrieving relevant, filtered, sorted results from vespa
 
-    :param request: SearchRequestBody
-    :param target_num_hits: rough number of hits to return
+    :param request SearchRequestBody: request object
     :return: YQL string
     """
     if request.exact_match:
         rendered_query_string_match = f"""
             where (
-                name contains ({{stem: false}}\"{ request.query_string }\"),
-                description contains ({{stem: false}}\"{ request.query_string }\")
+                (name contains({{stem: false}}"{request.query_string}")) or
+                (description contains({{stem: false}}"{request.query_string}")) or
+                (text contains ({{stem: false}}"{request.query_string}"))
             )
         """
     else:
         rendered_query_string_match = f"""
-            where
-            (
-                {{"targetHits": {target_num_hits}}}weakAnd(
+            where (
+                {{"targetHits": 1000}} weakAnd(
                     name contains "{ request.query_string }",
-                    description contains "{ request.query_string }"
+                    description contains "{ request.query_string }",
+                    text contains "{ request.query_string }"
                 )
-            ) or 
-            ((
-                [{{"targetNumHits":{target_num_hits}}}]
-                nearestNeighbor(description_embedding,query_embedding
-            ))
+            ) or (
+                [{{"targetNumHits": 1000}}]
+                nearestNeighbor(description_embedding,query_embedding)
+            ) or (
+                [{{"targetNumHits": 1000}}]
+                nearestNeighbor(text_embedding,query_embedding)
+            )
         """
 
     rendered_filters = ""
     if request.keyword_filters:
         rendered_filters = "and " + " and ".join(
             f'{field} contains "{value}"'
-            for field, value in request.keyword_filters.items()
+            for field, values in request.keyword_filters.items()
+            for value in values
         )
 
     if request.year_range:
         start, end = request.year_range
         if start:
-            rendered_filters += f" and year >= {start}"
+            rendered_filters += f" and family_publication_year >= {start}"
         if end:
-            rendered_filters += f" and year <= {end}"
+            rendered_filters += f" and family_publication_year <= {end}"
 
     rendered_sort = (
         f"order by {request.sort_field} {request.sort_order}"
@@ -96,21 +84,34 @@ def _build_yql(request: SearchRequestBody, target_num_hits: int = 1000) -> str:
         from sources family_document, document_passage
         { rendered_query_string_match }
         { rendered_filters }
+        { rendered_sort }
         limit 0
         |
         all(
             group(family_import_id)
+            max({request.limit})
             each(
                 all(
-                    group(document_import_id)
-                    each(
-                        max({ request.max_passages_per_doc })
-                        each(output(summary()))
-                    )
+                    max({request.max_hits_per_family})
+                    each(output(summary()))
                 )
             )
         )
-        { rendered_sort }
     """
 
-    return rendered_query
+    return " ".join(rendered_query.split())
+
+
+def _parse_vespa_response(
+    vespa_response: VespaResponse,
+) -> Sequence[Family]:
+    families: List[Family] = []
+    root = vespa_response.json["root"]
+    response_families = root["children"][0]["children"][0]["children"]
+    for family in response_families:
+        family_hits: List[Hit] = []
+        for hit in family["children"][0]["children"]:
+            family_hits.append(Hit.from_vespa_response(response_hit=hit))
+        families.append(Family(id=family["value"], hits=family_hits))
+
+    return families
