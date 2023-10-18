@@ -199,11 +199,8 @@ class TextBlock(BaseModel):
     def __hash__(self) -> int:
         """Get hash of the text-block. Based on the text and the text_block_id"""
         text_utf8 = self.to_string().encode("utf-8")
-        hash_string = (
-            hashlib.md5(text_utf8).hexdigest()
-            + hashlib.md5(self.text_block_id.encode()).hexdigest()
-        )
-        return int(hash_string, 16)
+
+        return hash(f"{text_utf8}-{self.text_block_id.encode()}")
 
     @cached_property
     def text_hash(self) -> str:
