@@ -60,11 +60,14 @@ def _build_yql(request: SearchRequestBody) -> str:
 
     rendered_filters = ""
     if request.keyword_filters:
-        rendered_filters = "and " + " and ".join(
-            f'{field} contains "{value}"'
-            for field, values in request.keyword_filters.items()
-            for value in values
-        )
+        rendered_filters += " and "
+        for field, values in request.keyword_filters.items():
+            if not isinstance(values, list):
+                values = [values]
+
+            rendered_filters += " and ".join(
+                f'({field.value} contains "{value}")' for value in values
+            )
 
     if request.year_range:
         start, end = request.year_range

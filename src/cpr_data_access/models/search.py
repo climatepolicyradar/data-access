@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Mapping, Optional, Sequence
+from typing import List, Mapping, Optional, Sequence, Union
 
 from pydantic import BaseModel
 
@@ -15,25 +15,17 @@ class SortOrder(str, Enum):
 class SortField(str, Enum):
     """Valid fields to sort search results by"""
 
-    DATE = "date"
-    TITLE = "title"
+    DATE = "family_publication_ts"
+    NAME = "family_name"
 
 
 class FilterField(str, Enum):
     """Valid fields for filtering search results"""
 
-    SOURCE = "sources"
-    COUNTRY = "countries"
-    REGION = "regions"
-    INSTRUMENT = "instruments"
-    SECTOR = "sectors"
-    TYPE = "types"
-    CATEGORY = "categories"
-    TOPIC = "topics"
-    KEYWORD = "keywords"
-    HAZARD = "hazards"
-    LANGUAGE = "languages"
-    FRAMEWORK = "frameworks"
+    GEOGRAPHY = "family_geography"
+    CATEGORY = "family_category"
+    LANGUAGE = "document_languages"
+    SOURCE = "family_source"
 
 
 class SearchRequestBody(BaseModel):
@@ -43,7 +35,7 @@ class SearchRequestBody(BaseModel):
     exact_match: bool = False
     max_hits_per_family: int = 10
 
-    keyword_filters: Optional[Mapping[FilterField, Sequence[str]]] = None
+    keyword_filters: Optional[Mapping[FilterField, Union[str, Sequence[str]]]] = None
     year_range: Optional[tuple[Optional[int], Optional[int]]] = None
 
     sort_field: Optional[SortField] = None
