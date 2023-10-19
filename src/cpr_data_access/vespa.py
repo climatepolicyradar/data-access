@@ -36,26 +36,26 @@ def _build_yql(request: SearchRequestBody) -> str:
     if request.exact_match:
         rendered_query_string_match = f"""
             where (
-                (name contains({{stem: false}}"{request.query_string}")) or
-                (description contains({{stem: false}}"{request.query_string}")) or
-                (text contains ({{stem: false}}"{request.query_string}"))
+                (family_name contains({{stem: false}}"{request.query_string}")) or
+                (family_description contains({{stem: false}}"{request.query_string}")) or
+                (text_block contains ({{stem: false}}"{request.query_string}"))
             )
         """
     else:
         rendered_query_string_match = f"""
-            where (
+            where ((
                 {{"targetHits": 1000}} weakAnd(
-                    name contains "{ request.query_string }",
-                    description contains "{ request.query_string }",
-                    text contains "{ request.query_string }"
+                    family_name contains "{ request.query_string }",
+                    family_description contains "{ request.query_string }",
+                    text_block contains "{ request.query_string }"
                 )
             ) or (
                 [{{"targetNumHits": 1000}}]
-                nearestNeighbor(description_embedding,query_embedding)
+                nearestNeighbor(family_description_embedding,query_embedding)
             ) or (
                 [{{"targetNumHits": 1000}}]
                 nearestNeighbor(text_embedding,query_embedding)
-            )
+            ))
         """
 
     rendered_filters = ""
@@ -69,9 +69,9 @@ def _build_yql(request: SearchRequestBody) -> str:
     if request.year_range:
         start, end = request.year_range
         if start:
-            rendered_filters += f" and family_publication_year >= {start}"
+            rendered_filters += f" and (family_publication_year >= {start})"
         if end:
-            rendered_filters += f" and family_publication_year <= {end}"
+            rendered_filters += f" and (family_publication_year <= {end})"
 
     rendered_sort = (
         f"order by {request.sort_field} {request.sort_order}"
@@ -100,12 +100,11 @@ def _build_yql(request: SearchRequestBody) -> str:
             each(
                 all(
                     max({request.max_hits_per_family})
-                    each(output(summary()))
+                    each(output(summary(search_summary)))
                 )
             )
         )
     """
-
     return " ".join(rendered_query.split())
 
 

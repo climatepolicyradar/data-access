@@ -90,19 +90,22 @@ class Document(Hit):
     def from_vespa_response(cls, response_hit) -> "Document":
         fields = response_hit["fields"]
         return cls(
-            family_name=fields["name"],
-            family_description=fields["description"],
+            family_name=fields["family_name"],
+            family_description=fields["family_description"],
             family_import_id=fields["family_import_id"],
             family_slug=fields["family_slug"],
-            family_category=fields["category"],
-            family_publication_ts=datetime.fromisoformat(fields["publication_ts"]),
-            family_geography=fields["geography"],
-            document_import_id=fields["documentid"],
+            family_category=fields["family_category"],
+            family_publication_ts=datetime.fromisoformat(
+                fields["family_publication_ts"]
+            ),
+            family_geography=fields["family_geography"],
+            document_import_id=fields["document_import_id"],
             document_slug=fields["document_slug"],
-            document_languages=fields["family_metadata"].get("language", []),
-            document_content_type=fields.get("content_type"),
-            document_cdn_object=fields.get("cdn_object"),
-            document_source_url=fields.get("source_url"),
+            # document_languages=fields["family_metadata"].get("language", []),
+            document_languages=[],
+            document_content_type=fields.get("document_content_type"),
+            document_cdn_object=fields.get("document_cdn_object"),
+            document_source_url=fields.get("document_source_url"),
         )
 
 
@@ -119,19 +122,22 @@ class Passage(Hit):
     def from_vespa_response(cls, response_hit) -> "Passage":
         fields = response_hit["fields"]
         return cls(
-            family_name=fields["name"],
-            family_description=fields["description"],
+            family_name=fields["family_name"],
+            family_description=fields["family_description"],
             family_import_id=fields["family_import_id"],
             family_slug=fields["family_slug"],
-            family_category=fields["category"],
-            family_publication_ts=datetime.fromisoformat(fields["publication_ts"]),
-            family_geography=fields["geography"],
-            document_import_id=fields["documentid"],
+            family_category=fields["family_category"],
+            family_publication_ts=datetime.fromisoformat(
+                fields["family_publication_ts"]
+            ),
+            family_geography=fields["family_geography"],
+            document_import_id=fields["document_import_id"],
             document_slug=fields["document_slug"],
-            document_languages=fields["family_metadata"].get("language", []),
-            document_content_type=fields.get("content_type"),
-            document_cdn_object=fields.get("cdn_object"),
-            document_source_url=fields.get("source_url"),
+            # document_languages=fields["family_metadata"].get("language", []),
+            document_languages=[],
+            document_content_type=fields.get("document_content_type"),
+            document_cdn_object=fields.get("document_cdn_object"),
+            document_source_url=fields.get("document_source_url"),
             text_block=fields["text_block"],
             text_block_id=fields["text_block_id"],
             text_block_type=fields["text_block_type"],

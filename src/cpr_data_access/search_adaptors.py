@@ -3,7 +3,6 @@ import time
 from abc import ABC
 from typing import Optional
 
-from rich import print
 from vespa.application import Vespa
 
 from cpr_data_access.embedding import Embedder, ModelName
@@ -94,11 +93,11 @@ class VespaSearchAdapter(SearchAdapter):
 
         families = _parse_vespa_response(vespa_response)
 
-        continuations = vespa_response.json["root"]["children"][0]["children"][0].get(
-            "continuation"
+        next_family_continuation_token = (
+            vespa_response.json["root"]["children"][0]["children"][0]
+            .get("continuation", {})
+            .get("next", None)
         )
-        if continuations:
-            next_family_continuation_token = continuations.get("next")
 
         total_time_end = time.time()
 
