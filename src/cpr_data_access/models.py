@@ -446,7 +446,7 @@ class BaseDocument(BaseModel):
                 f"Unsupported content type: {parser_document.document_content_type}"
             )
 
-        parser_document_data = parser_document.dict()
+        parser_document_data = parser_document.dict(exclude={"html_data", "pdf_data"})
         metadata = {"document_metadata": parser_document.document_metadata}
         text_and_page_data = {
             "text_blocks": text_blocks,  # type: ignore
@@ -764,7 +764,8 @@ class Dataset:
 
         parser_outputs = adaptor.load_dataset(name_or_path, limit)
         self.documents = [
-            self.document_model.from_parser_output(doc) for doc in parser_outputs
+            self.document_model.from_parser_output(doc)
+            for doc in tqdm(parser_outputs, desc="Loading documents")
         ]
 
         if self.document_model == CPRDocument:

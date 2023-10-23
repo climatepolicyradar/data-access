@@ -122,8 +122,28 @@ class LocalDataAdaptor(DataAdaptor):
 
         parsed_files = []
 
-        for file in tqdm(list(folder_path.glob("*.json"))[:limit]):
-            parsed_files.append(BaseParserOutput.parse_raw(file.read_text()))
+        files = list(folder_path.glob("*.json"))[:limit]
+        num_batches = len(files) // 1000 + 1
+
+        for batch_idx in range(num_batches):
+            parsed_batch_files = self._load_files(
+                files[batch_idx * 1000 : (batch_idx + 1) * 1000], batch_idx, num_batches
+            )
+            parsed_files += parsed_batch_files
+
+        return parsed_files
+
+    @staticmethod
+    def _load_files(file_paths: list[Path], batch_idx: int, num_batches: int):
+        """Loads the files within a batch with paths provided in file_paths."""
+        parsed_files = []
+
+        raw_files = (file.read_text() for file in file_paths)
+        for raw_file_text in tqdm(
+            raw_files,
+            desc=f"Loading files from directory in batch {batch_idx + 1}/{num_batches}",
+        ):
+            parsed_files.append(BaseParserOutput.parse_raw(raw_file_text))
 
         return parsed_files
 
