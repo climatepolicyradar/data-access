@@ -4,14 +4,7 @@ from typing import List, Sequence
 import yaml
 from vespa.io import VespaResponse
 
-from cpr_data_access.models.search import (
-    Family,
-    Hit,
-    SearchRequestBody,
-    filter_fields,
-    sort_fields,
-    sort_orders,
-)
+from cpr_data_access.models.search import Family, Hit, SearchRequestBody, filter_fields
 
 
 def _find_vespa_cert_paths() -> tuple[Path, Path]:
@@ -83,12 +76,6 @@ def _build_yql(request: SearchRequestBody) -> str:
         if end:
             rendered_filters += f" and (family_publication_year <= {end})"
 
-    rendered_sort = (
-        f"order by {sort_fields[request.sort_by]} {sort_orders[request.sort_order]}"
-        if request.sort_by
-        else ""
-    )
-
     rendered_continuation = (
         f"{{ 'continuations':['{request.continuation_token}'] }}"
         if request.continuation_token
@@ -100,7 +87,6 @@ def _build_yql(request: SearchRequestBody) -> str:
         from sources family_document, document_passage
         { rendered_query_string_match }
         { rendered_filters }
-        { rendered_sort }
         limit 0
         |
         { rendered_continuation }

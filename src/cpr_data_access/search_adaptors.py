@@ -6,7 +6,12 @@ from typing import Optional
 from vespa.application import Vespa
 
 from cpr_data_access.embedding import Embedder, ModelName
-from cpr_data_access.models.search import Hit, SearchRequestBody, SearchResponse
+from cpr_data_access.models.search import (
+    Hit,
+    SearchRequestBody,
+    SearchResponse,
+    sort_fields,
+)
 from cpr_data_access.vespa import (
     _build_yql,
     _find_vespa_cert_paths,
@@ -87,6 +92,15 @@ class VespaSearchAdapter(SearchAdapter):
         query_time_end = time.time()
 
         families = _parse_vespa_response(vespa_response)
+
+        # For now, we can't sort our results natively in vespa, because sort orders are
+        # applied _before_ grouping. We're sorting here instead.
+        if request.sort_by:
+            families = sorted(
+                families,
+                key=lambda f: getattr(f.hits[0], sort_fields[request.sort_by]),
+                reverse=True if request.sort_order == "descending" else False,
+            )
 
         next_family_continuation_token = (
             vespa_response.json["root"]["children"][0]["children"][0]

@@ -3,12 +3,7 @@ from typing import List, Literal, Mapping, Optional, Sequence, Union
 
 from pydantic import BaseModel
 
-sort_orders = {
-    "ascending": "asc",
-    "descending": "desc",
-}
-
-SortOrder = Literal[tuple(sort_orders.keys())]
+SortOrder = Literal["ascending", "descending"]
 
 sort_fields = {
     "date": "family_publication_ts",
