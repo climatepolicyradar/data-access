@@ -13,6 +13,7 @@ from cpr_data_access.models import (
     CPRDocumentMetadata,
     Span,
     KnowledgeBaseIDs,
+    TextBlock,
 )
 
 
@@ -433,3 +434,20 @@ def test_display_text_block(test_document, test_spans_valid):
     assert isinstance(block_html, str)
     assert len(block_html) > 0
     assert block_html.startswith("<div")
+
+
+def test_text_block_hashable(test_document):
+    doc = test_document
+
+    set(doc.text_blocks)
+
+    first_block_hash = doc.text_blocks[0].__hash__()
+    assert isinstance(first_block_hash, int)
+
+    comparison_block = TextBlock(**doc.text_blocks[0].dict())
+
+    assert comparison_block == doc.text_blocks[0]
+
+    comparison_block.text_block_id = "0"
+
+    assert comparison_block != doc.text_blocks[0]
