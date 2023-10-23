@@ -1,31 +1,31 @@
 from datetime import datetime
-from enum import Enum
-from typing import List, Mapping, Optional, Sequence, Union
+from typing import List, Literal, Mapping, Optional, Sequence, Union
 
 from pydantic import BaseModel
 
+sort_orders = {
+    "ascending": "asc",
+    "descending": "desc",
+}
 
-class SortOrder(str, Enum):
-    """Valid sort orders for search results"""
+SortOrder = Literal[tuple(sort_orders.keys())]
 
-    ASCENDING = "asc"
-    DESCENDING = "desc"
+sort_fields = {
+    "date": "family_publication_ts",
+    "name": "family_name",
+}
 
-
-class SortField(str, Enum):
-    """Valid fields to sort search results by"""
-
-    DATE = "family_publication_ts"
-    NAME = "family_name"
+SortField = Literal[tuple(sort_fields.keys())]
 
 
-class FilterField(str, Enum):
-    """Valid fields for filtering search results"""
+filter_fields = {
+    "geography": "family_geography",
+    "category": "family_category",
+    "language": "document_languages",
+    "source": "family_source",
+}
 
-    GEOGRAPHY = "family_geography"
-    CATEGORY = "family_category"
-    LANGUAGE = "document_languages"
-    SOURCE = "family_source"
+FilterField = Literal[tuple(filter_fields.keys())]
 
 
 class SearchRequestBody(BaseModel):
@@ -33,16 +33,15 @@ class SearchRequestBody(BaseModel):
 
     query_string: str
     exact_match: bool = False
+    limit: int = 100
     max_hits_per_family: int = 10
 
     keyword_filters: Optional[Mapping[FilterField, Union[str, Sequence[str]]]] = None
     year_range: Optional[tuple[Optional[int], Optional[int]]] = None
 
-    sort_field: Optional[SortField] = None
-    sort_order: SortOrder = SortOrder.DESCENDING
+    sort_by: Optional[SortField] = None
+    sort_order: SortOrder = "descending"
 
-    limit: int = 10
-    offset: int = 0
     continuation_token: Optional[str] = None
 
 
@@ -93,8 +92,7 @@ class Document(Hit):
             family_geography=fields["family_geography"],
             document_import_id=fields["document_import_id"],
             document_slug=fields["document_slug"],
-            # document_languages=fields["family_metadata"].get("language", []),
-            document_languages=[],
+            document_languages=fields.get("document_languages", []),
             document_content_type=fields.get("document_content_type"),
             document_cdn_object=fields.get("document_cdn_object"),
             document_source_url=fields.get("document_source_url"),
@@ -125,8 +123,7 @@ class Passage(Hit):
             family_geography=fields["family_geography"],
             document_import_id=fields["document_import_id"],
             document_slug=fields["document_slug"],
-            # document_languages=fields["family_metadata"].get("language", []),
-            document_languages=[],
+            document_languages=fields.get("document_languages", []),
             document_content_type=fields.get("document_content_type"),
             document_cdn_object=fields.get("document_cdn_object"),
             document_source_url=fields.get("document_source_url"),

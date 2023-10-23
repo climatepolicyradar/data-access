@@ -73,12 +73,7 @@ class VespaSearchAdapter(SearchAdapter):
         """
         total_time_start = time.time()
 
-        yql_body = _build_yql(request)
-        vespa_request_body = {
-            "yql": yql_body,
-            "hits": request.limit,
-            "offset": request.offset,
-        }
+        vespa_request_body = {"yql": _build_yql(request)}
 
         if request.exact_match:
             vespa_request_body["ranking.profile"] = "exact"
