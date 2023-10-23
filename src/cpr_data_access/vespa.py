@@ -4,7 +4,14 @@ from typing import List, Sequence
 import yaml
 from vespa.io import VespaResponse
 
-from cpr_data_access.models.search import Family, Hit, SearchRequestBody
+from cpr_data_access.models.search import (
+    Family,
+    Hit,
+    SearchRequestBody,
+    filter_fields,
+    sort_fields,
+    sort_orders,
+)
 
 
 def _find_vespa_cert_paths() -> tuple[Path, Path]:
@@ -60,14 +67,14 @@ def _build_yql(request: SearchRequestBody) -> str:
 
     rendered_filters = ""
     if request.keyword_filters:
-        rendered_filters += " and "
-        for field, values in request.keyword_filters.items():
+        filters = []
+        for field_key, values in request.keyword_filters.items():
+            field_name = filter_fields[field_key]
             if not isinstance(values, list):
                 values = [values]
-
-            rendered_filters += " and ".join(
-                f'({field.value} contains "{value}")' for value in values
-            )
+            for value in values:
+                filters.append(f'({field_name} contains "{value}")')
+        rendered_filters = " and " + " and ".join(filters)
 
     if request.year_range:
         start, end = request.year_range
@@ -77,8 +84,8 @@ def _build_yql(request: SearchRequestBody) -> str:
             rendered_filters += f" and (family_publication_year <= {end})"
 
     rendered_sort = (
-        f"order by {request.sort_field} {request.sort_order}"
-        if request.sort_field
+        f"order by {sort_fields[request.sort_by]} {sort_orders[request.sort_order]}"
+        if request.sort_by
         else ""
     )
 
@@ -101,13 +108,13 @@ def _build_yql(request: SearchRequestBody) -> str:
             group(family_import_id)
             max({request.limit})
             each(
-                all(
-                    max({request.max_hits_per_family})
-                    each(output(summary(search_summary)))
-                )
+                max({request.max_hits_per_family})
+                each(output(summary(search_summary))
             )
         )
+)
     """
+
     return " ".join(rendered_query.split())
 
 
@@ -119,7 +126,7 @@ def _parse_vespa_response(
     response_families = root["children"][0]["children"][0]["children"]
     for family in response_families:
         family_hits: List[Hit] = []
-        for hit in family["children"][0]["children"]:
+        for hit in family.get("children", [{}])[0].get("children", []):
             family_hits.append(Hit.from_vespa_response(response_hit=hit))
         families.append(Family(id=family["value"], hits=family_hits))
 
