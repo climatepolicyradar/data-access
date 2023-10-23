@@ -122,17 +122,14 @@ class VespaSearchAdapter(SearchAdapter):
         """
         Get a single document by its id
 
-        :param document_id: document id
+        :param document_id: Document IDs should look something like
+            "id:doc_search:family_document::CCLW.family.11171.0"
         """
+        namespace_and_schema, document_id = document_id.split("::")
+        _, namespace, schema = namespace_and_schema.split(":")
 
-        schema = document_id.split(":")[1]
-        vespa_response = self.client.get_data(schema=schema, data_id=document_id)
-        hits = vespa_response.json["root"]["children"]
+        vespa_response = self.client.get_data(
+            namespace=namespace, schema=schema, data_id=document_id
+        )
 
-        if len(hits) == 0:
-            raise ValueError(f"No matches found for ID: {document_id}")
-
-        if len(hits) > 1:
-            raise ValueError(f"Multiple matches found for ID: {document_id}")
-
-        return Hit.from_vespa_response(hits[0])
+        return Hit.from_vespa_response(vespa_response.json)

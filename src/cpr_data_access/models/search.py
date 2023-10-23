@@ -59,7 +59,13 @@ class Hit(BaseModel):
 
     @classmethod
     def from_vespa_response(cls, response_hit) -> "Hit":
-        response_type = response_hit["fields"]["sddocname"]
+        # vespa structures its response differently depending on the api endpoint
+        # for searches, the response should contain a sddocname field
+        response_type = response_hit["fields"].get("sddocname", None)
+        if response_type is None:
+            # for get_by_id, the response should contain an id field
+            response_type = response_hit["id"].split(":")[2]
+
         if response_type == "family_document":
             hit = Document.from_vespa_response(response_hit=response_hit)
         elif response_type == "document_passage":
