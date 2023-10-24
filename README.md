@@ -7,7 +7,9 @@ Internal library for persistent access to text data.
 
 ## Usage
 
-The base document model of this library is `BaseDocument`, which contains only the metadata fields that are used in the parser. 
+### Documents and Datasets
+
+The base document model of this library is `BaseDocument`, which contains only the metadata fields that are used in the parser.
 
 ``` py
 # document_id is also the filename stem
@@ -53,3 +55,51 @@ dataset.filter_by_language("en")
 dataset.filter("document_id", lambda x: x in ["1234", "5678"])
 >>> Dataset()
 ```
+
+### Search
+
+This library can also be used to run searches against CPR documents and passages in Vespa.
+
+```python
+from src.cpr_data_access.search_adaptors import VespaSearchAdapter
+from src.cpr_data_access.models.search import SearchRequestBody
+
+adaptor = VespaSearchAdapter(instance_url="YOUR_INSTANCE_URL")
+
+request = SearchRequestBody(query_string="forest fires")
+
+response = adaptor.search(request)
+```
+
+The above example will return a `SearchResponse` object, which lists some basic information about the request, and the results, arranged as a list of Families, which each contain relevant Documents and/or Passages.
+
+By default, results are sorted by relevance, but can be sorted by date, or name, eg
+
+```python
+request = SearchRequestBody(
+    query_string="forest fires",
+    sort_by="date",
+    sort_order="descending",
+)
+```
+
+Matching documents can also be filtered by keyword field, and by publication date
+
+```python
+request = SearchRequestBody(
+    query_string="forest fires",
+    keyword_filters={
+        "language": ["English", "French"],
+        "category": "Executive",
+    },
+    year_range=(2010, 2020)
+)
+```
+
+Users can also fetch single documents directly from Vespa, by document ID
+
+```python
+adaptor.get_by_id(document_id="id:YOUR_NAMESPACE:YOUR_SCHEMA_NAME::SOME_DOCUMENT_ID")
+```
+
+All of the above search functionality assumes that a valid set of vespa credentials is available in `~/.vespa`, or in a directory supplied to the `VespaSearchAdapter` constructor directly.
