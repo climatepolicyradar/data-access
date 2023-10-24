@@ -6,12 +6,7 @@ from typing import Optional
 from vespa.application import Vespa
 
 from cpr_data_access.embedding import Embedder, ModelName
-from cpr_data_access.models.search import (
-    Hit,
-    SearchRequestBody,
-    SearchResponse,
-    sort_fields,
-)
+from cpr_data_access.models.search import Hit, SearchRequestBody, SearchResponse
 from cpr_data_access.vespa import (
     _build_yql,
     _find_vespa_cert_paths,
@@ -28,9 +23,9 @@ class SearchAdapter(ABC):
         """
         Search a dataset
 
-        :param request: a search request object
+        :param SearchRequestBody request: a search request object
         :return SearchResponse: a list of parent families, each containing relevant
-        child documents and passages
+            child documents and passages
         """
         raise NotImplementedError
 
@@ -38,8 +33,7 @@ class SearchAdapter(ABC):
         """
         Get a single document by its id
 
-
-        :param document_id: document id
+        :param str document_id: document id
         :return Hit: a single document or passage
         """
         raise NotImplementedError
@@ -50,10 +44,10 @@ class VespaSearchAdapter(SearchAdapter):
     Search within a vespa instance
 
     :param str instance_url: url of the vespa instance
-    :param str cert_directory: path to the directory containing the cert and key files
-      for the given instance
+    :param Optional[str] cert_directory: path to the directory containing the cert and key files
+        for the given instance
     :param str model: name of the model to use for embedding queries. This should match
-    the name of the model used to embed text in the vespa index.
+        the name of the model used to embed text in the vespa index.
     """
 
     def __init__(
@@ -73,7 +67,7 @@ class VespaSearchAdapter(SearchAdapter):
         """
         Search a vespa instance
 
-        :param request: a search request object
+        :param SearchRequestBody request: a search request object
         :return SearchResponse: a list of families, with response metadata
         """
         total_time_start = time.time()
@@ -101,8 +95,9 @@ class VespaSearchAdapter(SearchAdapter):
         """
         Get a single document by its id
 
-        :param document_id: Document IDs should look something like
+        :param str document_id: Document IDs should look something like
             "id:doc_search:family_document::CCLW.family.11171.0"
+        :return Hit: a single document or passage
         """
         namespace_and_schema, document_id = document_id.split("::")
         _, namespace, schema = namespace_and_schema.split(":")

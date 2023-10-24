@@ -15,6 +15,13 @@ from cpr_data_access.models.search import (
 
 
 def _find_vespa_cert_paths() -> tuple[Path, Path]:
+    """
+    Automatically find the certificate and key files for the vespa instance
+
+    :raises FileNotFoundError: if the .vespa directory is not found in the home
+        directory, or if the application name is not found in the config.yaml file
+    :return tuple[Path, Path]: The paths to the certificate and key files, respectively
+    """
     vespa_directory = Path.home() / ".vespa/"
     if not vespa_directory.exists():
         raise FileNotFoundError(
@@ -37,8 +44,8 @@ def sanitize(user_input: str) -> str:
     """
     Sanitize user input strings to limit possible YQL injection attacks
 
-    :param user_input: a potentially hazardous user input string
-    :return: sanitized user input string
+    :param str user_input: a potentially hazardous user input string
+    :return str: sanitized user input string
     """
     # in the generated YQL string, user inputs are wrapped in double quotes. We should
     # therefore remove any double quotes from the user inputs to avoid early terminations,
@@ -55,8 +62,9 @@ def _build_yql(request: SearchRequestBody) -> str:
     """
     Build a YQL string for retrieving relevant, filtered, sorted results from vespa
 
-    :param request SearchRequestBody: request object
-    :return: YQL string
+    :param SearchRequestBody request: a search request object comprised of the user's
+        search parameters
+    :return str: formatted YQL which incorporates the user's search parameters
     """
     request.query_string = sanitize(request.query_string)
 
@@ -135,6 +143,15 @@ def _parse_vespa_response(
     request: SearchRequestBody,
     vespa_response: VespaResponse,
 ) -> SearchResponse:
+    """
+    Parse a vespa response into a SearchResponse object
+
+    :param SearchRequestBody request: The user's original search request
+    :param VespaResponse vespa_response: The response from the vespa instance
+    :raises ValueError: if the vespa response status code is not 200, indicating an
+        error in the query, or the vespa instance
+    :return SearchResponse: a list of families, with response metadata
+    """
     if vespa_response.status_code != 200:
         raise ValueError(
             f"Vespa response status code was {vespa_response.status_code}, "
