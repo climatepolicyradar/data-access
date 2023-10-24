@@ -26,6 +26,24 @@ def _find_vespa_cert_paths() -> tuple[Path, Path]:
     return cert_path, key_path
 
 
+def sanitize(user_input: str) -> str:
+    """
+    Sanitize user input strings to limit possible YQL injection attacks
+
+    :param user_input: a potentially hazardous user input string
+    :return: sanitized user input string
+    """
+    # in the generated YQL string, user inputs are wrapped in double quotes. We should
+    # therefore remove any double quotes from the user inputs to avoid early terminations,
+    # which could allow for subsequent injections
+    user_input = user_input.replace('"', "")
+
+    # remove any extra whitespace from the user input string
+    user_input = " ".join(user_input.split())
+
+    return user_input
+
+
 def _build_yql(request: SearchRequestBody) -> str:
     """
     Build a YQL string for retrieving relevant, filtered, sorted results from vespa
@@ -33,6 +51,8 @@ def _build_yql(request: SearchRequestBody) -> str:
     :param request SearchRequestBody: request object
     :return: YQL string
     """
+    request.query_string = sanitize(request.query_string)
+
     if request.exact_match:
         rendered_query_string_match = f"""
             where (
@@ -66,7 +86,7 @@ def _build_yql(request: SearchRequestBody) -> str:
             if not isinstance(values, list):
                 values = [values]
             for value in values:
-                filters.append(f'({field_name} contains "{value}")')
+                filters.append(f'({field_name} contains "{sanitize(value)}")')
         rendered_filters = " and " + " and ".join(filters)
 
     if request.year_range:
@@ -98,7 +118,7 @@ def _build_yql(request: SearchRequestBody) -> str:
                 each(output(summary(search_summary))
             )
         )
-)
+    )
     """
 
     return " ".join(rendered_query.split())

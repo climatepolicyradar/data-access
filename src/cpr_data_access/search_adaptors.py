@@ -79,7 +79,6 @@ class VespaSearchAdapter(SearchAdapter):
         total_time_start = time.time()
 
         vespa_request_body = {"yql": _build_yql(request)}
-
         if request.exact_match:
             vespa_request_body["ranking.profile"] = "exact"
         else:
