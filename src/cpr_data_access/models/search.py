@@ -59,16 +59,16 @@ class SearchRequestBody(BaseModel):
 class Hit(BaseModel):
     """Common model for all search result hits."""
 
-    family_name: str
-    family_description: str
-    family_import_id: str
-    family_slug: str
-    family_category: str
-    family_publication_ts: datetime
-    family_geography: str
-    document_import_id: str
-    document_slug: str
-    document_languages: List[str]
+    family_name: Optional[str]
+    family_description: Optional[str]
+    family_import_id: Optional[str]
+    family_slug: Optional[str]
+    family_category: Optional[str]
+    family_publication_ts: Optional[datetime]
+    family_geography: Optional[str]
+    document_import_id: Optional[str]
+    document_slug: Optional[str]
+    document_languages: Optional[List[str]]
     document_content_type: Optional[str]
     document_cdn_object: Optional[str]
     document_source_url: Optional[str]
@@ -128,18 +128,22 @@ class Passage(Hit):
     @classmethod
     def from_vespa_response(cls, response_hit) -> "Passage":
         fields = response_hit["fields"]
+        family_publication_ts = fields.get("family_publication_ts", None)
+        family_publication_ts = (
+            datetime.fromisoformat(family_publication_ts)
+            if family_publication_ts
+            else None
+        )
         return cls(
-            family_name=fields["family_name"],
-            family_description=fields["family_description"],
-            family_import_id=fields["family_import_id"],
-            family_slug=fields["family_slug"],
-            family_category=fields["family_category"],
-            family_publication_ts=datetime.fromisoformat(
-                fields["family_publication_ts"]
-            ),
-            family_geography=fields["family_geography"],
-            document_import_id=fields["document_import_id"],
-            document_slug=fields["document_slug"],
+            family_name=fields.get("family_name", None),
+            family_description=fields.get("family_description", None),
+            family_import_id=fields.get("family_import_id", None),
+            family_slug=fields.get("family_slug", None),
+            family_category=fields.get("family_category", None),
+            family_publication_ts=family_publication_ts,
+            family_geography=fields.get("family_geography", None),
+            document_import_id=fields.get("document_import_id", None),
+            document_slug=fields.get("document_slug", None),
             document_languages=fields.get("document_languages", []),
             document_content_type=fields.get("document_content_type"),
             document_cdn_object=fields.get("document_cdn_object"),

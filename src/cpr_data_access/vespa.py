@@ -14,6 +14,17 @@ from cpr_data_access.models.search import (
 )
 
 
+def _split_document_id(document_id: str) -> tuple[str, str, str]:
+    try:
+        namespace_and_schema, data_id = document_id.split("::")
+        _, namespace, schema = namespace_and_schema.split(":")
+    except ValueError as e:
+        raise ValueError(
+            f'Document id "{document_id}" is not in the expected format'
+        ) from e
+    return namespace, schema, data_id
+
+
 def _find_vespa_cert_paths() -> tuple[Path, Path]:
     """
     Automatically find the certificate and key files for the vespa instance

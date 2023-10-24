@@ -1,8 +1,11 @@
+import json
+
 """Adaptors for searching CPR data"""
 import time
 from abc import ABC
 from typing import Optional
 
+from requests.exceptions import HTTPError
 from vespa.application import Vespa
 
 from cpr_data_access.embedding import Embedder, ModelName
@@ -11,6 +14,7 @@ from cpr_data_access.vespa import (
     _build_yql,
     _find_vespa_cert_paths,
     _parse_vespa_response,
+    _split_document_id,
 )
 
 
@@ -95,15 +99,23 @@ class VespaSearchAdapter(SearchAdapter):
         """
         Get a single document by its id
 
-        :param str document_id: Document IDs should look something like
+        :param str document_id: IDs should look something like
             "id:doc_search:family_document::CCLW.family.11171.0"
+            or
+            "id:doc_search:document_passage::UNFCCC.party.1060.0.3743"
         :return Hit: a single document or passage
         """
-        namespace_and_schema, document_id = document_id.split("::")
-        _, namespace, schema = namespace_and_schema.split(":")
-
-        vespa_response = self.client.get_data(
-            namespace=namespace, schema=schema, data_id=document_id
-        )
+        namespace, schema, data_id = _split_document_id(document_id)
+        try:
+            vespa_response = self.client.get_data(
+                namespace=namespace, schema=schema, data_id=data_id
+            )
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                raise ValueError(f'No document found with id "{document_id}"') from e
+            else:
+                raise ValueError(
+                    f'Something went wrong when fetching document with id "{document_id}"'
+                ) from e
 
         return Hit.from_vespa_response(vespa_response.json)
