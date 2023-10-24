@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Literal, Mapping, Optional, Sequence, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 SortOrder = Literal["ascending", "descending"]
 
@@ -38,6 +38,22 @@ class SearchRequestBody(BaseModel):
     sort_order: SortOrder = "descending"
 
     continuation_token: Optional[str] = None
+
+    @validator("query_string")
+    def query_string_must_not_be_empty(cls, v):
+        """Validate that the query string is not empty."""
+        if v == "":
+            raise ValueError("Query string must not be empty")
+        return v
+
+    @validator("year_range")
+    def year_range_must_be_valid(cls, v):
+        """Validate that the year range is valid."""
+        if v is not None:
+            if v[0] is not None and v[1] is not None:
+                if v[0] > v[1]:
+                    raise ValueError("Invalid year range")
+        return v
 
 
 class Hit(BaseModel):
