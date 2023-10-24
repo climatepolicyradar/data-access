@@ -451,3 +451,15 @@ def test_text_block_hashable(test_document):
     comparison_block.text_block_id = "0"
 
     assert comparison_block != doc.text_blocks[0]
+
+
+def test_dataset_sample(test_dataset):
+    dataset = test_dataset
+
+    sample_1 = dataset.sample(1, random_state=20)
+    sample_2 = dataset.sample(1, random_state=20)
+    sample_3 = dataset.sample(1, random_state=30)
+
+    assert len(sample_1) == 1
+    assert sample_1.documents == sample_2.documents
+    assert sample_1.documents == sample_3.documents

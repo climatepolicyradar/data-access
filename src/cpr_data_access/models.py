@@ -32,6 +32,7 @@ from pydantic import (
 import pandas as pd
 from tqdm.auto import tqdm
 import numpy as np
+import random
 
 from datasets import Dataset as HFDataset, DatasetInfo, load_dataset
 import cpr_data_access.data_adaptors as adaptors
@@ -1024,6 +1025,19 @@ class Dataset:
     def filter_by_language(self, language: str) -> "Dataset":
         """Return documents whose only language is the given language."""
         return self.filter("languages", [language])
+
+    def sample(self, n: int, random_state: int = 42) -> "Dataset":
+        """Samples n documents from the dataset and returns a Dataset object with only those."""
+        random.seed(random_state)
+
+        documents = random.sample(self.documents, n)
+
+        instance_attributes = {
+            k: v for k, v in self.__dict__.items() if k != "documents"
+        }
+    
+        return Dataset(**instance_attributes, documents=documents)
+
 
     def sample_text(
         self, n: int, document_ids: Optional[Sequence[str]], replace: bool = False
