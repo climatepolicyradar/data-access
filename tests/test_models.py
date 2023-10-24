@@ -458,8 +458,8 @@ def test_dataset_sample(test_dataset):
 
     sample_1 = dataset.sample(1, random_state=20)
     sample_2 = dataset.sample(1, random_state=20)
-    sample_3 = dataset.sample(1, random_state=30)
+    sample_3 = dataset.sample(1, random_state=40)
 
     assert len(sample_1) == 1
     assert sample_1.documents == sample_2.documents
-    assert sample_1.documents == sample_3.documents
+    assert sample_1.documents != sample_3.documents
