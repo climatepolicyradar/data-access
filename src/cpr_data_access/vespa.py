@@ -1,10 +1,17 @@
 from pathlib import Path
-from typing import List, Sequence
+from typing import List
 
 import yaml
 from vespa.io import VespaResponse
 
-from cpr_data_access.models.search import Family, Hit, SearchRequestBody, filter_fields
+from cpr_data_access.models.search import (
+    Family,
+    Hit,
+    SearchRequestBody,
+    SearchResponse,
+    filter_fields,
+    sort_fields,
+)
 
 
 def _find_vespa_cert_paths() -> tuple[Path, Path]:
@@ -125,8 +132,9 @@ def _build_yql(request: SearchRequestBody) -> str:
 
 
 def _parse_vespa_response(
+    request: SearchRequestBody,
     vespa_response: VespaResponse,
-) -> Sequence[Family]:
+) -> SearchResponse:
     families: List[Family] = []
     root = vespa_response.json["root"]
     response_families = root["children"][0]["children"][0]["children"]
@@ -136,4 +144,23 @@ def _parse_vespa_response(
             family_hits.append(Hit.from_vespa_response(response_hit=hit))
         families.append(Family(id=family["value"], hits=family_hits))
 
-    return families
+    # For now, we can't sort our results natively in vespa because sort orders are
+    # applied _before_ grouping. We're sorting here instead.
+    if request.sort_by:
+        families = sorted(
+            families,
+            key=lambda f: getattr(f.hits[0], sort_fields[request.sort_by]),
+            reverse=True if request.sort_order == "descending" else False,
+        )
+
+    next_family_continuation_token = (
+        vespa_response.json["root"]["children"][0]["children"][0]
+        .get("continuation", {})
+        .get("next", None)
+    )
+
+    return SearchResponse(
+        total_hits=vespa_response.json["root"]["fields"]["totalCount"],
+        families=families,
+        continuation_token=next_family_continuation_token,
+    )

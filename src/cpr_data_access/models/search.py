@@ -159,7 +159,7 @@ class Family(BaseModel):
 
 class SearchResponse(BaseModel):
     total_hits: int
-    query_time_ms: int
-    total_time_ms: int
+    query_time_ms: Optional[int]
+    total_time_ms: Optional[int]
     families: Sequence[Family]
     continuation_token: Optional[str]

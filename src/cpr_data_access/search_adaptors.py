@@ -90,32 +90,12 @@ class VespaSearchAdapter(SearchAdapter):
         vespa_response = self.client.query(body=vespa_request_body)
         query_time_end = time.time()
 
-        families = _parse_vespa_response(vespa_response)
+        response = _parse_vespa_response(request=request, vespa_response=vespa_response)
 
-        # For now, we can't sort our results natively in vespa, because sort orders are
-        # applied _before_ grouping. We're sorting here instead.
-        if request.sort_by:
-            families = sorted(
-                families,
-                key=lambda f: getattr(f.hits[0], sort_fields[request.sort_by]),
-                reverse=True if request.sort_order == "descending" else False,
-            )
+        response.query_time_ms = int((query_time_end - query_time_start) * 1000)
+        response.total_time_ms = int((time.time() - total_time_start) * 1000)
 
-        next_family_continuation_token = (
-            vespa_response.json["root"]["children"][0]["children"][0]
-            .get("continuation", {})
-            .get("next", None)
-        )
-
-        total_time_end = time.time()
-
-        return SearchResponse(
-            total_hits=vespa_response.json["root"]["fields"]["totalCount"],
-            total_time_ms=(total_time_end - total_time_start) * 1000,
-            query_time_ms=(query_time_end - query_time_start) * 1000,
-            families=families,
-            continuation_token=next_family_continuation_token,
-        )
+        return response
 
     def get_by_id(self, document_id: str) -> Hit:
         """
