@@ -135,6 +135,11 @@ def _parse_vespa_response(
     request: SearchRequestBody,
     vespa_response: VespaResponse,
 ) -> SearchResponse:
+    if vespa_response.status_code != 200:
+        raise ValueError(
+            f"Vespa response status code was {vespa_response.status_code}, "
+            f"expected 200"
+        )
     families: List[Family] = []
     root = vespa_response.json["root"]
     response_families = root["children"][0]["children"][0]["children"]
@@ -154,7 +159,7 @@ def _parse_vespa_response(
         )
 
     next_family_continuation_token = (
-        vespa_response.json["root"]["children"][0]["children"][0]
+        vespa_response.json["root"]["children"][0]
         .get("continuation", {})
         .get("next", None)
     )
