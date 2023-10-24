@@ -1035,9 +1035,8 @@ class Dataset:
         instance_attributes = {
             k: v for k, v in self.__dict__.items() if k != "documents"
         }
-    
-        return Dataset(**instance_attributes, documents=documents)
 
+        return Dataset(**instance_attributes, documents=documents)
 
     def sample_text(
         self, n: int, document_ids: Optional[Sequence[str]], replace: bool = False
