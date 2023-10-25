@@ -118,4 +118,4 @@ Users can also fetch single documents directly from Vespa, by document ID
 adaptor.get_by_id(document_id="id:YOUR_NAMESPACE:YOUR_SCHEMA_NAME::SOME_DOCUMENT_ID")
 ```
 
-All of the above search functionality assumes that a valid set of vespa credentials is available in `~/.vespa`, or in a directory supplied to the `VespaSearchAdapter` constructor directly.
+All of the above search functionality assumes that a valid set of vespa credentials is available in `~/.vespa`, or in a directory supplied to the `VespaSearchAdapter` constructor directly. See [the docs](docs/vespa-auth.md) for more information on how vespa expects credentials.
