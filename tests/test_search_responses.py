@@ -4,7 +4,7 @@ import pytest
 from vespa.io import VespaResponse
 
 from cpr_data_access.models.search import Hit, SearchRequestBody
-from cpr_data_access.vespa import _parse_vespa_response, _split_document_id
+from cpr_data_access.vespa import parse_vespa_response, split_document_id
 
 
 @pytest.fixture
@@ -39,7 +39,7 @@ def valid_get_passage_response():
 
 def test_whether_a_valid_vespa_response_is_parsed(valid_vespa_search_response):
     request = SearchRequestBody(query_string="test")
-    assert _parse_vespa_response(
+    assert parse_vespa_response(
         request=request, vespa_response=valid_vespa_search_response
     )
 
@@ -49,7 +49,7 @@ def test_whether_an_invalid_vespa_response_raises_a_valueerror(
 ):
     with pytest.raises(ValueError):
         request = SearchRequestBody(query_string="test")
-        _parse_vespa_response(
+        parse_vespa_response(
             request=request, vespa_response=invalid_vespa_search_response
         )
 
@@ -58,7 +58,7 @@ def test_whether_sorting_by_ascending_date_works(valid_vespa_search_response):
     request = SearchRequestBody(
         query_string="test", sort_by="date", sort_order="ascending"
     )
-    response = _parse_vespa_response(
+    response = parse_vespa_response(
         request=request, vespa_response=valid_vespa_search_response
     )
     for family_i, family_j in zip(response.families[:-1], response.families[1:]):
@@ -71,7 +71,7 @@ def test_whether_sorting_by_descending_date_works(valid_vespa_search_response):
     request = SearchRequestBody(
         query_string="test", sort_by="date", sort_order="descending"
     )
-    response = _parse_vespa_response(
+    response = parse_vespa_response(
         request=request, vespa_response=valid_vespa_search_response
     )
     for family_i, family_j in zip(response.families[:-1], response.families[1:]):
@@ -84,7 +84,7 @@ def test_whether_sorting_by_ascending_name_works(valid_vespa_search_response):
     request = SearchRequestBody(
         query_string="test", sort_by="name", sort_order="ascending"
     )
-    response = _parse_vespa_response(
+    response = parse_vespa_response(
         request=request, vespa_response=valid_vespa_search_response
     )
     for family_i, family_j in zip(response.families[:-1], response.families[1:]):
@@ -97,7 +97,7 @@ def test_whether_sorting_by_descending_name_works(valid_vespa_search_response):
     request = SearchRequestBody(
         query_string="test", sort_by="name", sort_order="descending"
     )
-    response = _parse_vespa_response(
+    response = parse_vespa_response(
         request=request, vespa_response=valid_vespa_search_response
     )
     for family_i, family_j in zip(response.families[:-1], response.families[1:]):
@@ -110,7 +110,7 @@ def test_whether_continuation_token_is_returned_when_present(
     valid_vespa_search_response,
 ):
     request = SearchRequestBody(query_string="test", limit=1)
-    response = _parse_vespa_response(
+    response = parse_vespa_response(
         request=request, vespa_response=valid_vespa_search_response
     )
     assert response.continuation_token
@@ -125,7 +125,7 @@ def test_whether_valid_get_passage_response_is_parsed(valid_get_passage_response
 
 
 def test_whether_valid_document_id_is_correctly_split():
-    namespace, schema, data_id = _split_document_id(
+    namespace, schema, data_id = split_document_id(
         "id:doc_search:family_document::CCLW.family.11171.0"
     )
     assert namespace == "doc_search"
@@ -135,4 +135,4 @@ def test_whether_valid_document_id_is_correctly_split():
 
 def test_whether_invalid_document_id_raises_value_error():
     with pytest.raises(ValueError):
-        _split_document_id("this is not a valid document id")
+        split_document_id("this is not a valid document id")
