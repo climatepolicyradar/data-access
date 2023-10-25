@@ -991,7 +991,7 @@ class Dataset:
     def __iter__(self):
         """Iterate over the documents in the dataset"""
         return iter(self.documents)
-    
+
     def dict(self, exclude: Union[None, str, list[str]] = None) -> dict:
         """Returns the dataset object in a dict format"""
         if isinstance(exclude, str):
@@ -1000,7 +1000,7 @@ class Dataset:
             attributes_to_exclude = exclude
         else:
             attributes_to_exclude = []
-        
+
         return {
             k: v for k, v in self.__dict__.items() if k not in attributes_to_exclude
         }
@@ -1047,7 +1047,9 @@ class Dataset:
         elif isinstance(n, int) and n > 0:
             documents = random.sample(self.documents, min(n, len(self.documents)))
         else:
-            raise ValueError(f"n should be a float in (0.0, 1.0) or a positive integer. Provided value: {n}")
+            raise ValueError(
+                f"n should be a float in (0.0, 1.0) or a positive integer. Provided value: {n}"
+            )
 
         instance_attributes = self.dict(exclude="documents")
 

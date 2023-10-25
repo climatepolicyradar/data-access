@@ -468,11 +468,14 @@ def test_dataset_sample(test_dataset):
 
     assert len(sample_4) == len(dataset)
 
-    sample_5 = dataset.sample(1/3)
-    
+    sample_5 = dataset.sample(1 / 3)
+
     assert len(sample_5) == len(dataset) / 3
 
-    with pytest.raises(ValueError, match=r"n should be a float in \(0.0, 1.0\) or a positive integer. Provided value: -1") as e_info:
+    with pytest.raises(
+        ValueError,
+        match=r"n should be a float in \(0.0, 1.0\) or a positive integer. Provided value: -1",
+    ) as e_info:
         _ = dataset.sample(-1)
 
 
@@ -483,7 +486,7 @@ def test_dataset_dict(test_dataset):
 
     for k, v in dataset.__dict__.items():
         assert v == getattr(d2, k)
-    
+
     d3_dict = dataset.dict(exclude=["documents", "document_model"])
 
     assert "documents" not in d3_dict.keys()
