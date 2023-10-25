@@ -1,21 +1,34 @@
 """Data models for data access."""
 
+import itertools
+from typing import (
+    Sequence,
+    Optional,
+    List,
+    Tuple,
+    Any,
+    Union,
+    TypeVar,
+    Literal,
+    Annotated,
+)
+from pathlib import Path
 import datetime
 import hashlib
 import itertools
 import logging
 from functools import cached_property
-from pathlib import Path
-from typing import (
-    Annotated,
-    Any,
-    List,
-    Literal,
-    Optional,
-    Sequence,
-    Tuple,
-    TypeVar,
-    Union,
+import os
+
+from pydantic import (
+    BaseModel,
+    AnyHttpUrl,
+    NonNegativeInt,
+    confloat,
+    conint,
+    root_validator,
+    PrivateAttr,
+    constr,
 )
 
 import pandas as pd
@@ -30,7 +43,9 @@ from pydantic import (
     root_validator,
 )
 from tqdm.auto import tqdm
+import numpy as np
 
+from datasets import Dataset as HFDataset, DatasetInfo, load_dataset
 import cpr_data_access.data_adaptors as adaptors
 from cpr_data_access.parser_models import BlockType, ParserOutput
 from cpr_data_access.pipeline_general_models import CONTENT_TYPE_HTML, CONTENT_TYPE_PDF
@@ -102,6 +117,22 @@ def _load_and_validate_metadata_csv(
     return metadata_df
 
 
+class KnowledgeBaseIDs(BaseModel):
+    """Store for knowledge base IDs."""
+
+    wikipedia_title: Optional[str]
+    wikidata_id: Optional[Annotated[str, constr(regex=r"^Q\d+$")]]  # type: ignore
+
+    class Config:
+        """
+        Make the model immutable and hashable.
+
+        Generates a __hash__() method for the model: see docs https://docs.pydantic.dev/1.10/usage/model_config/.
+        """
+
+        frozen = True
+
+
 class Span(BaseModel):
     """
     Annotation with a type and ID made to a span of text in a document.
@@ -131,6 +162,7 @@ class Span(BaseModel):
     sentence: str
     pred_probability: Annotated[float, Field(ge=0, le=1)]
     annotator: str
+    kb_ids: Optional[KnowledgeBaseIDs] = None
 
     def __hash__(self):
         """Make hashable."""
@@ -170,6 +202,12 @@ class TextBlock(BaseModel):
         """Return text in a clean format"""
         return " ".join([line.strip() for line in self.text])
 
+    def __hash__(self) -> int:
+        """Get hash of the text-block. Based on the text and the text_block_id"""
+        text_utf8 = self.to_string().encode("utf-8")
+
+        return hash(f"{text_utf8}-{self.text_block_id.encode()}")
+
     @cached_property
     def text_hash(self) -> str:
         """
@@ -177,7 +215,6 @@ class TextBlock(BaseModel):
 
         :return str: md5sum + "__" + sha256, or empty string if the text block has no text
         """
-
         if self.text == "":
             return ""
 
@@ -415,7 +452,7 @@ class BaseDocument(BaseModel):
                 f"Unsupported content type: {parser_document.document_content_type}"
             )
 
-        parser_document_data = parser_document.dict()
+        parser_document_data = parser_document.dict(exclude={"html_data", "pdf_data"})
         metadata = {"document_metadata": parser_document.document_metadata}
         text_and_page_data = {
             "text_blocks": text_blocks,  # type: ignore
@@ -694,7 +731,7 @@ class Dataset:
     Helper class for accessing the entire corpus.
 
     :param document_model: pydantic model to use for documents
-    :param documents: list of documents to add. Recommended to use `Dataset.load_from_remote` or `Dataset.load_from_local` instead. Defaults to []
+    :param documents: list of documents to add. Recommended to use `Dataset().load_from_remote` or `Dataset().load_from_local` instead. Defaults to []
     """
 
     class Config:  # noqa: D106
@@ -708,6 +745,12 @@ class Dataset:
     ):
         self.document_model = document_model
         self.documents = documents
+
+        self.hf_hub_repo_map = {
+            CPRDocument: "ClimatePolicyRadar/climate-law-and-policy-documents",
+            GSTDocument: "ClimatePolicyRadar/global-stocktake-documents",
+        }
+        self.hf_hub_repo = self.hf_hub_repo_map.get(self.document_model)  # type: ignore
 
         if self.document_model == CPRDocument:
             if not kwargs.get("cdn_domain"):
@@ -727,7 +770,8 @@ class Dataset:
 
         parser_outputs = adaptor.load_dataset(name_or_path, limit)
         self.documents = [
-            self.document_model.from_parser_output(doc) for doc in parser_outputs
+            self.document_model.from_parser_output(doc)
+            for doc in tqdm(parser_outputs, desc="Loading documents")
         ]
 
         if self.document_model == CPRDocument:
@@ -977,6 +1021,12 @@ class Dataset:
 
         return Dataset(**instance_attributes, documents=documents)
 
+    def filter_by_corpus(self, corpus_name: str) -> "Dataset":
+        """Returns documents that are source from the corpus provided as per their document-id"""
+        return self.filter(
+            "document_id", lambda x: x.lower().startswith(corpus_name.lower())
+        )
+
     def filter_by_language(self, language: str) -> "Dataset":
         """Return documents whose only language is the given language."""
         return self.filter("languages", [language])
@@ -1011,7 +1061,7 @@ class Dataset:
 
         return output_values
 
-    def _doc_to_text_block_dicts(self, document: AnyDocument) -> list[dict[str, Any]]:
+    def _doc_to_text_block_dicts(self, document: AnyDocument) -> list[dict[str, Any]]:  # type: ignore
         """
         Create a list of dictionaries with document metadata and text block metadata for each text block in a document.
 
@@ -1072,4 +1122,125 @@ class Dataset:
             info=dataset_info,
         )
 
+        # Rename column to avoid confusion with the 'language' field, which is text block language
+        rename_map = {
+            "languages": "document_languages",
+        }
+
+        huggingface_dataset = huggingface_dataset.rename_columns(rename_map)
+
         return huggingface_dataset
+
+    def _from_huggingface_parquet(
+        self,
+        huggingface_dataset: HFDataset,
+        limit: Optional[int] = None,
+    ) -> "Dataset":
+        """
+        Create a dataset from a huggingface dataset.
+
+        :param huggingface_dataset: created using `Dataset.to_huggingface()`
+        :param limit: optionally limit the number of documents to load
+        :return self: with documents loaded from huggingface dataset
+        """
+
+        hf_dataframe: pd.DataFrame = huggingface_dataset.to_pandas()
+
+        # This undoes the renaming of columns done in to_huggingface()
+        hf_dataframe = hf_dataframe.rename(columns={"document_languages": "languages"})
+
+        # Create a dummy variable to group on combining document_id and translated.
+        # This way we get an accurate count in the progress bar.
+        hf_dataframe["_document_id_translated"] = hf_dataframe[
+            "document_id"
+        ] + hf_dataframe["translated"].astype(str)
+
+        if limit is not None:
+            doc_ids = hf_dataframe["_document_id_translated"].unique()[:limit]
+            hf_dataframe = hf_dataframe[
+                hf_dataframe["_document_id_translated"].isin(doc_ids)
+            ]
+
+        documents = []
+
+        for _, doc_df in tqdm(
+            hf_dataframe.groupby("_document_id_translated"),
+            total=hf_dataframe["_document_id_translated"].nunique(),
+            unit="docs",
+        ):
+            document_text_blocks = [
+                TextBlock(
+                    # TODO: we aren't able to access the original text split over lines as it's not stored in the huggingface dataset
+                    text=[row["text"]],
+                    text_block_id=row["text_block_id"],
+                    language=row["language"],
+                    type=row["type"],
+                    type_confidence=row["type_confidence"],
+                    page_number=row["page_number"],
+                    coords=[tuple(c) for c in row["coords"].tolist()] if row["coords"] is not None else None,  # type: ignore
+                )
+                for _, row in doc_df.iterrows()
+            ]
+
+            # pandas to_dict() stores sequences as numpy arrays, so we need to convert them back to lists
+            doc_fields = {
+                k: list(v) if isinstance(v, np.ndarray) else v
+                for k, v in doc_df.iloc[0].to_dict().items()
+            }
+
+            doc_metadata_dict = doc_fields | {
+                "source": "GST" if self.document_model == GSTDocument else "CPR"
+            }
+
+            doc = self.document_model.parse_obj(
+                doc_fields
+                | {
+                    "document_metadata": doc_metadata_dict,
+                    "text_blocks": document_text_blocks,
+                }
+            )
+
+            documents.append(doc)
+
+        self.documents = documents
+
+        return self
+
+    def from_huggingface(
+        self,
+        dataset_name: Optional[str] = None,
+        dataset_version: Optional[str] = None,
+        limit: Optional[int] = None,
+        **kwargs,
+    ) -> "Dataset":
+        """
+        Load documents from a huggingface hub dataset.
+
+        For private repos a token should be provided either as a `token` kwarg or as
+        environment variable HUGGINGFACE_TOKEN. Any additional keyword arguments are
+        passed to the huggingface datasets load_dataset function.
+
+        :param dataset_name: name of the dataset on huggingface hub
+        :param dataset_version: version of the dataset on huggingface hub
+        :param limit: optionally limit the number of documents to load
+        :return self: with documents loaded from huggingface dataset
+        """
+
+        token = kwargs.pop("token", os.getenv("HUGGINGFACE_TOKEN"))
+
+        if dataset_name is None:
+            if self.hf_hub_repo is None:
+                raise ValueError(
+                    f"Dataset name not provided and no default dataset name found for document model {self.document_model}. Provide a dataset name directly to this function."
+                )
+
+            dataset_name = self.hf_hub_repo
+            LOGGER.info(
+                f"Dataset name not provided. Using default dataset name {dataset_name} for document model {self.document_model}."
+            )
+
+        huggingface_dataset = load_dataset(
+            dataset_name, dataset_version, token=token, split="train", **kwargs
+        )
+
+        return self._from_huggingface_parquet(huggingface_dataset, limit)

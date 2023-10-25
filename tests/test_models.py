@@ -12,6 +12,8 @@ from cpr_data_access.models import (
     CPRDocument,
     CPRDocumentMetadata,
     Span,
+    KnowledgeBaseIDs,
+    TextBlock,
 )
 
 
@@ -54,6 +56,24 @@ def test_document(test_dataset) -> BaseDocument:
         for doc in test_dataset.documents
         if doc.document_id == "CCLW.executive.1003.0"
     ][0]
+
+
+@pytest.fixture
+def test_huggingface_dataset_cpr() -> HuggingFaceDataset:
+    """Test HuggingFace dataset."""
+
+    return HuggingFaceDataset.from_parquet(
+        "tests/test_data/CPR_huggingface_data_sample.parquet"
+    )
+
+
+@pytest.fixture
+def test_huggingface_dataset_gst() -> HuggingFaceDataset:
+    """Test HuggingFace dataset."""
+
+    return HuggingFaceDataset.from_parquet(
+        "tests/test_data/GST_huggingface_data_sample.parquet"
+    )
 
 
 def test_dataset_metadata_df(test_dataset):
@@ -112,6 +132,10 @@ def test_spans_valid(test_document) -> list[Span]:
             type="TEST",
             pred_probability=0.99,
             annotator="pytest",
+            kb_ids=KnowledgeBaseIDs(
+                wikidata_id="Q42",
+                wikipedia_title="Douglas_Adams",
+            ),
         ),
     ]
 
@@ -156,6 +180,17 @@ def test_dataset_filter_by_language(test_dataset):
     assert len(dataset) == 2
     assert dataset.documents[0].languages == ["en"]
     assert dataset.documents[1].languages == ["en"]
+
+
+def test_dataset_filter_by_corpus(test_dataset):
+    """Test Dataset.filter_by_corpus"""
+    dataset = test_dataset.filter_by_corpus("UNFCCC")
+
+    assert len(dataset) == 0
+
+    dataset = test_dataset.filter_by_corpus("CCLW")
+
+    assert len(dataset) == 3
 
 
 def test_dataset_get_all_text_blocks(test_dataset):
@@ -318,7 +353,7 @@ def test_document_get_text_window(test_document):
     assert len(text_window) > len(text_block.to_string())
 
 
-def test_to_huggingface(test_dataset, test_dataset_gst):
+def test_dataset_to_huggingface(test_dataset, test_dataset_gst):
     """Test that the HuggingFace dataset can be created."""
     dataset_hf = test_dataset.to_huggingface()
     dataset_gst_hf = test_dataset_gst.to_huggingface()
@@ -329,6 +364,48 @@ def test_to_huggingface(test_dataset, test_dataset_gst):
     )
     assert len(dataset_gst_hf) == sum(
         len(doc.text_blocks) for doc in test_dataset_gst.documents if doc.text_blocks
+    )
+
+
+@pytest.mark.parametrize("limit", [None, 2])
+def test_dataset_from_huggingface_cpr(test_huggingface_dataset_cpr, limit):
+    """Test that a CPR dataset can be created from a HuggingFace dataset."""
+    dataset = Dataset(document_model=CPRDocument)._from_huggingface_parquet(
+        test_huggingface_dataset_cpr, limit=limit
+    )
+
+    assert isinstance(dataset, Dataset)
+    assert all(isinstance(doc, CPRDocument) for doc in dataset.documents)
+
+    if limit is None:
+        limit = len({d["document_id"] for d in test_huggingface_dataset_cpr})
+
+        # Check huggingface dataset has the same number of text blocks as the dataset
+        assert sum(len(doc.text_blocks or []) for doc in dataset.documents) == len(
+            test_huggingface_dataset_cpr
+        )
+
+    # Check huggingface dataset has the same number of documents as the dataset or the set limit
+    assert len(dataset) == limit
+
+
+def test_dataset_from_huggingface_gst(test_huggingface_dataset_gst):
+    """Test that a dataset can be created from a HuggingFace dataset."""
+    dataset = Dataset(document_model=GSTDocument)._from_huggingface_parquet(
+        test_huggingface_dataset_gst
+    )
+
+    assert isinstance(dataset, Dataset)
+    assert all(isinstance(doc, GSTDocument) for doc in dataset.documents)
+
+    assert any(doc.languages is not None for doc in dataset.documents)
+
+    # Check hugingface dataset has the same number of documents as the dataset
+    assert len(dataset) == len({d["document_id"] for d in test_huggingface_dataset_gst})
+
+    # Check huggingface dataset has the same number of text blocks as the dataset
+    assert sum(len(doc.text_blocks or []) for doc in dataset.documents) == len(
+        test_huggingface_dataset_gst
     )
 
 
@@ -357,3 +434,20 @@ def test_display_text_block(test_document, test_spans_valid):
     assert isinstance(block_html, str)
     assert len(block_html) > 0
     assert block_html.startswith("<div")
+
+
+def test_text_block_hashable(test_document):
+    doc = test_document
+
+    set(doc.text_blocks)
+
+    first_block_hash = doc.text_blocks[0].__hash__()
+    assert isinstance(first_block_hash, int)
+
+    comparison_block = TextBlock(**doc.text_blocks[0].dict())
+
+    assert comparison_block == doc.text_blocks[0]
+
+    comparison_block.text_block_id = "0"
+
+    assert comparison_block != doc.text_blocks[0]
