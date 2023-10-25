@@ -109,8 +109,7 @@ def _build_yql(request: SearchRequestBody) -> str:
         filters = []
         for field_key, values in request.keyword_filters.items():
             field_name = filter_fields[field_key]
-            if not isinstance(values, list):
-                values = [values]
+            values = [values] if not isinstance(values, list) else values
             for value in values:
                 filters.append(f'({field_name} contains "{sanitize(value)}")')
         rendered_filters = " and " + " and ".join(filters)
@@ -171,6 +170,7 @@ def _parse_vespa_response(
     families: List[Family] = []
     root = vespa_response.json["root"]
     response_families = root["children"][0]["children"][0]["children"]
+
     for family in response_families:
         family_hits: List[Hit] = []
         for hit in family.get("children", [{}])[0].get("children", []):
@@ -180,10 +180,10 @@ def _parse_vespa_response(
     # For now, we can't sort our results natively in vespa because sort orders are
     # applied _before_ grouping. We're sorting here instead.
     if request.sort_by:
-        families = sorted(
-            families,
+        # pyright: reportGeneralTypeIssues=none
+        families.sort(
             key=lambda f: getattr(f.hits[0], sort_fields[request.sort_by]),
-            reverse=True if request.sort_order == "descending" else False,
+            reverse=request.sort_order == "descending",
         )
 
     next_family_continuation_token = (
@@ -196,4 +196,6 @@ def _parse_vespa_response(
         total_hits=vespa_response.json["root"]["fields"]["totalCount"],
         families=families,
         continuation_token=next_family_continuation_token,
+        query_time_ms=None,
+        total_time_ms=None,
     )

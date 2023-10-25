@@ -7,9 +7,7 @@ ModelName = Literal["msmarco-distilbert-dot-v5"]
 
 
 class Embedder:
-    """
-    Class for embedding strings using a sentence-transformers model
-    """
+    """Class for embedding strings using a sentence-transformers model"""
 
     def __init__(self, model_name: ModelName = "msmarco-distilbert-dot-v5"):
         self.model = SentenceTransformer(model_name)

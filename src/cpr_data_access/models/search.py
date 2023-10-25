@@ -10,7 +10,7 @@ sort_fields = {
     "name": "family_name",
 }
 
-SortField = Literal[tuple(sort_fields.keys())]
+SortField = Literal["date", "name"]
 
 
 filter_fields = {
@@ -20,7 +20,7 @@ filter_fields = {
     "source": "family_source",
 }
 
-FilterField = Literal[tuple(filter_fields.keys())]
+FilterField = Literal["geography", "category", "language", "source"]
 
 
 class SearchRequestBody(BaseModel):
@@ -74,7 +74,14 @@ class Hit(BaseModel):
     document_source_url: Optional[str]
 
     @classmethod
-    def from_vespa_response(cls, response_hit) -> "Hit":
+    def from_vespa_response(cls, response_hit: dict) -> "Hit":
+        """
+        Create a Hit from a Vespa response hit.
+
+        :param dict response_hit: part of a json response from Vespa
+        :raises ValueError: if the response type is unknown
+        :return Hit: an individual document or passage hit
+        """
         # vespa structures its response differently depending on the api endpoint
         # for searches, the response should contain a sddocname field
         response_type = response_hit["fields"].get("sddocname", None)
@@ -95,7 +102,13 @@ class Document(Hit):
     """A document search result hit."""
 
     @classmethod
-    def from_vespa_response(cls, response_hit) -> "Document":
+    def from_vespa_response(cls, response_hit: dict) -> "Document":
+        """
+        Create a Document from a Vespa response hit.
+
+        :param dict response_hit: part of a json response from Vespa
+        :return Document: a populated document
+        """
         fields = response_hit["fields"]
         return cls(
             family_name=fields["family_name"],
@@ -126,7 +139,13 @@ class Passage(Hit):
     text_block_coords: Optional[Sequence[tuple[float, float]]]
 
     @classmethod
-    def from_vespa_response(cls, response_hit) -> "Passage":
+    def from_vespa_response(cls, response_hit: dict) -> "Passage":
+        """
+        Create a Passage from a Vespa response hit.
+
+        :param dict response_hit: part of a json response from Vespa
+        :return Passage: a populated passage
+        """
         fields = response_hit["fields"]
         family_publication_ts = fields.get("family_publication_ts", None)
         family_publication_ts = (
@@ -157,11 +176,15 @@ class Passage(Hit):
 
 
 class Family(BaseModel):
+    """A family containing relevant documents and passages."""
+
     id: str
     hits: Sequence[Hit]
 
 
 class SearchResponse(BaseModel):
+    """Relevant results, and search response metadata"""
+
     total_hits: int
     query_time_ms: Optional[int]
     total_time_ms: Optional[int]

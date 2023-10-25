@@ -15,29 +15,16 @@ from typing import (
 from pathlib import Path
 import datetime
 import hashlib
-import itertools
 import logging
 from functools import cached_property
 import os
 
-from pydantic import (
-    BaseModel,
-    AnyHttpUrl,
-    NonNegativeInt,
-    confloat,
-    conint,
-    root_validator,
-    PrivateAttr,
-    constr,
-)
-
 import pandas as pd
-from datasets import Dataset as HFDataset
-from datasets import DatasetInfo
 from pydantic import (
     AnyHttpUrl,
     BaseModel,
     Field,
+    constr,
     NonNegativeInt,
     PrivateAttr,
     root_validator,

@@ -1,6 +1,5 @@
-import json
-
 """Adaptors for searching CPR data"""
+from pathlib import Path
 import time
 from abc import ABC
 from typing import Optional
@@ -19,9 +18,7 @@ from cpr_data_access.vespa import (
 
 
 class SearchAdapter(ABC):
-    """
-    Base class for all search adapters.
-    """
+    """Base class for all search adapters."""
 
     def search(self, request: SearchRequestBody) -> SearchResponse:
         """
@@ -63,8 +60,11 @@ class VespaSearchAdapter(SearchAdapter):
         self.instance_url = instance_url
         if cert_directory is None:
             cert_path, key_path = _find_vespa_cert_paths()
+        else:
+            cert_path = Path(cert_directory) / "cert.pem"
+            key_path = Path(cert_directory) / "key.pem"
 
-        self.client = Vespa(url=instance_url, cert=cert_path, key=key_path)
+        self.client = Vespa(url=instance_url, cert=str(cert_path), key=str(key_path))
         self.embedder = Embedder(model_name)
 
     def search(self, request: SearchRequestBody) -> SearchResponse:

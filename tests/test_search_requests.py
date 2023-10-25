@@ -80,8 +80,7 @@ def test_whether_single_filter_values_and_lists_of_filter_values_appear_in_yql()
     )
     yql = _build_yql(request)
     for key, values in request.keyword_filters.items():
-        if not isinstance(values, list):
-            values = [values]
+        values = [values] if not isinstance(values, list) else values
         for value in values:
             assert key in yql
             assert value in yql
