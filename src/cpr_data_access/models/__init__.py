@@ -6,6 +6,7 @@ from typing import (
     Sequence,
     Optional,
     List,
+    Dict,
     Tuple,
     Any,
     Union,
@@ -32,6 +33,7 @@ from pydantic import (
 )
 from tqdm.auto import tqdm
 import numpy as np
+import random
 
 from datasets import Dataset as HFDataset, DatasetInfo, load_dataset
 import cpr_data_access.data_adaptors as adaptors
@@ -984,6 +986,19 @@ class Dataset:
         """Iterate over the documents in the dataset"""
         return iter(self.documents)
 
+    def dict(self, exclude: Union[None, str, list[str]] = None) -> Dict[str, Any]:  # type: ignore
+        """Returns the dataset object in a dict format"""
+        if isinstance(exclude, str):
+            attributes_to_exclude = [exclude]
+        elif isinstance(exclude, list):
+            attributes_to_exclude = exclude
+        else:
+            attributes_to_exclude = []
+
+        return {
+            k: v for k, v in self.__dict__.items() if k not in attributes_to_exclude
+        }
+
     def filter(self, attribute: str, value: Any) -> "Dataset":
         """
         Filter documents by attribute. Value can be a single value or a function returning a boolean.
@@ -1003,9 +1018,7 @@ class Dataset:
                 doc for doc in self.documents if getattr(doc, attribute) == value
             ]
 
-        instance_attributes = {
-            k: v for k, v in self.__dict__.items() if k != "documents"
-        }
+        instance_attributes = self.dict(exclude="documents")
 
         return Dataset(**instance_attributes, documents=documents)
 
@@ -1032,6 +1045,23 @@ class Dataset:
                 lambda x: language in x if isinstance(x, Iterable) else False,
             )
 
+    def sample(self, n: Union[float, int], random_state: int = 42) -> "Dataset":
+        """Samples n number of proportion of documents from the dataset and returns a Dataset object with only those."""
+        random.seed(random_state)
+
+        if isinstance(n, float) and n < 1:
+            documents = random.sample(self.documents, round(n * len(self.documents)))
+        elif isinstance(n, int) and n > 0:
+            documents = random.sample(self.documents, min(n, len(self.documents)))
+        else:
+            raise ValueError(
+                f"n should be a float in (0.0, 1.0) or a positive integer. Provided value: {n}"
+            )
+
+        instance_attributes = self.dict(exclude="documents")
+
+        return Dataset(**instance_attributes, documents=documents)
+
     def sample_text(
         self, n: int, document_ids: Optional[Sequence[str]], replace: bool = False
     ):
@@ -1040,7 +1070,7 @@ class Dataset:
 
     def get_all_text_blocks(
         self, with_document_context: bool = False
-    ) -> Union[List[TextBlock], Tuple[List[TextBlock], dict]]:
+    ) -> Union[List[TextBlock], Tuple[List[TextBlock], dict]]:  #  type: ignore
         """
         Return all text blocks in the dataset.
 
@@ -1062,7 +1092,7 @@ class Dataset:
 
         return output_values
 
-    def _doc_to_text_block_dicts(self, document: AnyDocument) -> list[dict[str, Any]]:  # type: ignore
+    def _doc_to_text_block_dicts(self, document: AnyDocument) -> List[Dict[str, Any]]:  # type: ignore
         """
         Create a list of dictionaries with document metadata and text block metadata for each text block in a document.
 
