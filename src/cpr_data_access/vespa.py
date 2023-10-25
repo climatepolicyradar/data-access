@@ -14,7 +14,7 @@ from cpr_data_access.models.search import (
 )
 
 
-def _split_document_id(document_id: str) -> tuple[str, str, str]:
+def split_document_id(document_id: str) -> tuple[str, str, str]:
     try:
         namespace_and_schema, data_id = document_id.split("::")
         _, namespace, schema = namespace_and_schema.split(":")
@@ -25,7 +25,7 @@ def _split_document_id(document_id: str) -> tuple[str, str, str]:
     return namespace, schema, data_id
 
 
-def _find_vespa_cert_paths() -> tuple[Path, Path]:
+def find_vespa_cert_paths() -> tuple[Path, Path]:
     """
     Automatically find the certificate and key files for the vespa instance
 
@@ -69,7 +69,7 @@ def sanitize(user_input: str) -> str:
     return user_input
 
 
-def _build_yql(request: SearchRequestBody) -> str:
+def build_yql(request: SearchRequestBody) -> str:
     """
     Build a YQL string for retrieving relevant, filtered, sorted results from vespa
 
@@ -149,7 +149,7 @@ def _build_yql(request: SearchRequestBody) -> str:
     return " ".join(rendered_query.split())
 
 
-def _parse_vespa_response(
+def parse_vespa_response(
     request: SearchRequestBody,
     vespa_response: VespaResponse,
 ) -> SearchResponse:
