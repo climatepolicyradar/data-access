@@ -21,31 +21,24 @@ import logging
 from functools import cached_property
 import os
 
-from pydantic import (
-    BaseModel,
-    AnyHttpUrl,
-    NonNegativeInt,
-    confloat,
-    conint,
-    root_validator,
-    PrivateAttr,
-    constr,
-)
 import pandas as pd
+from pydantic import (
+    AnyHttpUrl,
+    BaseModel,
+    Field,
+    constr,
+    NonNegativeInt,
+    PrivateAttr,
+    root_validator,
+)
 from tqdm.auto import tqdm
 import numpy as np
 import random
 
 from datasets import Dataset as HFDataset, DatasetInfo, load_dataset
 import cpr_data_access.data_adaptors as adaptors
-from cpr_data_access.parser_models import (
-    ParserOutput,
-    BlockType,
-)
-from cpr_data_access.pipeline_general_models import (
-    CONTENT_TYPE_HTML,
-    CONTENT_TYPE_PDF,
-)
+from cpr_data_access.parser_models import BlockType, ParserOutput
+from cpr_data_access.pipeline_general_models import CONTENT_TYPE_HTML, CONTENT_TYPE_PDF
 
 LOGGER = logging.getLogger(__name__)
 
@@ -157,7 +150,7 @@ class Span(BaseModel):
     start_idx: int
     end_idx: int
     sentence: str
-    pred_probability: confloat(ge=0, le=1)  # type: ignore
+    pred_probability: Annotated[float, Field(ge=0, le=1)]
     annotator: str
     kb_ids: Optional[KnowledgeBaseIDs] = None
 
@@ -190,8 +183,8 @@ class TextBlock(BaseModel):
     text_block_id: str
     language: Optional[str]
     type: BlockType
-    type_confidence: confloat(ge=0, le=1)  # type: ignore
-    page_number: conint(ge=-1)  # type: ignore
+    type_confidence: Annotated[float, Field(ge=0, le=1)]
+    page_number: Annotated[int, Field(ge=-1)]
     coords: Optional[List[Tuple[float, float]]]
     _spans: list[Span] = PrivateAttr(default_factory=list)
 
