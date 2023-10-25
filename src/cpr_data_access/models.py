@@ -992,7 +992,7 @@ class Dataset:
         """Iterate over the documents in the dataset"""
         return iter(self.documents)
 
-    def dict(self, exclude: Union[None, str, list[str]] = None) -> dict:
+    def dict(self, exclude: Union[None, str, list[str]] = None) -> Dict[str, Any]:
         """Returns the dataset object in a dict format"""
         if isinstance(exclude, str):
             attributes_to_exclude = [exclude]
