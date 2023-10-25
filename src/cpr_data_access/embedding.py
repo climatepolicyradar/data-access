@@ -23,7 +23,7 @@ class Embedder:
         show_progress_bar: bool = True,
     ) -> List[float]:
         """
-        Embed a string using a sentence-transformers model
+        Embed a string using the configured sentence-transformers model
 
         :param string: the string to embed
         :param normalize: whether to normalize the embedding
