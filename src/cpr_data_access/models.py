@@ -2,6 +2,7 @@
 
 import itertools
 from typing import (
+    Iterable,
     Sequence,
     Optional,
     List,
@@ -1034,9 +1035,22 @@ class Dataset:
             "document_id", lambda x: x.lower().startswith(corpus_name.lower())
         )
 
-    def filter_by_language(self, language: str) -> "Dataset":
-        """Return documents whose only language is the given language."""
-        return self.filter("languages", [language])
+    def filter_by_language(self, language: str, strict_match: bool = True) -> "Dataset":
+        """
+        Return documents filtered by the language provided
+
+        :param language: the language to filter by
+        :param strict_match: controls whether to only return documents that have 1 language, and that matches with the
+            provided language, or (in case of False) return all documents that have one or more languages, one of which
+            is the provided one.
+        """
+        if strict_match:
+            return self.filter("languages", [language])
+        else:
+            return self.filter(
+                "languages",
+                lambda x: language in x if isinstance(x, Iterable) else False,
+            )
 
     def sample(self, n: Union[float, int], random_state: int = 42) -> "Dataset":
         """Samples n number of proportion of documents from the dataset and returns a Dataset object with only those."""

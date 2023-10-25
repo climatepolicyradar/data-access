@@ -181,6 +181,19 @@ def test_dataset_filter_by_language(test_dataset):
     assert dataset.documents[0].languages == ["en"]
     assert dataset.documents[1].languages == ["en"]
 
+    test_dataset.documents[0].languages = ["en", "fr"]
+
+    dataset_2 = test_dataset.filter_by_language("en", strict_match=False)
+
+    assert len(dataset_2) == 2
+    assert dataset_2.documents[0].languages == ["en", "fr"]
+    assert dataset_2.documents[1].languages == ["en"]
+
+    dataset_3 = test_dataset.filter_by_language("en", strict_match=True)
+
+    assert len(dataset_3) == 1
+    assert dataset_3.documents[0].languages == ["en"]
+
 
 def test_dataset_filter_by_corpus(test_dataset):
     """Test Dataset.filter_by_corpus"""
