@@ -1063,7 +1063,7 @@ class Dataset:
 
     def get_all_text_blocks(
         self, with_document_context: bool = False
-    ) -> Union[List[TextBlock], Tuple[List[TextBlock], dict]]:
+    ) -> Union[List[TextBlock], Tuple[List[TextBlock], dict]]:  # type: ignore
         """
         Return all text blocks in the dataset.
 
