@@ -1028,7 +1028,7 @@ class Dataset:
 
         :param language: the language to filter by
         :param strict_match: controls whether to only return documents that have 1 language, and that matches with the
-            provided language, or (in case of False) return all documents that have multiple languages, one of which
+            provided language, or (in case of False) return all documents that have one or more languages, one of which
             is the provided one.
         """
         if strict_match:
