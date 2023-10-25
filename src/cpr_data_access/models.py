@@ -5,6 +5,7 @@ from typing import (
     Sequence,
     Optional,
     List,
+    Dict,
     Tuple,
     Any,
     Union,
@@ -990,6 +991,19 @@ class Dataset:
     def __iter__(self):
         """Iterate over the documents in the dataset"""
         return iter(self.documents)
+    
+    def dict(self, exclude: Union[None, str, list[str]] = None) -> dict:
+        """Returns the dataset object in a dict format"""
+        if isinstance(exclude, str):
+            attributes_to_exclude = [exclude]
+        elif isinstance(exclude, list):
+            attributes_to_exclude = exclude
+        else:
+            attributes_to_exclude = []
+        
+        return {
+            k: v for k, v in self.__dict__.items() if k not in attributes_to_exclude
+        }
 
     def filter(self, attribute: str, value: Any) -> "Dataset":
         """
@@ -1010,9 +1024,7 @@ class Dataset:
                 doc for doc in self.documents if getattr(doc, attribute) == value
             ]
 
-        instance_attributes = {
-            k: v for k, v in self.__dict__.items() if k != "documents"
-        }
+        instance_attributes = self.dict(exclude="documents")
 
         return Dataset(**instance_attributes, documents=documents)
 
@@ -1026,15 +1038,18 @@ class Dataset:
         """Return documents whose only language is the given language."""
         return self.filter("languages", [language])
 
-    def sample(self, n: int, random_state: int = 42) -> "Dataset":
-        """Samples n documents from the dataset and returns a Dataset object with only those."""
+    def sample(self, n: Union[float, int], random_state: int = 42) -> "Dataset":
+        """Samples n number of proportion of documents from the dataset and returns a Dataset object with only those."""
         random.seed(random_state)
 
-        documents = random.sample(self.documents, n)
+        if isinstance(n, float) and n < 1:
+            documents = random.sample(self.documents, round(n * len(self.documents)))
+        elif isinstance(n, int) and n > 0:
+            documents = random.sample(self.documents, min(n, len(self.documents)))
+        else:
+            raise ValueError(f"n should be a float in (0.0, 1.0) or a positive integer. Provided value: {n}")
 
-        instance_attributes = {
-            k: v for k, v in self.__dict__.items() if k != "documents"
-        }
+        instance_attributes = self.dict(exclude="documents")
 
         return Dataset(**instance_attributes, documents=documents)
 
@@ -1068,7 +1083,7 @@ class Dataset:
 
         return output_values
 
-    def _doc_to_text_block_dicts(self, document: AnyDocument) -> list[dict[str, Any]]:  # type: ignore
+    def _doc_to_text_block_dicts(self, document: AnyDocument) -> List[Dict[str, Any]]:  # type: ignore
         """
         Create a list of dictionaries with document metadata and text block metadata for each text block in a document.
 
