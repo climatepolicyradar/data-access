@@ -475,7 +475,7 @@ def test_dataset_sample(test_dataset):
     with pytest.raises(
         ValueError,
         match=r"n should be a float in \(0.0, 1.0\) or a positive integer. Provided value: -1",
-    ) as e_info:
+    ):
         _ = dataset.sample(-1)
 
 
