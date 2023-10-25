@@ -464,3 +464,47 @@ def test_text_block_hashable(test_document):
     comparison_block.text_block_id = "0"
 
     assert comparison_block != doc.text_blocks[0]
+
+
+def test_dataset_sample(test_dataset):
+    dataset = test_dataset
+
+    sample_1 = dataset.sample(1, random_state=20)
+    sample_2 = dataset.sample(1, random_state=20)
+    sample_3 = dataset.sample(1, random_state=40)
+
+    assert len(sample_1) == 1
+    assert sample_1.documents == sample_2.documents
+    assert sample_1.documents != sample_3.documents
+
+    sample_4 = dataset.sample(len(dataset) * 2, random_state=20)
+
+    assert len(sample_4) == len(dataset)
+
+    sample_5 = dataset.sample(1 / 3)
+
+    assert len(sample_5) == len(dataset) / 3
+
+    with pytest.raises(
+        ValueError,
+        match=r"n should be a float in \(0.0, 1.0\) or a positive integer. Provided value: -1",
+    ):
+        _ = dataset.sample(-1)
+
+
+def test_dataset_dict(test_dataset):
+    dataset = test_dataset
+
+    d2 = Dataset(**dataset.dict())
+
+    for k, v in dataset.__dict__.items():
+        assert v == getattr(d2, k)
+
+    d3_dict = dataset.dict(exclude=["documents", "document_model"])
+
+    assert "documents" not in d3_dict.keys()
+    assert "document_model" not in d3_dict.keys()
+
+    d4_dict = dataset.dict(exclude="documents")
+
+    assert "documents" not in d4_dict.keys()
