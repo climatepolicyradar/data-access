@@ -3,7 +3,7 @@ import json
 import pytest
 from vespa.io import VespaResponse
 
-from cpr_data_access.models.search import Hit, SearchRequestBody
+from cpr_data_access.models.search import Hit, SearchParameters
 from cpr_data_access.vespa import parse_vespa_response, split_document_id
 
 
@@ -38,7 +38,7 @@ def valid_get_passage_response():
 
 
 def test_whether_a_valid_vespa_response_is_parsed(valid_vespa_search_response):
-    request = SearchRequestBody(query_string="test")
+    request = SearchParameters(query_string="test")
     assert parse_vespa_response(
         request=request, vespa_response=valid_vespa_search_response
     )
@@ -48,14 +48,14 @@ def test_whether_an_invalid_vespa_response_raises_a_valueerror(
     invalid_vespa_search_response,
 ):
     with pytest.raises(ValueError):
-        request = SearchRequestBody(query_string="test")
+        request = SearchParameters(query_string="test")
         parse_vespa_response(
             request=request, vespa_response=invalid_vespa_search_response
         )
 
 
 def test_whether_sorting_by_ascending_date_works(valid_vespa_search_response):
-    request = SearchRequestBody(
+    request = SearchParameters(
         query_string="test", sort_by="date", sort_order="ascending"
     )
     response = parse_vespa_response(
@@ -68,7 +68,7 @@ def test_whether_sorting_by_ascending_date_works(valid_vespa_search_response):
 
 
 def test_whether_sorting_by_descending_date_works(valid_vespa_search_response):
-    request = SearchRequestBody(
+    request = SearchParameters(
         query_string="test", sort_by="date", sort_order="descending"
     )
     response = parse_vespa_response(
@@ -81,7 +81,7 @@ def test_whether_sorting_by_descending_date_works(valid_vespa_search_response):
 
 
 def test_whether_sorting_by_ascending_name_works(valid_vespa_search_response):
-    request = SearchRequestBody(
+    request = SearchParameters(
         query_string="test", sort_by="name", sort_order="ascending"
     )
     response = parse_vespa_response(
@@ -94,7 +94,7 @@ def test_whether_sorting_by_ascending_name_works(valid_vespa_search_response):
 
 
 def test_whether_sorting_by_descending_name_works(valid_vespa_search_response):
-    request = SearchRequestBody(
+    request = SearchParameters(
         query_string="test", sort_by="name", sort_order="descending"
     )
     response = parse_vespa_response(
@@ -109,7 +109,7 @@ def test_whether_sorting_by_descending_name_works(valid_vespa_search_response):
 def test_whether_continuation_token_is_returned_when_present(
     valid_vespa_search_response,
 ):
-    request = SearchRequestBody(query_string="test", limit=1)
+    request = SearchParameters(query_string="test", limit=1)
     response = parse_vespa_response(
         request=request, vespa_response=valid_vespa_search_response
     )

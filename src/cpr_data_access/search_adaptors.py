@@ -8,7 +8,7 @@ from requests.exceptions import HTTPError
 from vespa.application import Vespa
 
 from cpr_data_access.embedding import Embedder, ModelName
-from cpr_data_access.models.search import Hit, SearchRequestBody, SearchResponse
+from cpr_data_access.models.search import Hit, SearchParameters, SearchResponse
 from cpr_data_access.vespa import (
     build_yql,
     find_vespa_cert_paths,
@@ -20,11 +20,11 @@ from cpr_data_access.vespa import (
 class SearchAdapter(ABC):
     """Base class for all search adapters."""
 
-    def search(self, request: SearchRequestBody) -> SearchResponse:
+    def search(self, parameters: SearchParameters) -> SearchResponse:
         """
         Search a dataset
 
-        :param SearchRequestBody request: a search request object
+        :param SearchParameters parameters: a search request object
         :return SearchResponse: a list of parent families, each containing relevant
             child documents and passages
         """
@@ -67,32 +67,34 @@ class VespaSearchAdapter(SearchAdapter):
         self.client = Vespa(url=instance_url, cert=str(cert_path), key=str(key_path))
         self.embedder = Embedder(model_name)
 
-    def search(self, request: SearchRequestBody) -> SearchResponse:
+    def search(self, parameters: SearchParameters) -> SearchResponse:
         """
         Search a vespa instance
 
-        :param SearchRequestBody request: a search request object
+        :param SearchParameters parameters: a search request object
         :return SearchResponse: a list of families, with response metadata
         """
         total_time_start = time.time()
 
         vespa_request_body = {
-            "yql": build_yql(request),
+            "yql": build_yql(parameters),
             "timeout": "20",
             "ranking.softtimeout.factor": "0.7",
         }
-        if request.exact_match:
+        if parameters.exact_match:
             vespa_request_body["ranking.profile"] = "exact"
         else:
             vespa_request_body["ranking.profile"] = "hybrid"
-            embedding = self.embedder.embed(request.query_string, normalize=True)
+            embedding = self.embedder.embed(parameters.query_string, normalize=True)
             vespa_request_body["input.query(query_embedding)"] = embedding
 
         query_time_start = time.time()
         vespa_response = self.client.query(body=vespa_request_body)
         query_time_end = time.time()
 
-        response = parse_vespa_response(request=request, vespa_response=vespa_response)
+        response = parse_vespa_response(
+            request=parameters, vespa_response=vespa_response
+        )
 
         response.query_time_ms = int((query_time_end - query_time_start) * 1000)
         response.total_time_ms = int((time.time() - total_time_start) * 1000)

@@ -7,7 +7,7 @@ from vespa.io import VespaResponse
 from cpr_data_access.models.search import (
     Family,
     Hit,
-    SearchRequestBody,
+    SearchParameters,
     SearchResponse,
     filter_fields,
     sort_fields,
@@ -69,11 +69,11 @@ def sanitize(user_input: str) -> str:
     return user_input
 
 
-def build_yql(request: SearchRequestBody) -> str:
+def build_yql(request: SearchParameters) -> str:
     """
     Build a YQL string for retrieving relevant, filtered, sorted results from vespa
 
-    :param SearchRequestBody request: a search request object comprised of the user's
+    :param SearchParameters request: a search request object comprised of the user's
         search parameters
     :return str: formatted YQL which incorporates the user's search parameters
     """
@@ -109,7 +109,6 @@ def build_yql(request: SearchRequestBody) -> str:
         filters = []
         for field_key, values in request.keyword_filters.items():
             field_name = filter_fields[field_key]
-            values = [values] if not isinstance(values, list) else values
             for value in values:
                 filters.append(f'({field_name} contains "{sanitize(value)}")')
         rendered_filters = " and " + " and ".join(filters)
@@ -150,13 +149,13 @@ def build_yql(request: SearchRequestBody) -> str:
 
 
 def parse_vespa_response(
-    request: SearchRequestBody,
+    request: SearchParameters,
     vespa_response: VespaResponse,
 ) -> SearchResponse:
     """
     Parse a vespa response into a SearchResponse object
 
-    :param SearchRequestBody request: The user's original search request
+    :param SearchParameters request: The user's original search request
     :param VespaResponse vespa_response: The response from the vespa instance
     :raises ValueError: if the vespa response status code is not 200, indicating an
         error in the query, or the vespa instance

@@ -15,7 +15,7 @@ The `Dataset` class is automatically configured with the Huggingface repos we us
 
 If the repository is private you must provide a [user access token](https://huggingface.co/docs/hub/security-tokens), either in your environment as `HUGGINGFACE_TOKEN`, or as an argument to `from_huggingface`.
 
-``` py
+```py
 from cpr_data_access.models import Dataset, GSTDocument
 
 dataset = Dataset(GSTDocument).from_huggingface(
@@ -27,7 +27,7 @@ dataset = Dataset(GSTDocument).from_huggingface(
 
 ### Loading from local storage or s3
 
-``` py
+```py
 # document_id is also the filename stem
 
 document = BaseDocument.load_from_local(folder_path="path/to/data/", document_id="document_1234")
@@ -37,7 +37,7 @@ document = BaseDocument.load_from_remote(dataset_key"s3://cpr-data", document_id
 
 To manage metadata, documents need to be loaded into a `Dataset` object.
 
-``` py
+```py
 from cpr_data_access.models import Dataset, CPRDocument, GSTDocument
 
 dataset = Dataset().load_from_local("path/to/data", limit=1000)
@@ -53,7 +53,7 @@ assert all([isinstance(document, CPRDocument) for document in dataset_with_metad
 
 Datasets have a number of methods for filtering and accessing documents.
 
-``` py
+```py
 len(dataset)
 >>> 1000
 
@@ -78,11 +78,11 @@ This library can also be used to run searches against CPR documents and passages
 
 ```python
 from src.cpr_data_access.search_adaptors import VespaSearchAdapter
-from src.cpr_data_access.models.search import SearchRequestBody
+from src.cpr_data_access.models.search import SearchParameters
 
 adaptor = VespaSearchAdapter(instance_url="YOUR_INSTANCE_URL")
 
-request = SearchRequestBody(query_string="forest fires")
+request = SearchParameters(query_string="forest fires")
 
 response = adaptor.search(request)
 ```
@@ -92,7 +92,7 @@ The above example will return a `SearchResponse` object, which lists some basic 
 By default, results are sorted by relevance, but can be sorted by date, or name, eg
 
 ```python
-request = SearchRequestBody(
+request = SearchParameters(
     query_string="forest fires",
     sort_by="date",
     sort_order="descending",
@@ -102,7 +102,7 @@ request = SearchRequestBody(
 Matching documents can also be filtered by keyword field, and by publication date
 
 ```python
-request = SearchRequestBody(
+request = SearchParameters(
     query_string="forest fires",
     keyword_filters={
         "language": ["English", "French"],
