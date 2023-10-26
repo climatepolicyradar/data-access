@@ -15,6 +15,7 @@ from cpr_data_access.vespa import (
     parse_vespa_response,
     split_document_id,
 )
+from cpr_data_access.exceptions import DocumentNotFoundError, FetchError
 
 
 class SearchAdapter(ABC):
@@ -85,7 +86,9 @@ class VespaSearchAdapter(SearchAdapter):
             vespa_request_body["ranking.profile"] = "exact"
         else:
             vespa_request_body["ranking.profile"] = "hybrid"
-            embedding = self.embedder.embed(parameters.query_string, normalize=True)
+            embedding = self.embedder.embed(
+                parameters.query_string, normalize=True, show_progress_bar=False
+            )
             vespa_request_body["input.query(query_embedding)"] = embedding
 
         query_time_start = time.time()
@@ -118,10 +121,12 @@ class VespaSearchAdapter(SearchAdapter):
             )
         except HTTPError as e:
             if e.response.status_code == 404:
-                raise ValueError(f'No document found with id "{document_id}"') from e
+                raise DocumentNotFoundError(document_id) from e
             else:
-                raise ValueError(
-                    f'Something went wrong when fetching document with id "{document_id}"'
+                raise FetchError(
+                    f"Received status code {e.response.status_code} when fetching "
+                    f"document {document_id}",
+                    status_code=e.response.status_code,
                 ) from e
 
         return Hit.from_vespa_response(vespa_response.json)

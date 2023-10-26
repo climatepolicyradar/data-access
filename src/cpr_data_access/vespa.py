@@ -12,15 +12,27 @@ from cpr_data_access.models.search import (
     filter_fields,
     sort_fields,
 )
+from cpr_data_access.exceptions import FetchError
 
 
 def split_document_id(document_id: str) -> tuple[str, str, str]:
+    """
+    Split a document_id into its namespace, schema, and data_id components.
+
+    IDs should be of the form: "id:namespace:schema::data_id"
+
+    :param str document_id: a document id of the form "id:namespace:schema::data_id"
+    :raises ValueError: if the document id is not of the expected form
+    :return tuple[str, str, str]: the namespace, schema, and data_id components of the
+        document_id
+    """
     try:
         namespace_and_schema, data_id = document_id.split("::")
         _, namespace, schema = namespace_and_schema.split(":")
     except ValueError as e:
         raise ValueError(
-            f'Document id "{document_id}" is not in the expected format'
+            f'Failed to parse document id: "{document_id}". '
+            'Document ids should be of the form: "id:namespace:schema::data_id"'
         ) from e
     return namespace, schema, data_id
 
@@ -157,14 +169,14 @@ def parse_vespa_response(
 
     :param SearchParameters request: The user's original search request
     :param VespaResponse vespa_response: The response from the vespa instance
-    :raises ValueError: if the vespa response status code is not 200, indicating an
+    :raises FetchError: if the vespa response status code is not 200, indicating an
         error in the query, or the vespa instance
     :return SearchResponse: a list of families, with response metadata
     """
     if vespa_response.status_code != 200:
-        raise ValueError(
-            f"Vespa response status code was {vespa_response.status_code}, "
-            f"expected 200"
+        raise FetchError(
+            f"Received status code {vespa_response.status_code}",
+            status_code=vespa_response.status_code,
         )
     families: List[Family] = []
     root = vespa_response.json["root"]

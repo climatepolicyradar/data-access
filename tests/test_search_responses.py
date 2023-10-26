@@ -5,6 +5,7 @@ from vespa.io import VespaResponse
 
 from cpr_data_access.models.search import Hit, SearchParameters
 from cpr_data_access.vespa import parse_vespa_response, split_document_id
+from cpr_data_access.exceptions import FetchError
 
 
 @pytest.fixture
@@ -47,11 +48,12 @@ def test_whether_a_valid_vespa_response_is_parsed(valid_vespa_search_response):
 def test_whether_an_invalid_vespa_response_raises_a_valueerror(
     invalid_vespa_search_response,
 ):
-    with pytest.raises(ValueError):
+    with pytest.raises(FetchError) as excinfo:
         request = SearchParameters(query_string="test")
         parse_vespa_response(
             request=request, vespa_response=invalid_vespa_search_response
         )
+    assert "Received status code 500" in str(excinfo.value)
 
 
 def test_whether_sorting_by_ascending_date_works(valid_vespa_search_response):
