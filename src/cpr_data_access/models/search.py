@@ -105,6 +105,7 @@ class Hit(BaseModel):
 
     family_name: Optional[str]
     family_description: Optional[str]
+    family_source: Optional[str]
     family_import_id: Optional[str]
     family_slug: Optional[str]
     family_category: Optional[str]
@@ -163,6 +164,7 @@ class Document(Hit):
         return cls(
             family_name=fields.get("family_name"),
             family_description=fields.get("family_description"),
+            family_source=fields.get("family_source"),
             family_import_id=fields.get("family_import_id"),
             family_slug=fields.get("family_slug"),
             family_category=fields.get("family_category"),
@@ -195,22 +197,23 @@ class Passage(Hit):
         :return Passage: a populated passage
         """
         fields = response_hit["fields"]
-        family_publication_ts = fields.get("family_publication_ts", None)
+        family_publication_ts = fields.get("family_publication_ts")
         family_publication_ts = (
             datetime.fromisoformat(family_publication_ts)
             if family_publication_ts
             else None
         )
         return cls(
-            family_name=fields.get("family_name", None),
-            family_description=fields.get("family_description", None),
-            family_import_id=fields.get("family_import_id", None),
-            family_slug=fields.get("family_slug", None),
-            family_category=fields.get("family_category", None),
+            family_name=fields.get("family_name"),
+            family_description=fields.get("family_description"),
+            family_source=fields.get("family_source"),
+            family_import_id=fields.get("family_import_id"),
+            family_slug=fields.get("family_slug"),
+            family_category=fields.get("family_category"),
             family_publication_ts=family_publication_ts,
-            family_geography=fields.get("family_geography", None),
-            document_import_id=fields.get("document_import_id", None),
-            document_slug=fields.get("document_slug", None),
+            family_geography=fields.get("family_geography"),
+            document_import_id=fields.get("document_import_id"),
+            document_slug=fields.get("document_slug"),
             document_languages=fields.get("document_languages", []),
             document_content_type=fields.get("document_content_type"),
             document_cdn_object=fields.get("document_cdn_object"),
