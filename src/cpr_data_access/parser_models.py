@@ -16,7 +16,7 @@ from cpr_data_access.pipeline_general_models import (
     Json,
 )
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class VerticalFlipError(Exception):
@@ -265,7 +265,7 @@ class BaseParserOutput(BaseModel):
         """
 
         if self.document_content_type != CONTENT_TYPE_HTML:
-            logger.warning(
+            _LOGGER.warning(
                 "Language detection should not be required for non-HTML documents, "
                 "but it has been run on one. This will overwrite any document "
                 "languages detected via other means, e.g. OCR. "
@@ -278,7 +278,7 @@ class BaseParserOutput(BaseModel):
             try:
                 detected_language = detect(self.to_string())
             except LangDetectException:
-                logger.warning(
+                _LOGGER.warning(
                     "Language detection failed for document with id %s",
                     self.document_id,
                 )
@@ -355,7 +355,7 @@ class BaseParserOutput(BaseModel):
                         text_block.coords[0],
                     ]
         except Exception as e:
-            logger.exception(
+            _LOGGER.exception(
                 "Error flipping text block coordinates.",
                 extra={"props": {"document_id": self.document_id}},
             )

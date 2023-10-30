@@ -190,10 +190,10 @@ def parse_vespa_response(
 
     # For now, we can't sort our results natively in vespa because sort orders are
     # applied _before_ grouping. We're sorting here instead.
-    if request.sort_by:
-        # pyright: reportGeneralTypeIssues=none
+    if request.sort_by is not None:
+        sort_field = sort_fields[request.sort_by]
         families.sort(
-            key=lambda f: getattr(f.hits[0], sort_fields[request.sort_by]),
+            key=lambda f: getattr(f.hits[0], sort_field),
             reverse=request.sort_order == "descending",
         )
 

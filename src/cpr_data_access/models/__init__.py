@@ -37,7 +37,7 @@ import random
 
 from datasets import Dataset as HFDataset, DatasetInfo, load_dataset
 import cpr_data_access.data_adaptors as adaptors
-from cpr_data_access.parser_models import BlockType, ParserOutput
+from cpr_data_access.parser_models import BlockType, BaseParserOutput
 from cpr_data_access.pipeline_general_models import CONTENT_TYPE_HTML, CONTENT_TYPE_PDF
 
 LOGGER = logging.getLogger(__name__)
@@ -401,7 +401,7 @@ class BaseDocument(BaseModel):
 
     @classmethod
     def from_parser_output(
-        cls: type[AnyDocument], parser_document: ParserOutput
+        cls: type[AnyDocument], parser_document: BaseParserOutput
     ) -> AnyDocument:
         """Load from document parser output"""
 
@@ -1175,7 +1175,8 @@ class Dataset:
         :return self: with documents loaded from huggingface dataset
         """
 
-        hf_dataframe: pd.DataFrame = huggingface_dataset.to_pandas()
+        # TODO: validate that we really do have a DataFrame & not an iterator
+        hf_dataframe: pd.DataFrame = huggingface_dataset.to_pandas()  # type: ignore
 
         # This undoes the renaming of columns done in to_huggingface()
         hf_dataframe = hf_dataframe.rename(columns={"document_languages": "languages"})
@@ -1274,4 +1275,5 @@ class Dataset:
             dataset_name, dataset_version, token=token, split="train", **kwargs
         )
 
-        return self._from_huggingface_parquet(huggingface_dataset, limit)
+        # TODO: validate the result coming from the below method
+        return self._from_huggingface_parquet(huggingface_dataset, limit)  # type: ignore

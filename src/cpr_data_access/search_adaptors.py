@@ -2,7 +2,7 @@
 from pathlib import Path
 import time
 from abc import ABC
-from typing import Optional
+from typing import Any, Optional
 
 from requests.exceptions import HTTPError
 from vespa.application import Vespa
@@ -77,7 +77,7 @@ class VespaSearchAdapter(SearchAdapter):
         """
         total_time_start = time.time()
 
-        vespa_request_body = {
+        vespa_request_body: dict[str, Any] = {
             "yql": build_yql(parameters),
             "timeout": "20",
             "ranking.softtimeout.factor": "0.7",

@@ -1,16 +1,16 @@
 """Adaptors for getting and storing data from CPR data sources."""
 
+import logging
 from abc import ABC, abstractmethod
 from typing import List, Optional
 from pathlib import Path
-import logging
 
 from tqdm.auto import tqdm
 
-from cpr_data_access.s3 import _get_s3_keys_with_prefix, _s3_object_read_text
 from cpr_data_access.parser_models import BaseParserOutput
+from cpr_data_access.s3 import _get_s3_keys_with_prefix, _s3_object_read_text
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class DataAdaptor(ABC):
@@ -45,7 +45,7 @@ class S3DataAdaptor(DataAdaptor):
         :return List[BaseParserOutput]: list of parser outputs
         """
         if not dataset_key.startswith("s3://"):
-            LOGGER.warning(
+            _LOGGER.warning(
                 f"Dataset key {dataset_key} does not start with 's3://'. "
                 "Assuming it is an S3 bucket."
             )
@@ -157,6 +157,8 @@ class LocalDataAdaptor(DataAdaptor):
         :param str document_id: import ID
         :return Optional[BaseParserOutput]: None if no document was found with the ID
         """
+        # TODO: these "get_by_id"  methods are almost certainly not what we need
+        # because we're unable to load more complex subclasses of BaseParserOutput
 
         folder_path = Path(dataset_key).resolve()
 
