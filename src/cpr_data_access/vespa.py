@@ -7,20 +7,32 @@ from vespa.io import VespaResponse
 from cpr_data_access.models.search import (
     Family,
     Hit,
-    SearchRequestBody,
+    SearchParameters,
     SearchResponse,
     filter_fields,
     sort_fields,
 )
+from cpr_data_access.exceptions import FetchError
 
 
 def split_document_id(document_id: str) -> tuple[str, str, str]:
+    """
+    Split a document_id into its namespace, schema, and data_id components.
+
+    IDs should be of the form: "id:namespace:schema::data_id"
+
+    :param str document_id: a document id of the form "id:namespace:schema::data_id"
+    :raises ValueError: if the document id is not of the expected form
+    :return tuple[str, str, str]: the namespace, schema, and data_id components of the
+        document_id
+    """
     try:
         namespace_and_schema, data_id = document_id.split("::")
         _, namespace, schema = namespace_and_schema.split(":")
     except ValueError as e:
         raise ValueError(
-            f'Document id "{document_id}" is not in the expected format'
+            f'Failed to parse document id: "{document_id}". '
+            'Document ids should be of the form: "id:namespace:schema::data_id"'
         ) from e
     return namespace, schema, data_id
 
@@ -69,11 +81,11 @@ def sanitize(user_input: str) -> str:
     return user_input
 
 
-def build_yql(request: SearchRequestBody) -> str:
+def build_yql(request: SearchParameters) -> str:
     """
     Build a YQL string for retrieving relevant, filtered, sorted results from vespa
 
-    :param SearchRequestBody request: a search request object comprised of the user's
+    :param SearchParameters request: a search request object comprised of the user's
         search parameters
     :return str: formatted YQL which incorporates the user's search parameters
     """
@@ -109,7 +121,6 @@ def build_yql(request: SearchRequestBody) -> str:
         filters = []
         for field_key, values in request.keyword_filters.items():
             field_name = filter_fields[field_key]
-            values = [values] if not isinstance(values, list) else values
             for value in values:
                 filters.append(f'({field_name} contains "{sanitize(value)}")')
         rendered_filters = " and " + " and ".join(filters)
@@ -150,22 +161,22 @@ def build_yql(request: SearchRequestBody) -> str:
 
 
 def parse_vespa_response(
-    request: SearchRequestBody,
+    request: SearchParameters,
     vespa_response: VespaResponse,
 ) -> SearchResponse:
     """
     Parse a vespa response into a SearchResponse object
 
-    :param SearchRequestBody request: The user's original search request
+    :param SearchParameters request: The user's original search request
     :param VespaResponse vespa_response: The response from the vespa instance
-    :raises ValueError: if the vespa response status code is not 200, indicating an
+    :raises FetchError: if the vespa response status code is not 200, indicating an
         error in the query, or the vespa instance
     :return SearchResponse: a list of families, with response metadata
     """
     if vespa_response.status_code != 200:
-        raise ValueError(
-            f"Vespa response status code was {vespa_response.status_code}, "
-            f"expected 200"
+        raise FetchError(
+            f"Received status code {vespa_response.status_code}",
+            status_code=vespa_response.status_code,
         )
     families: List[Family] = []
     root = vespa_response.json["root"]
@@ -179,10 +190,10 @@ def parse_vespa_response(
 
     # For now, we can't sort our results natively in vespa because sort orders are
     # applied _before_ grouping. We're sorting here instead.
-    if request.sort_by:
-        # pyright: reportGeneralTypeIssues=none
+    if request.sort_by is not None:
+        sort_field = sort_fields[request.sort_by]
         families.sort(
-            key=lambda f: getattr(f.hits[0], sort_fields[request.sort_by]),
+            key=lambda f: getattr(f.hits[0], sort_field),
             reverse=request.sort_order == "descending",
         )
 

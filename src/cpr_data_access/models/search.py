@@ -1,17 +1,14 @@
 from datetime import datetime
-from typing import List, Literal, Mapping, Optional, Sequence, Union
-
+from typing import List, Mapping, Optional, Sequence, Union
+from cpr_data_access.exceptions import QueryError
 from pydantic import BaseModel, validator
 
-SortOrder = Literal["ascending", "descending"]
+sort_orders = ["ascending", "descending"]
 
 sort_fields = {
     "date": "family_publication_ts",
     "name": "family_name",
 }
-
-SortField = Literal["date", "name"]
-
 
 filter_fields = {
     "geography": "family_geography",
@@ -20,10 +17,8 @@ filter_fields = {
     "source": "family_source",
 }
 
-FilterField = Literal["geography", "category", "language", "source"]
 
-
-class SearchRequestBody(BaseModel):
+class SearchParameters(BaseModel):
     """Parameters for a search request"""
 
     query_string: str
@@ -31,29 +26,78 @@ class SearchRequestBody(BaseModel):
     limit: int = 100
     max_hits_per_family: int = 10
 
-    keyword_filters: Optional[Mapping[FilterField, Union[str, Sequence[str]]]] = None
+    keyword_filters: Optional[Mapping[str, Union[str, Sequence[str]]]] = None
     year_range: Optional[tuple[Optional[int], Optional[int]]] = None
 
-    sort_by: Optional[SortField] = None
-    sort_order: SortOrder = "descending"
+    sort_by: Optional[str] = None
+    sort_order: str = "descending"
 
     continuation_token: Optional[str] = None
 
     @validator("query_string")
-    def query_string_must_not_be_empty(cls, v):
+    def query_string_must_not_be_empty(cls, query_string):
         """Validate that the query string is not empty."""
-        if v == "":
-            raise ValueError("Query string must not be empty")
-        return v
+        if query_string == "":
+            raise QueryError("query_string must not be empty")
+        return query_string
 
     @validator("year_range")
-    def year_range_must_be_valid(cls, v):
+    def year_range_must_be_valid(cls, year_range):
         """Validate that the year range is valid."""
-        if v is not None:
-            if v[0] is not None and v[1] is not None:
-                if v[0] > v[1]:
-                    raise ValueError("Invalid year range")
-        return v
+        if year_range is not None:
+            if year_range[0] is not None and year_range[1] is not None:
+                if year_range[0] > year_range[1]:
+                    raise QueryError(
+                        "The first supplied year must be less than or equal to the "
+                        f"second supplied year. Received: {year_range}"
+                    )
+        return year_range
+
+    @validator("sort_by")
+    def sort_by_must_be_valid(cls, sort_by):
+        """Validate that the sort field is valid."""
+        if sort_by is not None:
+            if sort_by not in sort_fields:
+                raise QueryError(
+                    f"Invalid sort field: {sort_by}. sort_by must be one of: "
+                    f"{list(sort_fields.keys())}"
+                )
+        return sort_by
+
+    @validator("sort_order")
+    def sort_order_must_be_valid(cls, sort_order):
+        """Validate that the sort order is valid."""
+        if sort_order not in ["ascending", "descending"]:
+            raise QueryError(
+                f"Invalid sort order: {sort_order}. sort_order must be one of: "
+                f"{sort_orders}"
+            )
+        return sort_order
+
+    @validator("keyword_filters")
+    def keyword_filters_must_be_valid(cls, keyword_filters):
+        """Validate that the keyword filters are valid."""
+        if keyword_filters is not None:
+            for field_key, values in keyword_filters.items():
+                if field_key not in filter_fields:
+                    raise QueryError(
+                        f"Invalid keyword filter: {field_key}. keyword_filters must be "
+                        f"a subset of: {list(filter_fields.keys())}"
+                    )
+
+                # convert single values to lists to make things easier later on
+                if not isinstance(values, list):
+                    keyword_filters[field_key] = [values]
+
+                for value in keyword_filters[field_key]:
+                    if not isinstance(value, str):
+                        raise QueryError(
+                            "Invalid keyword filter value: "
+                            f"{{{field_key}: {value}}}. "
+                            "Keyword filter values must be strings."
+                        )
+
+        return keyword_filters
 
 
 class Hit(BaseModel):
@@ -61,6 +105,7 @@ class Hit(BaseModel):
 
     family_name: Optional[str]
     family_description: Optional[str]
+    family_source: Optional[str]
     family_import_id: Optional[str]
     family_slug: Optional[str]
     family_category: Optional[str]
@@ -119,6 +164,7 @@ class Document(Hit):
         return cls(
             family_name=fields.get("family_name"),
             family_description=fields.get("family_description"),
+            family_source=fields.get("family_source"),
             family_import_id=fields.get("family_import_id"),
             family_slug=fields.get("family_slug"),
             family_category=fields.get("family_category"),
@@ -151,22 +197,23 @@ class Passage(Hit):
         :return Passage: a populated passage
         """
         fields = response_hit["fields"]
-        family_publication_ts = fields.get("family_publication_ts", None)
+        family_publication_ts = fields.get("family_publication_ts")
         family_publication_ts = (
             datetime.fromisoformat(family_publication_ts)
             if family_publication_ts
             else None
         )
         return cls(
-            family_name=fields.get("family_name", None),
-            family_description=fields.get("family_description", None),
-            family_import_id=fields.get("family_import_id", None),
-            family_slug=fields.get("family_slug", None),
-            family_category=fields.get("family_category", None),
+            family_name=fields.get("family_name"),
+            family_description=fields.get("family_description"),
+            family_source=fields.get("family_source"),
+            family_import_id=fields.get("family_import_id"),
+            family_slug=fields.get("family_slug"),
+            family_category=fields.get("family_category"),
             family_publication_ts=family_publication_ts,
-            family_geography=fields.get("family_geography", None),
-            document_import_id=fields.get("document_import_id", None),
-            document_slug=fields.get("document_slug", None),
+            family_geography=fields.get("family_geography"),
+            document_import_id=fields.get("document_import_id"),
+            document_slug=fields.get("document_slug"),
             document_languages=fields.get("document_languages", []),
             document_content_type=fields.get("document_content_type"),
             document_cdn_object=fields.get("document_cdn_object"),
