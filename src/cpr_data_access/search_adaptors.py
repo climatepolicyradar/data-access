@@ -7,7 +7,7 @@ from typing import Any, Optional
 from requests.exceptions import HTTPError
 from vespa.application import Vespa
 
-from cpr_data_access.embedding import Embedder, ModelName
+from cpr_data_access.embedding import Embedder
 from cpr_data_access.models.search import Hit, SearchParameters, SearchResponse
 from cpr_data_access.vespa import (
     build_yql,
