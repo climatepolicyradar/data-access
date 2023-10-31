@@ -56,7 +56,7 @@ class VespaSearchAdapter(SearchAdapter):
         self,
         instance_url: str,
         cert_directory: Optional[str] = None,
-        model_name: ModelName = "msmarco-distilbert-dot-v5",
+        embedder: Optional[Embedder] = None,
     ):
         self.instance_url = instance_url
         if cert_directory is None:
@@ -66,7 +66,7 @@ class VespaSearchAdapter(SearchAdapter):
             key_path = Path(cert_directory) / "key.pem"
 
         self.client = Vespa(url=instance_url, cert=str(cert_path), key=str(key_path))
-        self.embedder = Embedder(model_name)
+        self.embedder = embedder or Embedder()
 
     def search(self, parameters: SearchParameters) -> SearchResponse:
         """
