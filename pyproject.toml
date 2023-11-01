@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cpr-data-access"
-version = "0.2.6"
+version = "0.2.7"
 description = ""
 authors = ["CPR Tech <tech@climatepolicyradar.org>"]
 readme = "README.md"
