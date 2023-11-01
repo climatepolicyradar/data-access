@@ -1,13 +1,11 @@
 """Adaptors for searching CPR data"""
-from pathlib import Path
 import time
 from abc import ABC
+from pathlib import Path
 from typing import Any, Optional
 
-from requests.exceptions import HTTPError
-from vespa.application import Vespa
-
 from cpr_data_access.embedding import Embedder
+from cpr_data_access.exceptions import DocumentNotFoundError, FetchError
 from cpr_data_access.models.search import Hit, SearchParameters, SearchResponse
 from cpr_data_access.vespa import (
     build_yql,
@@ -15,7 +13,8 @@ from cpr_data_access.vespa import (
     parse_vespa_response,
     split_document_id,
 )
-from cpr_data_access.exceptions import DocumentNotFoundError, FetchError
+from requests.exceptions import HTTPError
+from vespa.application import Vespa
 
 
 class SearchAdapter(ABC):
@@ -46,10 +45,10 @@ class VespaSearchAdapter(SearchAdapter):
     Search within a vespa instance
 
     :param str instance_url: url of the vespa instance
-    :param Optional[str] cert_directory: path to the directory containing the cert and key files
-        for the given instance
-    :param str model: name of the model to use for embedding queries. This should match
-        the name of the model used to embed text in the vespa index.
+    :param Optional[str] cert_directory: path to the directory containing the
+        cert and key files for the given instance
+    :param Embedder embedder: a configured embedder to use for embedding queries.
+        This should match the embedding model used to embed text in the vespa index.
     """
 
     def __init__(
@@ -120,13 +119,17 @@ class VespaSearchAdapter(SearchAdapter):
                 namespace=namespace, schema=schema, data_id=data_id
             )
         except HTTPError as e:
-            if e.response.status_code == 404:
+            if e.response is not None:
+                status_code = e.response.status_code
+            else:
+                status_code = "Unknown"
+            if status_code == 404:
                 raise DocumentNotFoundError(document_id) from e
             else:
                 raise FetchError(
-                    f"Received status code {e.response.status_code} when fetching "
+                    f"Received status code {status_code} when fetching "
                     f"document {document_id}",
-                    status_code=e.response.status_code,
+                    status_code=status_code,
                 ) from e
 
         return Hit.from_vespa_response(vespa_response.json)
