@@ -87,7 +87,7 @@ class VespaSearchAdapter(SearchAdapter):
         else:
             vespa_request_body["ranking.profile"] = "hybrid"
             embedding = self.embedder.embed(
-                parameters.query_string, normalize=True, show_progress_bar=False
+                parameters.query_string, normalize=False, show_progress_bar=False
             )
             vespa_request_body["input.query(query_embedding)"] = embedding
 
