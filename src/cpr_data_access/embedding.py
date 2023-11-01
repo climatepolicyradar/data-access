@@ -19,7 +19,7 @@ class Embedder:
     def embed(
         self,
         string: str,
-        normalize: bool = True,
+        normalize: bool = False,
         show_progress_bar: bool = True,
     ) -> List[float]:
         """
