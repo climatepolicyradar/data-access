@@ -102,16 +102,16 @@ def build_yql(request: SearchParameters) -> str:
     else:
         rendered_query_string_match = f"""
             where ((
-                {{"targetHits": 100000}} weakAnd(
+                {{"targetHits": 1000}} weakAnd(
                     family_name contains "{ request.query_string }",
                     family_description contains "{ request.query_string }",
                     text_block contains "{ request.query_string }"
                 )
             ) or (
-                [{{"targetNumHits": 100000}}]
+                [{{"targetNumHits": 1000}}]
                 nearestNeighbor(family_description_embedding,query_embedding)
             ) or (
-                [{{"targetNumHits": 100000}}]
+                [{{"targetNumHits": 1000}}]
                 nearestNeighbor(text_embedding,query_embedding)
             ))
         """
