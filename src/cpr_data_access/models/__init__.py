@@ -38,7 +38,11 @@ import random
 from datasets import Dataset as HFDataset, DatasetInfo, load_dataset
 import cpr_data_access.data_adaptors as adaptors
 from cpr_data_access.parser_models import BlockType, BaseParserOutput
-from cpr_data_access.pipeline_general_models import CONTENT_TYPE_HTML, CONTENT_TYPE_PDF
+from cpr_data_access.pipeline_general_models import (
+    CONTENT_TYPE_HTML,
+    CONTENT_TYPE_PDF,
+    Json,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -398,6 +402,7 @@ class BaseDocument(BaseModel):
         Sequence[PageMetadata]
     ]  # Properties such as page numbers and dimensions for paged documents
     document_metadata: BaseMetadata
+    pipeline_metadata: Json = {}
 
     @classmethod
     def from_parser_output(
@@ -443,7 +448,10 @@ class BaseDocument(BaseModel):
             )
 
         parser_document_data = parser_document.dict(exclude={"html_data", "pdf_data"})
-        metadata = {"document_metadata": parser_document.document_metadata}
+        metadata = {
+            "document_metadata": parser_document.document_metadata,
+            "pipeline_metadata": parser_document.pipeline_metadata,
+        }
         text_and_page_data = {
             "text_blocks": text_blocks,  # type: ignore
             "page_metadata": page_metadata,  # type: ignore
