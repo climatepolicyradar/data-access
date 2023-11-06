@@ -102,16 +102,16 @@ def build_yql(request: SearchParameters) -> str:
     else:
         rendered_query_string_match = f"""
             where ((
-                {{"targetHits": 1000}} weakAnd(
+                {{"targetHits": 100000}} weakAnd(
                     family_name contains "{ request.query_string }",
                     family_description contains "{ request.query_string }",
                     text_block contains "{ request.query_string }"
                 )
             ) or (
-                [{{"targetNumHits": 1000}}]
+                [{{"targetNumHits": 100000}}]
                 nearestNeighbor(family_description_embedding,query_embedding)
             ) or (
-                [{{"targetNumHits": 1000}}]
+                [{{"targetNumHits": 100000}}]
                 nearestNeighbor(text_embedding,query_embedding)
             ))
         """
@@ -180,7 +180,10 @@ def parse_vespa_response(
         )
     families: List[Family] = []
     root = vespa_response.json["root"]
-    response_families = root["children"][0]["children"][0]["children"]
+
+    response_families = (
+        root.get("children", [{}])[0].get("children", [{}])[0].get("children", [])
+    )
 
     for family in response_families:
         family_hits: List[Hit] = []
@@ -198,13 +201,15 @@ def parse_vespa_response(
         )
 
     next_family_continuation_token = (
-        vespa_response.json["root"]["children"][0]
-        .get("continuation", {})
-        .get("next", None)
+        root.get("children", [{}])[0].get("continuation", {}).get("next", None)
+    )
+
+    total_hits = (
+        vespa_response.json.get("root", {}).get("fields", {}).get("totalCount", 0)
     )
 
     return SearchResponse(
-        total_hits=vespa_response.json["root"]["fields"]["totalCount"],
+        total_hits=total_hits,
         families=families,
         continuation_token=next_family_continuation_token,
         query_time_ms=None,
