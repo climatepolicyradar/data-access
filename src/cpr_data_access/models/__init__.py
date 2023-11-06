@@ -38,7 +38,11 @@ import random
 from datasets import Dataset as HFDataset, DatasetInfo, load_dataset
 import cpr_data_access.data_adaptors as adaptors
 from cpr_data_access.parser_models import BlockType, BaseParserOutput
-from cpr_data_access.pipeline_general_models import CONTENT_TYPE_HTML, CONTENT_TYPE_PDF
+from cpr_data_access.pipeline_general_models import (
+    CONTENT_TYPE_HTML,
+    CONTENT_TYPE_PDF,
+    Json,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -398,6 +402,10 @@ class BaseDocument(BaseModel):
         Sequence[PageMetadata]
     ]  # Properties such as page numbers and dimensions for paged documents
     document_metadata: BaseMetadata
+    # The current fields are set in the document parser:
+    # https://github.com/climatepolicyradar/navigator-document-parser/blob/5a2872389a85e9f81cdde148b388383d7490807e/cli/parse_pdfs.py#L435
+    # These are azure_api_version, azure_model_id and parsing_date
+    pipeline_metadata: Json = {}
 
     @classmethod
     def from_parser_output(
@@ -443,7 +451,10 @@ class BaseDocument(BaseModel):
             )
 
         parser_document_data = parser_document.dict(exclude={"html_data", "pdf_data"})
-        metadata = {"document_metadata": parser_document.document_metadata}
+        metadata = {
+            "document_metadata": parser_document.document_metadata,
+            "pipeline_metadata": parser_document.pipeline_metadata,
+        }
         text_and_page_data = {
             "text_blocks": text_blocks,  # type: ignore
             "page_metadata": page_metadata,  # type: ignore
