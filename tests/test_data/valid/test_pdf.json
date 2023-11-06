@@ -5,6 +5,7 @@
     "document_source_url": "https://cdn.climatepolicyradar.org/EUR/2013/EUR-2013-01-01-Overview+of+CAP+Reform+2014-2020_6237180d8c443d72c06c9167019ca177.pdf",
     "document_cdn_object": "EUR/2013/EUR-2013-01-01-Overview+of+CAP+Reform+2014-2020_6237180d8c443d72c06c9167019ca177.pdf",
     "document_md5_sum": "abcdefghijk",
+    "pipeline_metadata": {"parser_version": 1.2},
     "languages": [
         "en"
     ],
