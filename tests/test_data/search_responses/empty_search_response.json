@@ -1,0 +1,26 @@
+{
+    "root": {
+        "id": "toplevel",
+        "relevance": 1.0,
+        "fields": {
+            "totalCount": 0
+        },
+        "coverage": {
+            "coverage": 100,
+            "documents": 2896404,
+            "full": true,
+            "nodes": 8,
+            "results": 2,
+            "resultsFull": 2
+        },
+        "children": [
+            {
+                "id": "group:root:0",
+                "relevance": 1.0,
+                "continuation": {
+                    "this": ""
+                }
+            }
+        ]
+    }
+}
