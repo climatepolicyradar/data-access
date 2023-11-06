@@ -402,6 +402,9 @@ class BaseDocument(BaseModel):
         Sequence[PageMetadata]
     ]  # Properties such as page numbers and dimensions for paged documents
     document_metadata: BaseMetadata
+    # The current fields are set in the document parser:
+    # https://github.com/climatepolicyradar/navigator-document-parser/blob/5a2872389a85e9f81cdde148b388383d7490807e/cli/parse_pdfs.py#L435
+    # These are azure_api_version, azure_model_id and parsing_date
     pipeline_metadata: Json = {}
 
     @classmethod
