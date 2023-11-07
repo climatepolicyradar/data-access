@@ -1172,10 +1172,18 @@ class Dataset:
                 citation=citation or "",
             )
 
+        mapping = {
+            key: [d.get(key, None) for d in text_block_dicts] for key in dict_keys
+        }
+
+        plain_urls: list[str] = [
+            source_url.path if source_url else None for source_url in mapping['document_source_url']
+        ]
+
+        mapping['document_source_url'] = plain_urls
+
         huggingface_dataset = HFDataset.from_dict(
-            mapping={
-                key: [d.get(key, None) for d in text_block_dicts] for key in dict_keys
-            },
+            mapping=mapping,
             info=dataset_info,
         )
 
