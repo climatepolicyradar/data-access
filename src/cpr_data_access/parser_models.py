@@ -131,8 +131,8 @@ class ParserInput(BaseModel):
     )
     def to_json(self) -> Mapping[str, Any]:
         """Output a JSON serialising friendly dict representing this model"""
-        json_dict = self.dict()
-        json_dict["document_metadata"] = self.document_metadata.to_json()
+        json_dict = self.model_dump()
+        json_dict["document_metadata"] = self.document_metadata.model_dump()
         return json_dict
 
 

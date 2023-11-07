@@ -48,7 +48,7 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     parser_output_no_pdf_data["pdf_data"] = None
     parser_output_no_pdf_data["document_content_type"] = CONTENT_TYPE_PDF
 
-    with pytest.raises(pydantic.error_wrappers.ValidationError) as context:
+    with pytest.raises(pydantic.ValidationError) as context:
         ParserOutput(**parser_output_no_pdf_data)
     assert "pdf_data must be set for PDF documents" in str(context.value)
 
@@ -56,7 +56,7 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     parser_output_no_html_data["html_data"] = None
     parser_output_no_html_data["document_content_type"] = CONTENT_TYPE_HTML
 
-    with pytest.raises(pydantic.error_wrappers.ValidationError) as context:
+    with pytest.raises(pydantic.ValidationError) as context:
         ParserOutput(**parser_output_no_html_data)
     assert "html_data must be set for HTML documents" in str(context.value)
 
@@ -64,7 +64,7 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     # PDF data is set as the default
     parser_output_no_content_type["document_content_type"] = None
 
-    with pytest.raises(pydantic.error_wrappers.ValidationError) as context:
+    with pytest.raises(pydantic.ValidationError) as context:
         ParserOutput(**parser_output_no_content_type)
     assert (
         "html_data and pdf_data must be null for documents with no content type."
@@ -74,7 +74,7 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     # PDF data is set as the default
     parser_output_not_known_content_type["document_content_type"] = "not_known"
 
-    with pytest.raises(pydantic.error_wrappers.ValidationError) as context:
+    with pytest.raises(pydantic.ValidationError) as context:
         ParserOutput(**parser_output_not_known_content_type)
     assert (
         "html_data and pdf_data must be null for documents with no content type."
@@ -140,7 +140,7 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     parser_output_json_bad_text_block["pdf_data"]["text_blocks"][0][
         "type"
     ] = "ThisBlockTypeDoesNotExist"
-    with pytest.raises(pydantic.error_wrappers.ValidationError) as context:
+    with pytest.raises(pydantic.ValidationError) as context:
         ParserOutput(**parser_output_json_bad_text_block)
     assert (
                "1 validation error for ParserOutput\npdf_data.text_blocks.0.type"
