@@ -5,7 +5,7 @@ from cpr_data_access.parser_models import (
     ParserInput,
     ParserOutput,
     VerticalFlipError,
-    PDFTextBlock
+    PDFTextBlock,
 )
 from cpr_data_access.pipeline_general_models import (
     CONTENT_TYPE_PDF,
@@ -137,9 +137,9 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
 
     # Test that the correct validation error is thrown during instantiation
     parser_output_json_bad_text_block = parser_output_json_pdf.copy()
-    parser_output_json_bad_text_block["pdf_data"]["text_blocks"][0]["type"] = (
-        "ThisBlockTypeDoesNotExist"
-    )
+    parser_output_json_bad_text_block["pdf_data"]["text_blocks"][0][
+        "type"
+    ] = "ThisBlockTypeDoesNotExist"
     with pytest.raises(pydantic.error_wrappers.ValidationError) as context:
         ParserOutput.parse_obj(parser_output_json_bad_text_block)
     assert "value is not a valid enumeration member" in str(context.value)

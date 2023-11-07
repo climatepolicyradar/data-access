@@ -6,7 +6,7 @@ from typing import Any, List, Mapping, Optional, Sequence, Tuple, TypeVar, Union
 from collections import Counter
 
 from deprecation import deprecated
-from pydantic import BaseModel, AnyHttpUrl, Field, root_validator, validator
+from pydantic import BaseModel, AnyHttpUrl, Field, validator
 from langdetect import DetectorFactory, LangDetectException, detect
 
 from cpr_data_access.pipeline_general_models import (
@@ -193,8 +193,8 @@ class BaseParserOutput(BaseModel):
     pdf_data: Optional[PDFData] = None
     pipeline_metadata: Json = {}  # note: defaulting to {} here is safe (pydantic)
 
-    @validator("pdf_data")
-    def check_html_pdf_metadata(cls, value, values, config, field):
+    @validator("pdf_data")  # Validate the pdf_data field as it is ordered last
+    def check_html_pdf_metadata(cls, value, values):
         """
         Validate the relationship between content-type and the data that is set.
 
