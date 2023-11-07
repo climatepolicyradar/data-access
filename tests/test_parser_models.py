@@ -142,6 +142,4 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     )
     with pytest.raises(pydantic.error_wrappers.ValidationError) as context:
         ParserOutput.parse_obj(parser_output_json_bad_text_block)
-    assert str(context.value) == (
-        f"Random"
-    )
+    assert "value is not a valid enumeration member" in str(context.value)
