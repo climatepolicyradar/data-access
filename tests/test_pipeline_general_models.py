@@ -15,8 +15,3 @@ def test_backend_document(backend_document_json) -> None:
     backend_document_json_no_date = backend_document_json.copy()
     backend_document_json_no_date["date"] = None
     BackendDocument(**backend_document_json_no_date)
-
-    # Test the to_json method
-    assert BackendDocument(**backend_document_json).to_json() == (
-        backend_document_json
-    )

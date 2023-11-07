@@ -89,7 +89,7 @@ def test_dataset_metadata_df(test_dataset):
     for col in ("num_text_blocks", "num_pages"):
         assert col in metadata_df.columns
 
-    for key in CPRDocumentMetadata.__fields__.keys() | {"publication_year"}:
+    for key in CPRDocumentMetadata.model_fields.keys() | {"publication_year"}:
         assert key in metadata_df.columns
 
 
@@ -306,7 +306,7 @@ def test_add_spans_empty_document(
     test_document, test_spans_valid, test_spans_invalid, raise_on_error
 ):
     """Document.add_spans() should always raise if the document is empty."""
-    empty_document = test_document.copy()
+    empty_document = test_document.model_copy()
     empty_document.text_blocks = None
 
     # When the document is empty, no spans should be added
@@ -457,7 +457,7 @@ def test_text_block_hashable(test_document):
     first_block_hash = doc.text_blocks[0].__hash__()
     assert isinstance(first_block_hash, int)
 
-    comparison_block = TextBlock(**doc.text_blocks[0].dict())
+    comparison_block = TextBlock(**doc.text_blocks[0].model_dump())
 
     assert comparison_block == doc.text_blocks[0]
 

@@ -55,16 +55,6 @@ class BackendDocument(BaseModel):
 
         return self
 
-    @deprecated(
-        deprecated_in="0.1.4",
-        details="Not required, pydantic can safely serialise everything in this class",
-    )
-    def to_json(self) -> Mapping[str, Any]:
-        """Output a JSON serialising friendly dict representing this model."""
-        json_dict = self.dict()
-        json_dict["publication_ts"] = self.publication_ts.isoformat()
-        return json_dict
-
 
 class InputData(BaseModel):
     """Expected input data containing RDS state."""

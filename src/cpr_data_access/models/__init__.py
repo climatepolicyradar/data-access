@@ -450,7 +450,7 @@ class BaseDocument(BaseModel):
                 f"Unsupported content type: {parser_document.document_content_type}"
             )
 
-        parser_document_data = parser_document.dict(exclude={"html_data", "pdf_data"})
+        parser_document_data = parser_document.model_dump(exclude={"html_data", "pdf_data"})
         metadata = {
             "document_metadata": parser_document.document_metadata,
             "pipeline_metadata": parser_document.pipeline_metadata,
@@ -801,8 +801,8 @@ class Dataset:
     def metadata_df(self) -> pd.DataFrame:
         """Return a dataframe of document metadata"""
         metadata = [
-            doc.dict(exclude={"text_blocks", "document_metadata"})
-            | doc.document_metadata.dict()
+            doc.model_dump(exclude={"text_blocks", "document_metadata"})
+            | doc.document_metadata.model_dump()
             | {"num_text_blocks": len(doc.text_blocks) if doc.text_blocks else 0}
             | {"num_pages": len(doc.page_metadata) if doc.page_metadata else 0}
             for doc in self.documents
@@ -900,7 +900,7 @@ class Dataset:
                 else:
                     continue
 
-            doc_dict = document.dict(
+            doc_dict = document.model_dump(
                 exclude={"document_metadata", "_text_block_idx_hash_map"}
             )
             new_metadata_dict = metadata_df.loc[
@@ -1109,7 +1109,7 @@ class Dataset:
         for doc in self.documents:
             if doc.text_blocks is not None:
                 if with_document_context:
-                    doc_dict = doc.dict(exclude={"text_blocks"})
+                    doc_dict = doc.model_dump(exclude={"text_blocks"})
                     for block in doc.text_blocks:
                         output_values.append((block, doc_dict))
                 else:
@@ -1129,13 +1129,13 @@ class Dataset:
             return []
 
         doc_metadata_dict = (
-            document.dict(exclude={"text_blocks", "page_metadata", "document_metadata"})
-            | document.document_metadata.dict()
+            document.model_dump(exclude={"text_blocks", "page_metadata", "document_metadata"})
+            | document.document_metadata.model_dump()
         )
 
         return [
             doc_metadata_dict
-            | block.dict(exclude={"text"})
+            | block.model_dump(exclude={"text"})
             | {"text": block.to_string(), "block_index": idx}
             for idx, block in enumerate(document.text_blocks)
         ]
