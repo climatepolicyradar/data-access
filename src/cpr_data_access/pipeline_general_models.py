@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Mapping, Any, List, Optional, Sequence, Union
 
 from deprecation import deprecated
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, model_validator
 
 Json = dict[str, Any]
 
@@ -30,8 +30,8 @@ class BackendDocument(BaseModel):
     family_slug: str
     publication_ts: datetime
     date: Optional[str] = None  # Set on import by a validator
-    source_url: Optional[str]
-    download_url: Optional[str]
+    source_url: Optional[str] = None
+    download_url: Optional[str] = None
 
     type: str
     source: str
@@ -41,8 +41,8 @@ class BackendDocument(BaseModel):
 
     metadata: Json
 
-    @root_validator
-    def convert_publication_ts_to_date(cls, values):
+    @model_validator(mode="after")
+    def convert_publication_ts_to_date(self):
         """
         Convert publication_ts to a datetime string.
 
@@ -51,9 +51,9 @@ class BackendDocument(BaseModel):
         TODO: remove when no longer using Opensearch
         """
 
-        values["date"] = values["publication_ts"].strftime("%d/%m/%Y")
+        self.date = self.publication_ts.strftime("%d/%m/%Y")
 
-        return values
+        return self
 
     @deprecated(
         deprecated_in="0.1.4",
@@ -93,8 +93,8 @@ class UpdateTypes(str, Enum):
 class Update(BaseModel):
     """Results of comparing db state data against the s3 data to identify updates."""
 
-    s3_value: Optional[Union[str, datetime, dict]]
-    db_value: Optional[Union[str, datetime, dict]]
+    s3_value: Optional[Union[str, datetime, dict]] = None
+    db_value: Optional[Union[str, datetime, dict]] = None
     type: UpdateTypes
 
 

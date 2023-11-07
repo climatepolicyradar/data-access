@@ -6,7 +6,7 @@ from typing import Any, List, Mapping, Optional, Sequence, Tuple, TypeVar, Union
 from collections import Counter
 
 from deprecation import deprecated
-from pydantic import BaseModel, AnyHttpUrl, Field, validator
+from pydantic import BaseModel, AnyHttpUrl, Field, model_validator
 from langdetect import DetectorFactory, LangDetectException, detect
 
 from cpr_data_access.pipeline_general_models import (
@@ -116,10 +116,10 @@ class ParserInput(BaseModel):
     document_id: str
     document_name: str
     document_description: str
-    document_source_url: Optional[AnyHttpUrl]
-    document_cdn_object: Optional[str]
-    document_content_type: Optional[str]
-    document_md5_sum: Optional[str]
+    document_source_url: Optional[AnyHttpUrl] = None
+    document_cdn_object: Optional[str] = None
+    document_content_type: Optional[str] = None
+    document_md5_sum: Optional[str] = None
     document_slug: str
     document_metadata: BackendDocument
 
@@ -139,8 +139,8 @@ class ParserInput(BaseModel):
 class HTMLData(BaseModel):
     """Set of metadata specific to HTML documents."""
 
-    detected_title: Optional[str]
-    detected_date: Optional[date]
+    detected_title: Optional[str] = None
+    detected_date: Optional[date] = None
     has_valid_text: bool
     text_blocks: Sequence[HTMLTextBlock]
 
@@ -181,10 +181,10 @@ class BaseParserOutput(BaseModel):
     document_metadata: dict
     document_name: str
     document_description: str
-    document_source_url: Optional[AnyHttpUrl]
-    document_cdn_object: Optional[str]
-    document_content_type: Optional[str]
-    document_md5_sum: Optional[str]
+    document_source_url: Optional[AnyHttpUrl] = None
+    document_cdn_object: Optional[str] = None
+    document_content_type: Optional[str] = None
+    document_md5_sum: Optional[str] = None
     document_slug: str
 
     languages: Optional[Sequence[str]] = None
@@ -193,8 +193,8 @@ class BaseParserOutput(BaseModel):
     pdf_data: Optional[PDFData] = None
     pipeline_metadata: Json = {}  # note: defaulting to {} here is safe (pydantic)
 
-    @validator("pdf_data")  # Validate the pdf_data field as it is ordered last
-    def check_html_pdf_metadata(cls, value, values):
+    @model_validator(mode="after")  # Validate the pdf_data field as it is ordered last
+    def check_html_pdf_metadata(self):
         """
         Validate the relationship between content-type and the data that is set.
 
@@ -204,28 +204,27 @@ class BaseParserOutput(BaseModel):
         Check that if the content-type is not HTML or PDF, then html_data and pdf_data
         are both null.
         """
-        values["pdf_data"] = value
         if (
-            values["document_content_type"] == CONTENT_TYPE_HTML
-            and values["html_data"] is None
+            self.document_content_type == CONTENT_TYPE_HTML
+            and self.html_data is None
         ):
             raise ValueError("html_data must be set for HTML documents")
 
         if (
-            values["document_content_type"] == CONTENT_TYPE_PDF
-            and values["pdf_data"] is None
+            self.document_content_type == CONTENT_TYPE_PDF
+            and self.pdf_data is None
         ):
             raise ValueError("pdf_data must be set for PDF documents")
 
-        if values["document_content_type"] not in {
+        if self.document_content_type not in {
             CONTENT_TYPE_HTML,
             CONTENT_TYPE_PDF,
-        } and (values["html_data"] is not None or values["pdf_data"] is not None):
+        } and (self.html_data is not None or self.pdf_data is not None):
             raise ValueError(
                 "html_data and pdf_data must be null for documents with no content type."
             )
 
-        return values["pdf_data"]
+        return self.pdf_data
 
     def get_text_blocks(self, including_invalid_html=False) -> Sequence[TextBlock]:
         """A method for getting text blocks with the option to include invalid html."""
