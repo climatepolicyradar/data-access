@@ -397,7 +397,9 @@ class BaseDocument(BaseModel):
     languages: Optional[Sequence[str]] = None
     translated: bool
     has_valid_text: bool
-    text_blocks: Optional[Sequence[TextBlock]] = None  # None if there is no content type
+    text_blocks: Optional[
+        Sequence[TextBlock]
+    ] = None  # None if there is no content type
     page_metadata: Optional[
         Sequence[PageMetadata]
     ] = None  # Properties such as page numbers and dimensions for paged documents
@@ -450,7 +452,9 @@ class BaseDocument(BaseModel):
                 f"Unsupported content type: {parser_document.document_content_type}"
             )
 
-        parser_document_data = parser_document.model_dump(exclude={"html_data", "pdf_data"})
+        parser_document_data = parser_document.model_dump(
+            exclude={"html_data", "pdf_data"}
+        )
         metadata = {
             "document_metadata": parser_document.document_metadata,
             "pipeline_metadata": parser_document.pipeline_metadata,
@@ -909,10 +913,14 @@ class Dataset:
 
             if target_model == CPRDocument:
                 collection_id = new_metadata_dict.pop("CPR Collection ID")
-                collection_id = collection_id if isinstance(collection_id, str) else None
+                collection_id = (
+                    collection_id if isinstance(collection_id, str) else None
+                )
 
                 collection_name = new_metadata_dict.pop("Collection name")
-                collection_name = collection_name if isinstance(collection_name, str) else None
+                collection_name = (
+                    collection_name if isinstance(collection_name, str) else None
+                )
 
                 variant = new_metadata_dict.pop("Document variant")
                 variant = variant if isinstance(variant, str) else None
@@ -956,7 +964,9 @@ class Dataset:
 
             elif target_model == GSTDocument:
                 collection_id = new_metadata_dict.pop("CPR Collection ID")
-                collection_id = collection_id if isinstance(collection_id, str) else None
+                collection_id = (
+                    collection_id if isinstance(collection_id, str) else None
+                )
 
                 variant = new_metadata_dict.pop("Document Variant")
                 variant = variant if isinstance(variant, str) else None
@@ -1129,7 +1139,9 @@ class Dataset:
             return []
 
         doc_metadata_dict = (
-            document.model_dump(exclude={"text_blocks", "page_metadata", "document_metadata"})
+            document.model_dump(
+                exclude={"text_blocks", "page_metadata", "document_metadata"}
+            )
             | document.document_metadata.model_dump()
         )
 
@@ -1176,11 +1188,12 @@ class Dataset:
             key: [d.get(key, None) for d in text_block_dicts] for key in dict_keys
         }
 
-        plain_urls: list[str] = [
-            source_url.path if source_url else None for source_url in mapping['document_source_url']
+        plain_urls = [
+            source_url.path if source_url else None
+            for source_url in mapping["document_source_url"]
         ]
 
-        mapping['document_source_url'] = plain_urls
+        mapping["document_source_url"] = plain_urls
 
         huggingface_dataset = HFDataset.from_dict(
             mapping=mapping,
@@ -1259,8 +1272,7 @@ class Dataset:
             }
 
             doc = self.document_model(
-                **
-                doc_fields
+                **doc_fields
                 | {
                     "document_metadata": doc_metadata_dict,
                     "text_blocks": document_text_blocks,

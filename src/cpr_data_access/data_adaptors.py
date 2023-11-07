@@ -66,11 +66,7 @@ class S3DataAdaptor(DataAdaptor):
                 document_data = json.loads(
                     _s3_object_read_text(f"{dataset_key}/{filename.split('/')[-1]}")
                 )
-                parsed_files.append(
-                    BaseParserOutput(
-                        **document_data
-                    )
-                )
+                parsed_files.append(BaseParserOutput(**document_data))
 
         return parsed_files
 
@@ -86,7 +82,9 @@ class S3DataAdaptor(DataAdaptor):
         """
 
         try:
-            document_data = json.loads(_s3_object_read_text(f"s3://{dataset_key}/{document_id}.json"))
+            document_data = json.loads(
+                _s3_object_read_text(f"s3://{dataset_key}/{document_id}.json")
+            )
             return BaseParserOutput(**document_data)
         except ValueError as e:
             if "does not exist" in str(e):

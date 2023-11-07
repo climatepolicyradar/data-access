@@ -193,7 +193,7 @@ class BaseParserOutput(BaseModel):
     pdf_data: Optional[PDFData] = None
     pipeline_metadata: Json = {}  # note: defaulting to {} here is safe (pydantic)
 
-    @model_validator(mode="after")  # Validate the pdf_data field as it is ordered last
+    @model_validator(mode="after")
     def check_html_pdf_metadata(self):
         """
         Validate the relationship between content-type and the data that is set.
@@ -204,16 +204,10 @@ class BaseParserOutput(BaseModel):
         Check that if the content-type is not HTML or PDF, then html_data and pdf_data
         are both null.
         """
-        if (
-            self.document_content_type == CONTENT_TYPE_HTML
-            and self.html_data is None
-        ):
+        if self.document_content_type == CONTENT_TYPE_HTML and self.html_data is None:
             raise ValueError("html_data must be set for HTML documents")
 
-        if (
-            self.document_content_type == CONTENT_TYPE_PDF
-            and self.pdf_data is None
-        ):
+        if self.document_content_type == CONTENT_TYPE_PDF and self.pdf_data is None:
             raise ValueError("pdf_data must be set for PDF documents")
 
         if self.document_content_type not in {

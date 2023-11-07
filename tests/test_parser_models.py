@@ -142,6 +142,6 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     ] = "ThisBlockTypeDoesNotExist"
     with pytest.raises(pydantic.ValidationError) as context:
         ParserOutput(**parser_output_json_bad_text_block)
-    assert (
-               "1 validation error for ParserOutput\npdf_data.text_blocks.0.type"
-            ) in str(context.value)
+    assert ("1 validation error for ParserOutput\npdf_data.text_blocks.0.type") in str(
+        context.value
+    )

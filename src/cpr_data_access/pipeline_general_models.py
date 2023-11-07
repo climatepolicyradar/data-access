@@ -2,7 +2,6 @@ from datetime import datetime
 from enum import Enum
 from typing import Mapping, Any, List, Optional, Sequence, Union
 
-from deprecation import deprecated
 from pydantic import BaseModel, model_validator
 
 Json = dict[str, Any]

@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import List, Mapping, Optional, Sequence, Union
+
+from pydantic import BaseModel, field_validator
+
 from cpr_data_access.exceptions import QueryError
-from pydantic import BaseModel, model_validator, field_validator
 
 sort_orders = ["ascending", "descending"]
 
