@@ -439,11 +439,11 @@ class BaseDocument(BaseModel):
         elif parser_document.document_content_type == CONTENT_TYPE_PDF:
             has_valid_text = True
             text_blocks = [
-                TextBlock(**block.model_dump())
+                TextBlock.model_validate(block.model_dump())
                 for block in (parser_document.pdf_data.text_blocks)  # type: ignore
             ]
             page_metadata = [
-                PageMetadata(**meta.model_dump())
+                PageMetadata.model_validate(meta.model_dump())
                 for meta in parser_document.pdf_data.page_metadata  # type: ignore
             ]
 
@@ -465,7 +465,7 @@ class BaseDocument(BaseModel):
             "has_valid_text": has_valid_text,
         }
 
-        return cls(**parser_document_data | metadata | text_and_page_data)
+        return cls.model_validate(parser_document_data | metadata | text_and_page_data)
 
     @classmethod
     def load_from_remote(
@@ -912,19 +912,6 @@ class Dataset:
             ].to_dict(orient="records")[0]
 
             if target_model == CPRDocument:
-                collection_id = new_metadata_dict.pop("CPR Collection ID")
-                collection_id = (
-                    collection_id if isinstance(collection_id, str) else None
-                )
-
-                collection_name = new_metadata_dict.pop("Collection name")
-                collection_name = (
-                    collection_name if isinstance(collection_name, str) else None
-                )
-
-                variant = new_metadata_dict.pop("Document variant")
-                variant = variant if isinstance(variant, str) else None
-
                 doc_metadata = CPRDocumentMetadata(
                     source="CPR",
                     geography=new_metadata_dict.pop("Geography"),
@@ -937,13 +924,25 @@ class Dataset:
                         for s in new_metadata_dict.get("Sectors", "").split(";")
                     ],
                     status=new_metadata_dict.pop("CPR Document Status"),
-                    collection_id=collection_id,
-                    collection_name=collection_name,
+                    collection_id=(
+                        new_metadata_dict.pop("CPR Collection ID")
+                        if isinstance(new_metadata_dict.get("CPR Collection ID"), str)
+                        else None
+                    ),
+                    collection_name=(
+                        new_metadata_dict.pop("Collection name")
+                        if isinstance(new_metadata_dict.get("Collection name"), str)
+                        else None
+                    ),
                     family_id=new_metadata_dict.pop("CPR Family ID"),
                     family_name=new_metadata_dict.pop("Family name"),
                     family_slug=new_metadata_dict.pop("CPR Family Slug"),
                     role=new_metadata_dict.pop("Document role"),
-                    variant=variant,
+                    variant=(
+                        new_metadata_dict.pop("Document variant")
+                        if isinstance(new_metadata_dict.get("Document variant"), str)
+                        else None
+                    ),
                     # NOTE: we incorrectly use the "publication_ts" value from the parser output rather than the correct
                     # document date (calculated from events in product). When we upgrade to Vespa we should use the correct
                     # date.
@@ -963,14 +962,6 @@ class Dataset:
                 )
 
             elif target_model == GSTDocument:
-                collection_id = new_metadata_dict.pop("CPR Collection ID")
-                collection_id = (
-                    collection_id if isinstance(collection_id, str) else None
-                )
-
-                variant = new_metadata_dict.pop("Document Variant")
-                variant = variant if isinstance(variant, str) else None
-
                 doc_metadata = GSTDocumentMetadata(
                     source="GST-related documents",
                     geography_iso=new_metadata_dict.pop("Geography ISO"),
@@ -981,12 +972,20 @@ class Dataset:
                     date=new_metadata_dict.pop("Date"),
                     link=new_metadata_dict.pop("Documents"),
                     author_is_party=new_metadata_dict.pop("Author Type") == "Party",
-                    collection_id=collection_id,
+                    collection_id=(
+                        new_metadata_dict.pop("CPR Collection ID")
+                        if isinstance(new_metadata_dict.get("CPR Collection ID"), str)
+                        else None
+                    ),
                     family_id=new_metadata_dict.pop("CPR Family ID"),
                     family_name=new_metadata_dict.pop("Family Name"),
                     family_slug=new_metadata_dict.pop("CPR Family Slug"),
                     role=new_metadata_dict.pop("Document Role"),
-                    variant=variant,
+                    variant=(
+                        new_metadata_dict.pop("Document Variant")
+                        if isinstance(new_metadata_dict.get("Document Variant"), str)
+                        else None
+                    ),
                     status=new_metadata_dict.pop("CPR Document Status"),
                     author=[
                         s.strip() for s in new_metadata_dict.pop("Author").split(",")
@@ -1271,8 +1270,8 @@ class Dataset:
                 "source": "GST" if self.document_model == GSTDocument else "CPR"
             }
 
-            doc = self.document_model(
-                **doc_fields
+            doc = self.document_model.model_validate(
+                doc_fields
                 | {
                     "document_metadata": doc_metadata_dict,
                     "text_blocks": document_text_blocks,
