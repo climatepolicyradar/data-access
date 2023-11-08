@@ -4,7 +4,6 @@ import logging
 from abc import ABC, abstractmethod
 from typing import List, Optional
 from pathlib import Path
-import json
 from tqdm.auto import tqdm
 
 from cpr_data_access.parser_models import BaseParserOutput
@@ -63,10 +62,11 @@ class S3DataAdaptor(DataAdaptor):
 
         for filename in tqdm(s3_objects[:limit]):
             if filename.endswith(".json"):
-                document_data = json.loads(
-                    _s3_object_read_text(f"{dataset_key}/{filename.split('/')[-1]}")
+                parsed_files.append(
+                    BaseParserOutput.model_validate_json(
+                        _s3_object_read_text(f"{dataset_key}/{filename.split('/')[-1]}")
+                    )
                 )
-                parsed_files.append(BaseParserOutput(**document_data))
 
         return parsed_files
 
@@ -82,10 +82,9 @@ class S3DataAdaptor(DataAdaptor):
         """
 
         try:
-            document_data = json.loads(
+            return BaseParserOutput.model_validate_json(
                 _s3_object_read_text(f"s3://{dataset_key}/{document_id}.json")
             )
-            return BaseParserOutput(**document_data)
         except ValueError as e:
             if "does not exist" in str(e):
                 return None
@@ -143,8 +142,11 @@ class LocalDataAdaptor(DataAdaptor):
             raw_files,
             desc=f"Loading files from directory in batch {batch_idx + 1}/{num_batches}",
         ):
-            raw_file_data = json.loads(raw_file_text)
-            parsed_files.append(BaseParserOutput(**raw_file_data))
+            parsed_files.append(
+                BaseParserOutput.model_validate_json(
+                    raw_file_text
+                )
+            )
 
         return parsed_files
 
@@ -171,6 +173,5 @@ class LocalDataAdaptor(DataAdaptor):
         if not file_path.exists():
             return None
 
-        file_data = json.loads(file_path.read_text())
+        return BaseParserOutput.model_validate_json(file_path.read_text())
 
-        return BaseParserOutput(**file_data)

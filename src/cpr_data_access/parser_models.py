@@ -218,7 +218,7 @@ class BaseParserOutput(BaseModel):
                 "html_data and pdf_data must be null for documents with no content type."
             )
 
-        return self.pdf_data
+        return self
 
     def get_text_blocks(self, including_invalid_html=False) -> Sequence[TextBlock]:
         """A method for getting text blocks with the option to include invalid html."""
