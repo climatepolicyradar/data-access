@@ -142,11 +142,7 @@ class LocalDataAdaptor(DataAdaptor):
             raw_files,
             desc=f"Loading files from directory in batch {batch_idx + 1}/{num_batches}",
         ):
-            parsed_files.append(
-                BaseParserOutput.model_validate_json(
-                    raw_file_text
-                )
-            )
+            parsed_files.append(BaseParserOutput.model_validate_json(raw_file_text))
 
         return parsed_files
 
@@ -174,4 +170,3 @@ class LocalDataAdaptor(DataAdaptor):
             return None
 
         return BaseParserOutput.model_validate_json(file_path.read_text())
-

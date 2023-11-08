@@ -20,10 +20,7 @@ def test_parser_input_object(parser_output_json_pdf) -> None:
     Also test the methods on the parser input object.
     """
     # Instantiate the parser input object
-    parser_input = ParserInput(**parser_output_json_pdf)
-
-    # Test the to_json method
-    parser_input.to_json()
+    ParserInput.model_validate(parser_output_json_pdf)
 
 
 def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -> None:
@@ -34,14 +31,14 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     """
 
     # Instantiate the parser output object
-    ParserOutput(**parser_output_json_pdf)
+    ParserOutput.model_validate(parser_output_json_pdf)
 
     # Test the optional fields
     parser_output_empty_fields = parser_output_json_pdf.copy()
     parser_output_empty_fields["document_cdn_object"] = None
     parser_output_empty_fields["document_md5_sum"] = None
 
-    ParserOutput(**parser_output_empty_fields)
+    ParserOutput.model_validate(parser_output_empty_fields)
 
     # Test the check html pdf metadata method
     parser_output_no_pdf_data = parser_output_json_pdf.copy()
@@ -49,7 +46,7 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     parser_output_no_pdf_data["document_content_type"] = CONTENT_TYPE_PDF
 
     with pytest.raises(pydantic.ValidationError) as context:
-        ParserOutput(**parser_output_no_pdf_data)
+        ParserOutput.model_validate(parser_output_no_pdf_data)
     assert "pdf_data must be set for PDF documents" in str(context.value)
 
     parser_output_no_html_data = parser_output_json_pdf.copy()
@@ -57,7 +54,7 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     parser_output_no_html_data["document_content_type"] = CONTENT_TYPE_HTML
 
     with pytest.raises(pydantic.ValidationError) as context:
-        ParserOutput(**parser_output_no_html_data)
+        ParserOutput.model_validate(parser_output_no_html_data)
     assert "html_data must be set for HTML documents" in str(context.value)
 
     parser_output_no_content_type = parser_output_json_pdf.copy()
@@ -65,7 +62,7 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     parser_output_no_content_type["document_content_type"] = None
 
     with pytest.raises(pydantic.ValidationError) as context:
-        ParserOutput(**parser_output_no_content_type)
+        ParserOutput.model_validate(parser_output_no_content_type)
     assert (
         "html_data and pdf_data must be null for documents with no content type."
     ) in str(context.value)
@@ -75,28 +72,28 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     parser_output_not_known_content_type["document_content_type"] = "not_known"
 
     with pytest.raises(pydantic.ValidationError) as context:
-        ParserOutput(**parser_output_not_known_content_type)
+        ParserOutput.model_validate(parser_output_not_known_content_type)
     assert (
         "html_data and pdf_data must be null for documents with no content type."
     ) in str(context.value)
 
     # Test the text blocks property
-    assert ParserOutput(**parser_output_json_pdf).text_blocks != []
+    assert ParserOutput.model_validate(parser_output_json_pdf).text_blocks != []
     parser_output_no_data = parser_output_json_pdf.copy()
     parser_output_no_data["pdf_data"] = None
     parser_output_no_data["document_content_type"] = None
-    assert ParserOutput(**parser_output_no_data).text_blocks == []
+    assert ParserOutput.model_validate(parser_output_no_data).text_blocks == []
 
     # Test the to string method
-    assert ParserOutput(**parser_output_json_pdf).to_string() != ""
-    assert ParserOutput(**parser_output_no_data).to_string() == ""
+    assert ParserOutput.model_validate(parser_output_json_pdf).to_string() != ""
+    assert ParserOutput.model_validate(parser_output_no_data).to_string() == ""
 
     # Test the flip coords method
-    parser_output = ParserOutput(**parser_output_json_pdf)
+    parser_output = ParserOutput.model_validate(parser_output_json_pdf)
     original_text_blocks = parser_output.text_blocks
     assert parser_output.vertically_flip_text_block_coords() != original_text_blocks
 
-    parser_output = ParserOutput(**parser_output_json_pdf)
+    parser_output = ParserOutput.model_validate(parser_output_json_pdf)
     # Set as page number that doesn't exist in the page_metadata field to throw exception
     assert isinstance(parser_output.text_blocks[0], PDFTextBlock)
     parser_output.text_blocks[0].page_number = 123456  # type: ignore
@@ -109,7 +106,7 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
 
     # Test the get_text_blocks method
     # The test html document has invalid html data so the text blocks should be empty
-    parser_output = ParserOutput(**parser_output_json_html)
+    parser_output = ParserOutput.model_validate(parser_output_json_html)
     assert parser_output.get_text_blocks() == []
     assert (
         parser_output.get_text_blocks(including_invalid_html=True)
@@ -118,7 +115,7 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
 
     # Test that the get_text_blocks method works on pdfs. This test pdf has data so we
     # should get text blocks.
-    parser_output = ParserOutput(**parser_output_json_pdf)
+    parser_output = ParserOutput.model_validate(parser_output_json_pdf)
     text_blocks_raw = parser_output.get_text_blocks()
     assert text_blocks_raw
     text_blocks_include_invalid = parser_output.get_text_blocks(
@@ -141,7 +138,7 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
         "type"
     ] = "ThisBlockTypeDoesNotExist"
     with pytest.raises(pydantic.ValidationError) as context:
-        ParserOutput(**parser_output_json_bad_text_block)
+        ParserOutput.model_validate(parser_output_json_bad_text_block)
     assert ("1 validation error for ParserOutput\npdf_data.text_blocks.0.type") in str(
         context.value
     )
