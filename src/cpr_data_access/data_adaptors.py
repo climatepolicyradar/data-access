@@ -4,7 +4,6 @@ import logging
 from abc import ABC, abstractmethod
 from typing import List, Optional
 from pathlib import Path
-
 from tqdm.auto import tqdm
 
 from cpr_data_access.parser_models import BaseParserOutput
@@ -64,7 +63,7 @@ class S3DataAdaptor(DataAdaptor):
         for filename in tqdm(s3_objects[:limit]):
             if filename.endswith(".json"):
                 parsed_files.append(
-                    BaseParserOutput.parse_raw(
+                    BaseParserOutput.model_validate_json(
                         _s3_object_read_text(f"{dataset_key}/{filename.split('/')[-1]}")
                     )
                 )
@@ -83,7 +82,7 @@ class S3DataAdaptor(DataAdaptor):
         """
 
         try:
-            return BaseParserOutput.parse_raw(
+            return BaseParserOutput.model_validate_json(
                 _s3_object_read_text(f"s3://{dataset_key}/{document_id}.json")
             )
         except ValueError as e:
@@ -143,7 +142,7 @@ class LocalDataAdaptor(DataAdaptor):
             raw_files,
             desc=f"Loading files from directory in batch {batch_idx + 1}/{num_batches}",
         ):
-            parsed_files.append(BaseParserOutput.parse_raw(raw_file_text))
+            parsed_files.append(BaseParserOutput.model_validate_json(raw_file_text))
 
         return parsed_files
 
@@ -170,4 +169,4 @@ class LocalDataAdaptor(DataAdaptor):
         if not file_path.exists():
             return None
 
-        return BaseParserOutput.parse_raw(file_path.read_text())
+        return BaseParserOutput.model_validate_json(file_path.read_text())

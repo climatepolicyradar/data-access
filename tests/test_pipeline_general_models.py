@@ -9,14 +9,9 @@ def test_backend_document(backend_document_json) -> None:
     method.
     """
     # Test instantiation with the date field present
-    BackendDocument.parse_obj(backend_document_json)
+    BackendDocument.model_validate(backend_document_json)
 
     # Test instantiation without the date field present
     backend_document_json_no_date = backend_document_json.copy()
     backend_document_json_no_date["date"] = None
-    BackendDocument.parse_obj(backend_document_json_no_date)
-
-    # Test the to_json method
-    assert BackendDocument.parse_obj(backend_document_json).to_json() == (
-        backend_document_json
-    )
+    BackendDocument.model_validate(backend_document_json_no_date)

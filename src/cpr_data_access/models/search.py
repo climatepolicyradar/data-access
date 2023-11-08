@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import List, Mapping, Optional, Sequence, Union
+
+from pydantic import BaseModel, field_validator
+
 from cpr_data_access.exceptions import QueryError
-from pydantic import BaseModel, validator
 
 sort_orders = ["ascending", "descending"]
 
@@ -34,14 +36,14 @@ class SearchParameters(BaseModel):
 
     continuation_token: Optional[str] = None
 
-    @validator("query_string")
+    @field_validator("query_string")
     def query_string_must_not_be_empty(cls, query_string):
         """Validate that the query string is not empty."""
         if query_string == "":
             raise QueryError("query_string must not be empty")
         return query_string
 
-    @validator("year_range")
+    @field_validator("year_range")
     def year_range_must_be_valid(cls, year_range):
         """Validate that the year range is valid."""
         if year_range is not None:
@@ -53,7 +55,7 @@ class SearchParameters(BaseModel):
                     )
         return year_range
 
-    @validator("sort_by")
+    @field_validator("sort_by")
     def sort_by_must_be_valid(cls, sort_by):
         """Validate that the sort field is valid."""
         if sort_by is not None:
@@ -64,7 +66,7 @@ class SearchParameters(BaseModel):
                 )
         return sort_by
 
-    @validator("sort_order")
+    @field_validator("sort_order")
     def sort_order_must_be_valid(cls, sort_order):
         """Validate that the sort order is valid."""
         if sort_order not in ["ascending", "descending"]:
@@ -74,7 +76,7 @@ class SearchParameters(BaseModel):
             )
         return sort_order
 
-    @validator("keyword_filters")
+    @field_validator("keyword_filters")
     def keyword_filters_must_be_valid(cls, keyword_filters):
         """Validate that the keyword filters are valid."""
         if keyword_filters is not None:
@@ -103,20 +105,20 @@ class SearchParameters(BaseModel):
 class Hit(BaseModel):
     """Common model for all search result hits."""
 
-    family_name: Optional[str]
-    family_description: Optional[str]
-    family_source: Optional[str]
-    family_import_id: Optional[str]
-    family_slug: Optional[str]
-    family_category: Optional[str]
-    family_publication_ts: Optional[datetime]
-    family_geography: Optional[str]
-    document_import_id: Optional[str]
-    document_slug: Optional[str]
-    document_languages: Optional[List[str]]
-    document_content_type: Optional[str]
-    document_cdn_object: Optional[str]
-    document_source_url: Optional[str]
+    family_name: Optional[str] = None
+    family_description: Optional[str] = None
+    family_source: Optional[str] = None
+    family_import_id: Optional[str] = None
+    family_slug: Optional[str] = None
+    family_category: Optional[str] = None
+    family_publication_ts: Optional[datetime] = None
+    family_geography: Optional[str] = None
+    document_import_id: Optional[str] = None
+    document_slug: Optional[str] = None
+    document_languages: Optional[List[str]] = None
+    document_content_type: Optional[str] = None
+    document_cdn_object: Optional[str] = None
+    document_source_url: Optional[str] = None
 
     @classmethod
     def from_vespa_response(cls, response_hit: dict) -> "Hit":
@@ -185,8 +187,8 @@ class Passage(Hit):
     text_block: str
     text_block_id: str
     text_block_type: str
-    text_block_page: Optional[int]
-    text_block_coords: Optional[Sequence[tuple[float, float]]]
+    text_block_page: Optional[int] = None
+    text_block_coords: Optional[Sequence[tuple[float, float]]] = None
 
     @classmethod
     def from_vespa_response(cls, response_hit: dict) -> "Passage":
@@ -237,7 +239,7 @@ class SearchResponse(BaseModel):
     """Relevant results, and search response metadata"""
 
     total_hits: int
-    query_time_ms: Optional[int]
-    total_time_ms: Optional[int]
+    query_time_ms: Optional[int] = None
+    total_time_ms: Optional[int] = None
     families: Sequence[Family]
-    continuation_token: Optional[str]
+    continuation_token: Optional[str] = None
