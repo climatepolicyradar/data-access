@@ -134,3 +134,12 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
         == text_blocks_include_invalid
         == text_blocks_not_include_invalid
     )
+
+    # Test that the correct validation error is thrown during instantiation
+    parser_output_json_bad_text_block = parser_output_json_pdf.copy()
+    parser_output_json_bad_text_block["pdf_data"]["text_blocks"][0][
+        "type"
+    ] = "ThisBlockTypeDoesNotExist"
+    with pytest.raises(pydantic.error_wrappers.ValidationError) as context:
+        ParserOutput.parse_obj(parser_output_json_bad_text_block)
+    assert "value is not a valid enumeration member" in str(context.value)

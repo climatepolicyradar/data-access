@@ -6,7 +6,7 @@ from typing import Any, List, Mapping, Optional, Sequence, Tuple, TypeVar, Union
 from collections import Counter
 
 from deprecation import deprecated
-from pydantic import BaseModel, AnyHttpUrl, Field, root_validator
+from pydantic import BaseModel, AnyHttpUrl, Field, validator
 from langdetect import DetectorFactory, LangDetectException, detect
 
 from cpr_data_access.pipeline_general_models import (
@@ -193,8 +193,8 @@ class BaseParserOutput(BaseModel):
     pdf_data: Optional[PDFData] = None
     pipeline_metadata: Json = {}  # note: defaulting to {} here is safe (pydantic)
 
-    @root_validator
-    def check_html_pdf_metadata(cls, values):
+    @validator("pdf_data")  # Validate the pdf_data field as it is ordered last
+    def check_html_pdf_metadata(cls, value, values):
         """
         Validate the relationship between content-type and the data that is set.
 
@@ -204,6 +204,7 @@ class BaseParserOutput(BaseModel):
         Check that if the content-type is not HTML or PDF, then html_data and pdf_data
         are both null.
         """
+        values["pdf_data"] = value
         if (
             values["document_content_type"] == CONTENT_TYPE_HTML
             and values["html_data"] is None
@@ -224,7 +225,7 @@ class BaseParserOutput(BaseModel):
                 "html_data and pdf_data must be null for documents with no content type."
             )
 
-        return values
+        return values["pdf_data"]
 
     def get_text_blocks(self, including_invalid_html=False) -> Sequence[TextBlock]:
         """A method for getting text blocks with the option to include invalid html."""
