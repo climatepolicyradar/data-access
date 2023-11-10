@@ -29,7 +29,7 @@ jobs:
 
         GITHUB_RELEASE_VERSION=$(curl --silent "https://api.github.com/repos/climatepolicyradar/data-access/releases/latest" | jq -r '.tag_name')
         # remove the "v" from the version
-        GITHUB_RELEASE_VERSION=${GITHUB_RELEASE_VERSION:1}
+        GITHUB_RELEASE_VERSION=${GITHUB_RELEASE_VERSION#v}
         echo "GITHUB_RELEASE_VERSION=${GITHUB_RELEASE_VERSION}"
         
         # Check that semver tag is greater than the github release version
