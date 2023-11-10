@@ -17,6 +17,9 @@ datasets = "^2.14.0"
 langdetect = "^1.0.9"
 deprecation = "^2.1.0"
 
+[tool.poetry.group.vespa]
+optional = true
+
 [tool.poetry.group.vespa.dependencies]
 pyvespa = "^0.37.1"
 pyyaml = "^6.0.1"
