@@ -33,7 +33,7 @@ optional = true
 pre-commit = "^2.20.0"
 pyright = "^1.1.281"
 pytest = "^7.2.0"
-black = "^22.10.0"
+black = "^23.11.0"
 moto = "^4.0.11"
 pytest-dotenv = "^0.5.2"
 
