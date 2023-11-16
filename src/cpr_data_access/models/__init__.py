@@ -1103,6 +1103,8 @@ class Dataset:
         """
         Randomly sample a number of text blocks. Used for e.g. negative sampling for text classification.
 
+        For reproducibility you may want to set `random.seed` before calling this function.
+
         :param n: number of text blocks to sample
         :param with_document_context: If True, include document context in the output. Defaults to False
         :return: list of text blocks or (text block, document context) tuples.
