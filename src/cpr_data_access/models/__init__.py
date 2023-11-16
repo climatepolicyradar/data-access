@@ -1097,11 +1097,31 @@ class Dataset:
 
         return Dataset(**instance_attributes, documents=documents)
 
-    def sample_text(
-        self, n: int, document_ids: Optional[Sequence[str]], replace: bool = False
-    ):
-        """Randomly sample a number of text blocks. Used for e.g. negative sampling for text classification."""
-        raise NotImplementedError
+    def sample_text_blocks(
+        self, n: int, with_document_context: bool = False
+    ) -> Union[List[TextBlock], Tuple[List[TextBlock], dict]]:  #  type: ignore
+        """
+        Randomly sample a number of text blocks. Used for e.g. negative sampling for text classification.
+
+        For reproducibility you may want to set `random.seed` before calling this function.
+
+        :param n: number of text blocks to sample
+        :param with_document_context: If True, include document context in the output. Defaults to False
+        :return: list of text blocks or (text block, document context) tuples.
+        """
+
+        all_blocks = self.get_all_text_blocks(
+            with_document_context=with_document_context
+        )
+
+        if n >= len(all_blocks):
+            LOGGER.warning(
+                "Requested number of text blocks is >= the number of text blocks in the dataset. Returning all text blocks."
+            )
+            return all_blocks
+
+        else:
+            return random.sample(all_blocks, n)  # type: ignore
 
     def get_all_text_blocks(
         self, with_document_context: bool = False

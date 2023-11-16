@@ -225,6 +225,19 @@ def test_dataset_get_all_text_blocks(test_dataset):
     assert all(["text_blocks" not in i[1] for i in text_blocks_with_document_context])
 
 
+def test_dataset_sample_text_blocks(test_dataset):
+    text_blocks = test_dataset.sample_text_blocks(2)
+    num_text_blocks = sum(
+        [
+            len(doc.text_blocks) if doc.text_blocks is not None else 0
+            for doc in test_dataset.documents
+        ]
+    )
+
+    assert len(text_blocks) == 2
+    assert len(text_blocks) < num_text_blocks
+
+
 def test_text_block_add_valid_spans(test_document, test_spans_valid):
     block_1 = test_document.text_blocks[0]
     block_2 = test_document.text_blocks[1]
