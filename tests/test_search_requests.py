@@ -64,10 +64,23 @@ def test_whether_an_invalid_filter_fields_raises_a_valueerror():
     assert "keyword_filters must be a subset of" in str(excinfo.value)
 
 
-def test_whether_malicious_query_strings_are_sanitized():
-    input_string = ' " or true or \t \n family_name contains " '
+@pytest.mark.parametrize(
+    "input_string,expected",
+    (
+        ['remove "double quotes"', "remove double quotes"],
+        ["keep 'single quotes'", "keep 'single quotes'"],
+        ["tab\t\tinput", "tab input"],
+        ["new \n \n \n lines", "new lines"],
+        ["back \\\\\\ slashes", "back slashes"],
+        [
+            ' " or true or \t \n family_name contains " ',
+            "or true or family_name contains",
+        ],
+    ),
+)
+def test_whether_malicious_query_strings_are_sanitized(input_string, expected):
     output_string = sanitize(input_string)
-    assert output_string == "or true or family_name contains"
+    assert output_string == expected
 
 
 def test_whether_single_filter_values_and_lists_of_filter_values_appear_in_yql():

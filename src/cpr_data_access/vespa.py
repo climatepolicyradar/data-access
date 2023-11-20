@@ -75,6 +75,9 @@ def sanitize(user_input: str) -> str:
     # which could allow for subsequent injections
     user_input = user_input.replace('"', "")
 
+    # remove backslashes, as these are used by vespa as an escape character
+    user_input = user_input.replace("\\", " ")
+
     # remove any extra whitespace from the user input string
     user_input = " ".join(user_input.split())
 
