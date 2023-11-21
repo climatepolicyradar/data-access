@@ -34,6 +34,15 @@ def test_dataset() -> Dataset:
 
 
 @pytest.fixture
+def test_dataset_languages(test_dataset) -> Dataset:
+    """Defines specific languages for filtering on test_dataset"""
+    test_dataset.documents[0].languages = ["fr"]
+    test_dataset.documents[1].languages = ["en", "fr"]
+    test_dataset.documents[2].languages = ["en"]
+    return test_dataset
+
+
+@pytest.fixture
 def test_dataset_gst() -> Dataset:
     dataset = (
         Dataset(document_model=BaseDocument)
@@ -173,25 +182,28 @@ def test_spans_invalid(test_document) -> list[Span]:
     ]
 
 
-def test_dataset_filter_by_language(test_dataset):
+def test_dataset_filter_by_language(test_dataset_languages):
     """Test Dataset.filter_by_language."""
-    dataset = test_dataset.filter_by_language("en")
+    dataset = test_dataset_languages.filter_by_language("en")
 
-    assert len(dataset) == 2
+    assert len(dataset) == 1, f"found {[d.languages for d in dataset]}"
     assert dataset.documents[0].languages == ["en"]
-    assert dataset.documents[1].languages == ["en"]
 
-    test_dataset.documents[0].languages = ["en", "fr"]
 
-    dataset_2 = test_dataset.filter_by_language("en", strict_match=False)
+def test_dataset_filter_by_language__not_strict(test_dataset_languages):
+    """Test Dataset.filter_by_language."""
+    dataset_2 = test_dataset_languages.filter_by_language("en", strict_match=False)
 
-    assert len(dataset_2) == 2
+    assert len(dataset_2) == 2, f"found {[d.languages for d in dataset_2]}"
     assert dataset_2.documents[0].languages == ["en", "fr"]
     assert dataset_2.documents[1].languages == ["en"]
 
-    dataset_3 = test_dataset.filter_by_language("en", strict_match=True)
 
-    assert len(dataset_3) == 1
+def test_dataset_filter_by_language__strict(test_dataset_languages):
+    """Test Dataset.filter_by_language."""
+    dataset_3 = test_dataset_languages.filter_by_language("en", strict_match=True)
+
+    assert len(dataset_3) == 1, f"found {[d.languages for d in dataset_3]}"
     assert dataset_3.documents[0].languages == ["en"]
 
 
