@@ -3,18 +3,23 @@ import time
 from abc import ABC
 from pathlib import Path
 from typing import Any, Optional
+import logging
 
 from cpr_data_access.embedding import Embedder
-from cpr_data_access.exceptions import DocumentNotFoundError, FetchError
+from cpr_data_access.exceptions import DocumentNotFoundError, FetchError, QueryError
 from cpr_data_access.models.search import Hit, SearchParameters, SearchResponse
 from cpr_data_access.vespa import (
     build_yql,
     find_vespa_cert_paths,
     parse_vespa_response,
     split_document_id,
+    VespaErrorDetails,
 )
 from requests.exceptions import HTTPError
 from vespa.application import Vespa
+from vespa.exceptions import VespaError
+
+LOGGER = logging.getLogger(__name__)
 
 
 class SearchAdapter(ABC):
@@ -91,7 +96,15 @@ class VespaSearchAdapter(SearchAdapter):
             vespa_request_body["input.query(query_embedding)"] = embedding
 
         query_time_start = time.time()
-        vespa_response = self.client.query(body=vespa_request_body)
+        try:
+            vespa_response = self.client.query(body=vespa_request_body)
+        except VespaError as e:
+            err_details = VespaErrorDetails(e)
+            if err_details.is_invalid_query_parameter:
+                LOGGER.error(err_details.message)
+                raise QueryError(err_details.summary)
+            else:
+                raise e
         query_time_end = time.time()
 
         response = parse_vespa_response(

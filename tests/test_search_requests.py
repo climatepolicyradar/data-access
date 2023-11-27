@@ -1,7 +1,9 @@
 import pytest
 
+from vespa.exceptions import VespaError
+
 from cpr_data_access.models.search import SearchParameters
-from cpr_data_access.vespa import build_yql, sanitize
+from cpr_data_access.vespa import build_yql, sanitize, VespaErrorDetails
 from cpr_data_access.exceptions import QueryError
 
 
@@ -117,3 +119,28 @@ def test_whether_year_ranges_appear_in_yql(
         assert include in yql
     for exclude in expected_exclude:
         assert exclude not in yql
+
+
+def test_vespa_error_details():
+    # With invalid query parameter code
+    err_object = [
+        {
+            "code": 4,
+            "summary": "test_summary",
+            "message": "test_message",
+            "stackTrace": None,
+        }
+    ]
+    err = VespaError(err_object)
+    details = VespaErrorDetails(err)
+
+    assert details.code == err_object[0]["code"]
+    assert details.summary == err_object[0]["summary"]
+    assert details.message == err_object[0]["message"]
+    assert details.is_invalid_query_parameter
+
+    # With other code
+    err_object = [{"code": 1}]
+    err = VespaError(err_object)
+    details = VespaErrorDetails(err)
+    assert not details.is_invalid_query_parameter
