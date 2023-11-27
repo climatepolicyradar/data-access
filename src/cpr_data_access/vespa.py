@@ -65,7 +65,14 @@ def find_vespa_cert_paths() -> tuple[Path, Path]:
 
 def sanitize(user_input: str) -> str:
     """
-    Sanitize user input strings to limit possible YQL injection attacks
+    Sanitize user input strings
+
+    This is intended to limit possible YQL injection attacks. The query endpoint is not
+    as vulnerable as sql as updates/inserts/deletes in vespa are handled by a seperate
+    endpoint. The main purpose here is to mitigate vespas "INVALID_QUERY_PARAMETER"
+    errors. See vespa codebase for context on full list of errors:
+    https://github.com/vespa-engine/vespa/blob/dd94d619668210d09792597cbd218994058e923e
+    /container-core/src/main/java/com/yahoo/container/protect/Error.java#L15C2-L15C2
 
     :param str user_input: a potentially hazardous user input string
     :return str: sanitized user input string
