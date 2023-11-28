@@ -3,6 +3,7 @@ from typing import List
 
 import yaml
 from vespa.io import VespaResponse
+from vespa.exceptions import VespaError
 
 from cpr_data_access.models.search import (
     Family,
@@ -65,7 +66,14 @@ def find_vespa_cert_paths() -> tuple[Path, Path]:
 
 def sanitize(user_input: str) -> str:
     """
-    Sanitize user input strings to limit possible YQL injection attacks
+    Sanitize user input strings
+
+    This is intended to limit possible YQL injection attacks. The query endpoint is not
+    as vulnerable as sql as updates/inserts/deletes in vespa are handled by a seperate
+    endpoint. The main purpose here is to mitigate vespas "INVALID_QUERY_PARAMETER"
+    errors. See vespa codebase for context on full list of errors:
+    https://github.com/vespa-engine/vespa/blob/dd94d619668210d09792597cbd218994058e923e
+    /container-core/src/main/java/com/yahoo/container/protect/Error.java#L15C2-L15C2
 
     :param str user_input: a potentially hazardous user input string
     :return str: sanitized user input string
@@ -218,3 +226,39 @@ def parse_vespa_response(
         query_time_ms=None,
         total_time_ms=None,
     )
+
+
+class VespaErrorDetails:
+    """Wrapper for VespaError that parses the arguments"""
+
+    def __init__(self, e: VespaError) -> None:
+        self.e = e
+        self.code = None
+        self.summary = None
+        self.message = None
+        self.parse_args(self.e)
+
+    def parse_args(self, e: VespaError) -> None:
+        """
+        Gets the details of the first error
+
+        Args:
+            e (VespaError): An error from the vespa python sdk
+        """
+        for arg in e.args:
+            for error in arg:
+                self.code = error.get("code")
+                self.summary = error.get("summary")
+                self.message = error.get("message")
+                break
+
+    @property
+    def is_invalid_query_parameter(self) -> bool:
+        """
+        Checks if an error is coming from vespa on query parameters, see:
+
+        https://github.com/vespa-engine/vespa/blob/0c55dc92a3bf889c67fac1ca855e6e33e1994904/
+        container-core/src/main/java/com/yahoo/container/protect/Error.java
+        """
+        INVALID_QUERY_PARAMETER = 4
+        return self.code == INVALID_QUERY_PARAMETER
