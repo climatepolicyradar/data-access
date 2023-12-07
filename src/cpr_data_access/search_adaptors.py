@@ -8,6 +8,7 @@ import logging
 from cpr_data_access.embedding import Embedder
 from cpr_data_access.exceptions import DocumentNotFoundError, FetchError, QueryError
 from cpr_data_access.models.search import Hit, SearchParameters, SearchResponse
+from cpr_data_access.utils import is_sensitive_query, load_sensitive_query_terms
 from cpr_data_access.vespa import (
     build_yql,
     find_vespa_cert_paths,
@@ -20,6 +21,7 @@ from vespa.application import Vespa
 from vespa.exceptions import VespaError
 
 LOGGER = logging.getLogger(__name__)
+SENSITIVE_QUERY_TERMS = load_sensitive_query_terms()
 
 
 class SearchAdapter(ABC):
@@ -86,7 +88,9 @@ class VespaSearchAdapter(SearchAdapter):
             "timeout": "20",
             "ranking.softtimeout.factor": "0.7",
         }
-        if parameters.exact_match:
+        if parameters.exact_match or is_sensitive_query(
+            parameters.query_string, SENSITIVE_QUERY_TERMS
+        ):
             vespa_request_body["ranking.profile"] = "exact"
         else:
             vespa_request_body["ranking.profile"] = "hybrid"
