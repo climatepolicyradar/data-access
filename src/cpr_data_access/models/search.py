@@ -81,10 +81,10 @@ class SearchParameters(BaseModel):
         """Validate that the keyword filters are valid."""
         if keyword_filters is not None:
             for field_key, values in keyword_filters.items():
-                if field_key not in filter_fields:
+                if field_key not in filter_fields.values():
                     raise QueryError(
                         f"Invalid keyword filter: {field_key}. keyword_filters must be "
-                        f"a subset of: {list(filter_fields.keys())}"
+                        f"a subset of: {list(filter_fields.values())}"
                     )
 
                 # convert single values to lists to make things easier later on

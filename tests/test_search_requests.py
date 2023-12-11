@@ -52,7 +52,10 @@ def test_whether_an_invalid_sort_order_raises_a_queryerror():
     assert "sort_order must be one of" in str(excinfo.value)
 
 
-@pytest.mark.parametrize("field", ["geography", "category", "language", "source"])
+@pytest.mark.parametrize(
+    "field",
+    ["family_geography", "family_category", "document_languages", "family_source"],
+)
 def test_whether_valid_filter_fields_are_accepted(field):
     request = SearchParameters(query_string="test", keyword_filters={field: "value"})
     assert isinstance(request, SearchParameters)
