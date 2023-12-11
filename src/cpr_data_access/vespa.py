@@ -10,7 +10,6 @@ from cpr_data_access.models.search import (
     Hit,
     SearchParameters,
     SearchResponse,
-    filter_fields,
     sort_fields,
 )
 from cpr_data_access.exceptions import FetchError
@@ -130,8 +129,7 @@ def build_yql(request: SearchParameters) -> str:
     rendered_filters = ""
     if request.keyword_filters:
         filters = []
-        for field_key, values in request.keyword_filters.items():
-            field_name = filter_fields[field_key]
+        for field_name, values in request.keyword_filters.items():
             for value in values:
                 filters.append(f'({field_name} contains "{sanitize(value)}")')
         rendered_filters = " and " + " and ".join(filters)
