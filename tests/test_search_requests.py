@@ -148,3 +148,33 @@ def test_vespa_error_details():
     err = VespaError(err_object)
     details = VespaErrorDetails(err)
     assert not details.is_invalid_query_parameter
+
+
+def test_filter_profiles_return_different_queries():
+    exact_yql = build_yql(
+        request=SearchParameters(
+            query_string="test", year_range=(2000, 2023), exact_match=True
+        ),
+        sensitive=False,
+    )
+    assert "stem: false" in exact_yql
+    assert "nearestNeighbor" not in exact_yql
+
+    hybrid_yql = build_yql(
+        request=SearchParameters(
+            query_string="test", year_range=(2000, 2023), exact_match=False
+        ),
+        sensitive=False,
+    )
+    assert "nearestNeighbor" in hybrid_yql
+
+    sensitive_yql = build_yql(
+        request=SearchParameters(
+            query_string="test", year_range=(2000, 2023), exact_match=False
+        ),
+        sensitive=True,
+    )
+    assert "nearestNeighbor" not in sensitive_yql
+
+    queries = [exact_yql, hybrid_yql, sensitive_yql]
+    assert len(queries) == len(set(queries))
