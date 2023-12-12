@@ -37,10 +37,13 @@ def is_sensitive_query(text: str, sensitive_terms: set) -> bool:
 
         query_word_count = len(text.split())
         remaining_query_word_count = query_word_count - remaining_sensitive_word_count
+
+        if remaining_query_word_count <= 0:
+            return True
+
         proportion_sensitive = (
             shortest_sensitive_word_count / remaining_query_word_count
         )
-
         if proportion_sensitive >= 0.5:
             return True
 
