@@ -52,7 +52,10 @@ def test_whether_an_invalid_sort_order_raises_a_queryerror():
     assert "sort_order must be one of" in str(excinfo.value)
 
 
-@pytest.mark.parametrize("field", ["geography", "category", "language", "source"])
+@pytest.mark.parametrize(
+    "field",
+    ["family_geography", "family_category", "document_languages", "family_source"],
+)
 def test_whether_valid_filter_fields_are_accepted(field):
     request = SearchParameters(query_string="test", keyword_filters={field: "value"})
     assert isinstance(request, SearchParameters)
@@ -89,13 +92,14 @@ def test_whether_single_filter_values_and_lists_of_filter_values_appear_in_yql()
     request = SearchParameters(
         query_string="test",
         keyword_filters={
-            "geography": "SWE",
-            "category": "Executive",
-            "language": ["English", "Swedish"],
-            "source": "CCLW",
+            "family_geography": "SWE",
+            "family_category": "Executive",
+            "document_languages": ["English", "Swedish"],
+            "family_source": "CCLW",
         },
     )
     yql = build_yql(request)
+    assert isinstance(request.keyword_filters, dict)
     for key, values in request.keyword_filters.items():
         for value in values:
             assert key in yql
