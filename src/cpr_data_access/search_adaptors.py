@@ -82,16 +82,21 @@ class VespaSearchAdapter(SearchAdapter):
         :return SearchResponse: a list of families, with response metadata
         """
         total_time_start = time.time()
+        sensitive = is_sensitive_query(parameters.query_string, SENSITIVE_QUERY_TERMS)
 
         vespa_request_body: dict[str, Any] = {
-            "yql": build_yql(parameters),
+            "yql": build_yql(parameters, sensitive),
             "timeout": "20",
             "ranking.softtimeout.factor": "0.7",
         }
-        if parameters.exact_match or is_sensitive_query(
-            parameters.query_string, SENSITIVE_QUERY_TERMS
-        ):
+
+        if parameters.exact_match:
             vespa_request_body["ranking.profile"] = "exact"
+        elif sensitive:
+            vespa_request_body["ranking.profile"] = "hybrid_no_closeness"
+            embedding = self.embedder.embed(
+                parameters.query_string, normalize=False, show_progress_bar=False
+            )
         else:
             vespa_request_body["ranking.profile"] = "hybrid"
             embedding = self.embedder.embed(

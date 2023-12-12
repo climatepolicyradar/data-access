@@ -91,7 +91,7 @@ def sanitize(user_input: str) -> str:
     return user_input
 
 
-def build_yql(request: SearchParameters) -> str:
+def build_yql(request: SearchParameters, sensitive: bool = False) -> str:
     """
     Build a YQL string for retrieving relevant, filtered, sorted results from vespa
 
@@ -107,6 +107,15 @@ def build_yql(request: SearchParameters) -> str:
                 (family_name contains({{stem: false}}"{request.query_string}")) or
                 (family_description contains({{stem: false}}"{request.query_string}")) or
                 (text_block contains ({{stem: false}}"{request.query_string}"))
+            )
+        """
+    elif sensitive:
+        rendered_query_string_match = f"""
+            where (
+                {{"targetHits": 1000}} weakAnd(
+                    family_name contains "{ request.query_string }",
+                    family_description contains "{ request.query_string }",
+                    text_block contains "{ request.query_string }"
             )
         """
     else:
