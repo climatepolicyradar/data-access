@@ -116,7 +116,7 @@ def build_yql(request: SearchParameters, sensitive: bool = False) -> str:
                     family_name contains "{ request.query_string }",
                     family_description contains "{ request.query_string }",
                     text_block contains "{ request.query_string }"
-            )
+            ))
         """
     else:
         rendered_query_string_match = f"""
