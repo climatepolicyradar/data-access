@@ -77,6 +77,7 @@ class UpdateTypes(str, Enum):
     # LANGUAGES = "languages"
     # DOCUMENT_STATUS = "document_status"
     METADATA = "metadata"
+    REPARSE = "reparse"
 
 
 class Update(BaseModel):
