@@ -17,6 +17,11 @@ from cpr_data_access.pipeline_general_models import (
 
 _LOGGER = logging.getLogger(__name__)
 
+PARSER_METADATA_KEY = "parser_metadata"
+AZURE_API_VERSION_KEY = "azure_api_version"
+AZURE_MODEL_ID_KEY = "azure_model_id"
+PARSING_DATE_KEY = "parsing_date"
+
 
 class VerticalFlipError(Exception):
     """Exception for when a vertical flip fails."""
