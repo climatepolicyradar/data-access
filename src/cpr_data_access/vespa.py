@@ -141,7 +141,8 @@ def build_yql(request: SearchParameters, sensitive: bool = False) -> str:
         for field_name, values in request.keyword_filters.items():
             for value in values:
                 filters.append(f'({field_name} contains "{sanitize(value)}")')
-        rendered_filters = " and " + " and ".join(filters)
+        if filters:
+            rendered_filters = f" and ({' or '.join(filters)})"
 
     if request.year_range:
         start, end = request.year_range
