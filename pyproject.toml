@@ -32,7 +32,7 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^2.20.0"
-pyright = "^1.1.281"
+pyright = "^1.1.349"
 pytest = "^7.2.0"
 black = "^22.10.0"
 moto = "^4.0.11"
