@@ -14,6 +14,7 @@ from cpr_data_access.models import (
     Span,
     KnowledgeBaseIDs,
     TextBlock,
+    BlockType,
 )
 
 
@@ -533,3 +534,16 @@ def test_dataset_dict(test_dataset):
     d4_dict = dataset.dict(exclude="documents")
 
     assert "documents" not in d4_dict.keys()
+
+
+def test_document_to_markdown(test_document):
+    md = test_document.to_markdown(show_debug_elements=False)
+
+    assert isinstance(md, str)
+    assert len(md) > 0
+
+    # Hide text elements - should be shorter
+    md_debug = test_document.to_markdown(
+        show_debug_elements=False, debug_only_types={BlockType.TEXT}
+    )
+    assert len(md_debug) < len(md)

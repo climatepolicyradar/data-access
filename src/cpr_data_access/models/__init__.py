@@ -660,6 +660,60 @@ class BaseDocument(BaseModel):
 
         return None
 
+    def to_markdown(
+        self,
+        show_debug_elements: bool = False,
+        debug_only_types: Iterable[BlockType] = [
+            BlockType.TABLE_CELL,
+            BlockType.TABLE,
+            BlockType.PAGE_NUMBER,
+        ],
+    ) -> str:
+        """
+        Display a document in markdown format.
+
+        :param bool show_debug_elements: whether to show elements that we can't nicely
+            display as markdown at the moment. Defaults to False
+        :param Iterable[BlockType] debug_only_types: block types to only display if
+            `show_debug_elements` is set to True. Defaults to {BlockType.TABLE_CELL,
+            BlockType.TABLE, BlockType.PAGE_NUMBER}
+        :return str: Markdown string representing the document
+        """
+
+        markdown_str = ""
+
+        if self.text_blocks is None:
+            return markdown_str
+
+        for block in self.text_blocks:
+            if (not show_debug_elements) and (block.type in debug_only_types):
+                continue
+
+            block_string = block.to_string()
+            if block.type == BlockType.TEXT:
+                markdown_str += block_string + "\n\n"
+
+            elif block.type == BlockType.LIST:
+                markdown_str += "\n".join(f"- {item}" for item in block) + "\n\n"
+
+            elif block.type == BlockType.TABLE:
+                markdown_str += f"**TABLE: {block_string}**" + "\n\n"
+
+            elif block.type == BlockType.SECTION_HEADING:
+                markdown_str += f"## {block_string}" + "\n\n"
+
+            elif block.type in {BlockType.TITLE, BlockType.TITLE_LOWER_CASE}:
+                markdown_str += f"# {block_string}" + "\n\n"
+
+            elif block.type == BlockType.TABLE_CELL:
+                if not markdown_str.endswith("**table**\n\n"):
+                    markdown_str += "**table**" + "\n\n"
+
+            else:
+                markdown_str += f"**{block.type}:** {block_string}" + "\n\n"
+
+        return markdown_str
+
 
 class CPRDocumentMetadata(BaseModel):
     """Metadata about a document in the CPR tool."""
