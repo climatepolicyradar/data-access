@@ -6,6 +6,9 @@ import boto3
 from moto import mock_s3
 
 
+VESPA_TEST_SEARCH_URL = "http://localhost:8080"
+
+
 @pytest.fixture()
 def s3_client():
     with mock_s3():
