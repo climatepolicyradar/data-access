@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import tempfile
 
 import pytest
 import boto3
@@ -7,6 +8,16 @@ from moto import mock_s3
 
 
 VESPA_TEST_SEARCH_URL = "http://localhost:8080"
+
+
+@pytest.fixture()
+def fake_vespa_credentials():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with open(Path(tmpdir) / "cert.pem", "w"):
+            pass
+        with open(Path(tmpdir) / "key.pem", "w"):
+            pass
+        yield tmpdir
 
 
 @pytest.fixture()
