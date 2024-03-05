@@ -7,10 +7,12 @@ from conftest import VESPA_TEST_SEARCH_URL
 
 
 @pytest.mark.vespa
-def test_vespa_search_adapter():
+def test_vespa_search_adapter(fake_vespa_credentials):
     try:
-        adaptor = VespaSearchAdapter(instance_url=VESPA_TEST_SEARCH_URL)
+        adaptor = VespaSearchAdapter(
+            instance_url=VESPA_TEST_SEARCH_URL, cert_directory=fake_vespa_credentials
+        )
         request = SearchParameters(query_string="forest fires")
         adaptor.search(request)
     except Exception as e:
-        pytest.fail(f"Vespa query failed: {e}")
+        pytest.fail(f"Vespa query failed. {e.__class__.__name__}: {e}")
