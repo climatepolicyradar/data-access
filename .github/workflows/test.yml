@@ -24,6 +24,23 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install "poetry==1.3.2" && poetry install --all-extras --with dev
-      - name: Run test suite
+
+      - name: Run unit tests
         run: |
-          poetry run python -m pytest -vvv
+          make test_not_vespa
+
+      - name: Install latest Vespa CLI
+        env:
+          VESPA_CLI_VERSION: "8.250.43"
+        run: |
+          mkdir vespa-cli
+          curl -fsSL https://github.com/vespa-engine/vespa/releases/download/v${VESPA_CLI_VERSION}/vespa-cli_${VESPA_CLI_VERSION}_linux_amd64.tar.gz | \
+            tar -zxf - -C vespa-cli --strip-component=1
+          echo "vespa-cli/bin" >> $GITHUB_PATH
+
+      - name: Setup vespa test instance
+        run: make vespa_dev_setup
+  
+      - name: Run vespa tests
+        run: |
+          make test
