@@ -128,7 +128,9 @@ This requires the [vespa cli](https://docs.vespa.ai/en/vespa-cli.html) to be ins
 Setup can then be run with:
 
 ```
-make vespa_setup
+poetry install --all-extras --with dev
+poetry shell
+make vespa_dev_setup
 make test
 ```
 
@@ -136,4 +138,10 @@ Alternatively, to only run non-vespa tests:
 
 ```
 make test_not_vespa
+```
+
+For clean up:
+
+```
+make vespa_dev_down
 ```

@@ -36,3 +36,7 @@ vespa_load_data:
 
 # Set up a local instance of vespa
 vespa_dev_setup: vespa_confirm_cli_installed vespa_dev_start vespa_healthy vespa_deploy_schema vespa_load_data
+
+# Stop and remove the vespa container
+vespa_dev_down:
+	docker compose -f tests/local_vespa/docker-compose.dev.yml down vespadaltest
