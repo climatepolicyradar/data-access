@@ -119,3 +119,21 @@ adaptor.get_by_id(document_id="id:YOUR_NAMESPACE:YOUR_SCHEMA_NAME::SOME_DOCUMENT
 ```
 
 All of the above search functionality assumes that a valid set of vespa credentials is available in `~/.vespa`, or in a directory supplied to the `VespaSearchAdapter` constructor directly. See [the docs](docs/vespa-auth.md) for more information on how vespa expects credentials.
+
+# Test setup
+Some tests rely on a local running instance of vespa.
+
+This requires the [vespa cli](https://docs.vespa.ai/en/vespa-cli.html) to be installed.
+
+Setup can then be run with:
+
+```
+make vespa_setup
+make test
+```
+
+Alternatively, to only run non-vespa tests:
+
+```
+make test_not_vespa
+```
