@@ -28,6 +28,9 @@ class SearchParameters(BaseModel):
     limit: int = 100
     max_hits_per_family: int = 10
 
+    family_ids: Optional[Sequence[str]] = None
+    document_ids: Optional[Sequence[str]] = None
+
     keyword_filters: Optional[Mapping[str, Union[str, Sequence[str]]]] = None
     year_range: Optional[tuple[Optional[int], Optional[int]]] = None
 
@@ -42,6 +45,23 @@ class SearchParameters(BaseModel):
         if query_string == "":
             raise QueryError("query_string must not be empty")
         return query_string
+
+    @field_validator("family_ids", "document_ids")
+    def ids_must_fit_pattern(cls, ids):
+        """
+        Validate that the family and document ids are ids.
+
+        Example ids:
+            CCLW.document.i00000004.n0000
+            CCLW.family.i00000003.n0000
+            CCLW.executive.10014.4470
+            CCLW.family.10014.0
+        """
+        if ids:
+            for i in ids:
+                if len(i.split(".")) != 4:
+                    raise QueryError(f"id does not seem valid: {i}")
+        return ids
 
     @field_validator("year_range")
     def year_range_must_be_valid(cls, year_range):
