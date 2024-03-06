@@ -51,6 +51,40 @@ def test_whether_an_invalid_year_range_ranges_raises_a_queryerror():
     )
 
 
+def test_whether_valid_family_ids_are_accepted():
+    params = SearchParameters(
+        query_string="test",
+        family_ids=("CCLW.family.i00000003.n0000", "CCLW.family.10014.0"),
+    )
+    assert isinstance(params, SearchParameters)
+
+
+def test_whether_an_invalid_family_id_raises_a_queryerror():
+    with pytest.raises(QueryError) as excinfo:
+        SearchParameters(
+            query_string="test",
+            family_ids=("CCLW.family.i00000003.n0000", "invalid_fam_id"),
+        )
+    assert "id does not seem valid: invalid_fam_id" in str(excinfo.value)
+
+
+def test_whether_valid_document_ids_are_accepted():
+    params = SearchParameters(
+        query_string="test",
+        document_ids=("CCLW.document.i00000004.n0000", "CCLW.executive.10014.4470"),
+    )
+    assert isinstance(params, SearchParameters)
+
+
+def test_whether_an_invalid_document_id_raises_a_queryerror():
+    with pytest.raises(QueryError) as excinfo:
+        SearchParameters(
+            query_string="test",
+            document_ids=("invalid_doc_id", "CCLW.document.i00000004.n0000"),
+        )
+    assert "id does not seem valid: invalid_doc_id" in str(excinfo.value)
+
+
 @pytest.mark.parametrize("field", ["date", "name"])
 def test_whether_valid_sort_fields_are_accepted(field):
     params = SearchParameters(query_string="test", sort_by=field)
