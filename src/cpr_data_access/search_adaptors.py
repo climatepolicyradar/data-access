@@ -9,8 +9,8 @@ from cpr_data_access.embedding import Embedder
 from cpr_data_access.exceptions import DocumentNotFoundError, FetchError, QueryError
 from cpr_data_access.models.search import Hit, SearchParameters, SearchResponse
 from cpr_data_access.utils import is_sensitive_query, load_sensitive_query_terms
+from cpr_data_access.yql_builder import YQLBuilder
 from cpr_data_access.vespa import (
-    build_yql,
     find_vespa_cert_paths,
     parse_vespa_response,
     split_document_id,
@@ -84,8 +84,9 @@ class VespaSearchAdapter(SearchAdapter):
         total_time_start = time.time()
         sensitive = is_sensitive_query(parameters.query_string, SENSITIVE_QUERY_TERMS)
 
+        yql = YQLBuilder(params=parameters, sensitive=sensitive).to_str()
         vespa_request_body: dict[str, Any] = {
-            "yql": build_yql(parameters, sensitive),
+            "yql": yql,
             "timeout": "20",
             "ranking.softtimeout.factor": "0.7",
         }
