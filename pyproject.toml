@@ -49,8 +49,7 @@ env_files = """
     .env
 """
 markers = [
-    "search",
-    "unit",
+    "vespa",
 ]
 
 [tool.black-jupyter]

@@ -7,7 +7,7 @@ from conftest import VESPA_TEST_SEARCH_URL
 
 
 @pytest.mark.vespa
-def test_vespa_search_adapter(fake_vespa_credentials):
+def test_vespa_search_adaptor(fake_vespa_credentials):
     try:
         adaptor = VespaSearchAdapter(
             instance_url=VESPA_TEST_SEARCH_URL, cert_directory=fake_vespa_credentials
