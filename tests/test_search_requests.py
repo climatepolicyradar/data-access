@@ -3,7 +3,8 @@ import pytest
 from vespa.exceptions import VespaError
 
 from cpr_data_access.models.search import SearchParameters
-from cpr_data_access.vespa import build_yql, sanitize, VespaErrorDetails
+from cpr_data_access.vespa import VespaErrorDetails
+from cpr_data_access.yql_builder import YQLBuilder, sanitize
 from cpr_data_access.exceptions import QueryError
 
 
@@ -15,8 +16,8 @@ def test_whether_an_empty_query_string_raises_a_queryerror():
 
 @pytest.mark.parametrize("year_range", [(2000, 2020), (2000, None), (None, 2020)])
 def test_whether_valid_year_ranges_are_accepted(year_range):
-    request = SearchParameters(query_string="test", year_range=year_range)
-    assert isinstance(request, SearchParameters)
+    params = SearchParameters(query_string="test", year_range=year_range)
+    assert isinstance(params, SearchParameters)
 
 
 def test_whether_an_invalid_year_range_ranges_raises_a_queryerror():
@@ -30,8 +31,8 @@ def test_whether_an_invalid_year_range_ranges_raises_a_queryerror():
 
 @pytest.mark.parametrize("field", ["date", "name"])
 def test_whether_valid_sort_fields_are_accepted(field):
-    request = SearchParameters(query_string="test", sort_by=field)
-    assert isinstance(request, SearchParameters)
+    params = SearchParameters(query_string="test", sort_by=field)
+    assert isinstance(params, SearchParameters)
 
 
 def test_whether_an_invalid_sort_field_raises_a_queryerror():
@@ -42,8 +43,8 @@ def test_whether_an_invalid_sort_field_raises_a_queryerror():
 
 @pytest.mark.parametrize("order", ["ascending", "descending"])
 def test_whether_valid_sort_orders_are_accepted(order):
-    request = SearchParameters(query_string="test", sort_order=order)
-    assert isinstance(request, SearchParameters)
+    params = SearchParameters(query_string="test", sort_order=order)
+    assert isinstance(params, SearchParameters)
 
 
 def test_whether_an_invalid_sort_order_raises_a_queryerror():
@@ -57,8 +58,8 @@ def test_whether_an_invalid_sort_order_raises_a_queryerror():
     ["family_geography", "family_category", "document_languages", "family_source"],
 )
 def test_whether_valid_filter_fields_are_accepted(field):
-    request = SearchParameters(query_string="test", keyword_filters={field: "value"})
-    assert isinstance(request, SearchParameters)
+    params = SearchParameters(query_string="test", keyword_filters={field: "value"})
+    assert isinstance(params, SearchParameters)
 
 
 def test_whether_an_invalid_filter_fields_raises_a_valueerror():
@@ -89,7 +90,7 @@ def test_whether_malicious_query_strings_are_sanitized(input_string, expected):
 
 
 def test_whether_single_filter_values_and_lists_of_filter_values_appear_in_yql():
-    request = SearchParameters(
+    params = SearchParameters(
         query_string="test",
         keyword_filters={
             "family_geography": "SWE",
@@ -98,9 +99,9 @@ def test_whether_single_filter_values_and_lists_of_filter_values_appear_in_yql()
             "family_source": "CCLW",
         },
     )
-    yql = build_yql(request)
-    assert isinstance(request.keyword_filters, dict)
-    for key, values in request.keyword_filters.items():
+    yql = YQLBuilder(params).to_str()
+    assert isinstance(params.keyword_filters, dict)
+    for key, values in params.keyword_filters.items():
         for value in values:
             assert key in yql
             assert value in yql
@@ -117,8 +118,8 @@ def test_whether_single_filter_values_and_lists_of_filter_values_appear_in_yql()
 def test_whether_year_ranges_appear_in_yql(
     year_range, expected_include, expected_exclude
 ):
-    request = SearchParameters(query_string="test", year_range=year_range)
-    yql = build_yql(request)
+    params = SearchParameters(query_string="test", year_range=year_range)
+    yql = YQLBuilder(params).to_str()
     for include in expected_include:
         assert include in yql
     for exclude in expected_exclude:
@@ -151,29 +152,29 @@ def test_vespa_error_details():
 
 
 def test_filter_profiles_return_different_queries():
-    exact_yql = build_yql(
-        request=SearchParameters(
+    exact_yql = YQLBuilder(
+        params=SearchParameters(
             query_string="test", year_range=(2000, 2023), exact_match=True
         ),
         sensitive=False,
-    )
+    ).to_str()
     assert "stem: false" in exact_yql
     assert "nearestNeighbor" not in exact_yql
 
-    hybrid_yql = build_yql(
-        request=SearchParameters(
+    hybrid_yql = YQLBuilder(
+        params=SearchParameters(
             query_string="test", year_range=(2000, 2023), exact_match=False
         ),
         sensitive=False,
-    )
+    ).to_str()
     assert "nearestNeighbor" in hybrid_yql
 
-    sensitive_yql = build_yql(
-        request=SearchParameters(
+    sensitive_yql = YQLBuilder(
+        params=SearchParameters(
             query_string="test", year_range=(2000, 2023), exact_match=False
         ),
         sensitive=True,
-    )
+    ).to_str()
     assert "nearestNeighbor" not in sensitive_yql
 
     queries = [exact_yql, hybrid_yql, sensitive_yql]
