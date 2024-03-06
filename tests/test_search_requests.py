@@ -1,11 +1,33 @@
+from unittest.mock import patch
+
 import pytest
 
 from vespa.exceptions import VespaError
 
 from cpr_data_access.models.search import SearchParameters
-from cpr_data_access.vespa import VespaErrorDetails
+from cpr_data_access.vespa import build_vespa_request_body, VespaErrorDetails
 from cpr_data_access.yql_builder import YQLBuilder, sanitize
 from cpr_data_access.exceptions import QueryError
+from cpr_data_access.embedding import Embedder
+
+
+@patch("cpr_data_access.vespa.SENSITIVE_QUERY_TERMS", {"sensitive"})
+@pytest.mark.parametrize(
+    "query_type, params",
+    [
+        ("hybrid", SearchParameters(query_string="test")),
+        ("exact", SearchParameters(query_string="test", exact_match=True)),
+        ("hybrid_no_closeness", SearchParameters(query_string="sensitive")),
+    ],
+)
+def test_build_vespa_request_body(query_type, params):
+    embedder = Embedder()
+    body = build_vespa_request_body(parameters=params, embedder=embedder)
+    assert body["ranking.profile"] == query_type
+    for key, value in body.items():
+        assert (
+            len(value) > 0
+        ), f"Query type: {query_type} has an empty value for {key}: {value}"
 
 
 def test_whether_an_empty_query_string_raises_a_queryerror():

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import Any, List
 
 import yaml
 from vespa.io import VespaResponse
@@ -12,7 +12,13 @@ from cpr_data_access.models.search import (
     SearchResponse,
     sort_fields,
 )
+from cpr_data_access.embedding import Embedder
 from cpr_data_access.exceptions import FetchError
+from cpr_data_access.utils import is_sensitive_query, load_sensitive_query_terms
+from cpr_data_access.yql_builder import YQLBuilder
+
+
+SENSITIVE_QUERY_TERMS = load_sensitive_query_terms()
 
 
 def split_document_id(document_id: str) -> tuple[str, str, str]:
@@ -61,6 +67,35 @@ def find_vespa_cert_paths() -> tuple[Path, Path]:
     cert_path = list(cert_directory.glob("*cert.pem"))[0]
     key_path = list(cert_directory.glob("*key.pem"))[0]
     return cert_path, key_path
+
+
+def build_vespa_request_body(
+    parameters: SearchParameters, embedder: Embedder
+) -> dict[str, str]:
+    """Constructs the payload for a vespa query"""
+    sensitive = is_sensitive_query(parameters.query_string, SENSITIVE_QUERY_TERMS)
+
+    yql = YQLBuilder(params=parameters, sensitive=sensitive).to_str()
+    vespa_request_body: dict[str, Any] = {
+        "yql": yql,
+        "timeout": "20",
+        "ranking.softtimeout.factor": "0.7",
+    }
+
+    if parameters.exact_match:
+        vespa_request_body["ranking.profile"] = "exact"
+    elif sensitive:
+        vespa_request_body["ranking.profile"] = "hybrid_no_closeness"
+        embedding = embedder.embed(
+            parameters.query_string, normalize=False, show_progress_bar=False
+        )
+    else:
+        vespa_request_body["ranking.profile"] = "hybrid"
+        embedding = embedder.embed(
+            parameters.query_string, normalize=False, show_progress_bar=False
+        )
+        vespa_request_body["input.query(query_embedding)"] = embedding
+    return vespa_request_body
 
 
 def parse_vespa_response(
