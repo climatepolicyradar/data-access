@@ -213,11 +213,14 @@ def test_yql_builder_build_where_clause():
     )
     where_clause = YQLBuilder(params).build_where_clause()
     assert "SWE" in where_clause
+    assert "family_geography" in where_clause
 
     params = SearchParameters(query_string="climate", year_range=(2000, None))
     where_clause = YQLBuilder(params).build_where_clause()
     assert "2000" in where_clause
+    assert "family_publication_year" in where_clause
 
     params = SearchParameters(query_string="climate", year_range=(None, 2020))
     where_clause = YQLBuilder(params).build_where_clause()
     assert "2020" in where_clause
+    assert "family_publication_year" in where_clause
