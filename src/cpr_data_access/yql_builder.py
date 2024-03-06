@@ -107,6 +107,20 @@ class YQLBuilder:
             """
             ).substitute(QUERY=query)
 
+    def build_family_filter(self) -> Optional[str]:
+        """Create the part of the query that limits to specific families"""
+        if self.params.family_ids:
+            families = ", ".join([f"'{f}'" for f in self.params.family_ids])
+            return f"(family_import_id in({families}))"
+        return None
+
+    def build_document_filter(self) -> Optional[str]:
+        """Create the part of the query that limits to specific documents"""
+        if self.params.document_ids:
+            documents = ", ".join([f"'{d}'" for d in self.params.document_ids])
+            return f"(document_import_id in({documents}))"
+        return None
+
     def build_keyword_filter(self) -> Optional[str]:
         """Create the part of the query that adds keyword filters"""
         keyword_filters = self.params.keyword_filters
@@ -139,6 +153,8 @@ class YQLBuilder:
         """Create the part of the query that adds filters"""
         filters = []
         filters.append(self.build_search_term())
+        filters.append(self.build_family_filter())
+        filters.append(self.build_document_filter())
         filters.append(self.build_keyword_filter())
         filters.append(self.build_year_start_filter())
         filters.append(self.build_year_end_filter())
