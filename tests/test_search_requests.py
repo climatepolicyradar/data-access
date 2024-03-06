@@ -249,6 +249,22 @@ def test_yql_builder_build_where_clause():
     assert "SWE" in where_clause
     assert "family_geography" in where_clause
 
+    params = SearchParameters(
+        query_string="test",
+        family_ids=("CCLW.family.i00000003.n0000", "CCLW.family.10014.0"),
+    )
+    where_clause = YQLBuilder(params).build_where_clause()
+    assert "CCLW.family.i00000003.n0000" in where_clause
+    assert "CCLW.family.10014.0" in where_clause
+
+    params = SearchParameters(
+        query_string="test",
+        document_ids=("CCLW.document.i00000004.n0000", "CCLW.executive.10014.4470"),
+    )
+    where_clause = YQLBuilder(params).build_where_clause()
+    assert "CCLW.document.i00000004.n0000" in where_clause
+    assert "CCLW.executive.10014.4470" in where_clause
+
     params = SearchParameters(query_string="climate", year_range=(2000, None))
     where_clause = YQLBuilder(params).build_where_clause()
     assert "2000" in where_clause
