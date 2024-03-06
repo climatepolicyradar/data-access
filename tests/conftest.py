@@ -4,7 +4,7 @@ import tempfile
 
 import pytest
 import boto3
-from moto import mock_s3
+from moto import mock_aws
 
 
 VESPA_TEST_SEARCH_URL = "http://localhost:8080"
@@ -22,7 +22,7 @@ def fake_vespa_credentials():
 
 @pytest.fixture()
 def s3_client():
-    with mock_s3():
+    with mock_aws():
         s3_client = boto3.client("s3", region_name="us-east-1")
         s3_client.create_bucket(Bucket="test-bucket")
         s3_client.put_object(
