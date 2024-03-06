@@ -2,15 +2,14 @@
 import time
 from abc import ABC
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 import logging
 
 from cpr_data_access.embedding import Embedder
 from cpr_data_access.exceptions import DocumentNotFoundError, FetchError, QueryError
 from cpr_data_access.models.search import Hit, SearchParameters, SearchResponse
-from cpr_data_access.utils import is_sensitive_query, load_sensitive_query_terms
-from cpr_data_access.yql_builder import YQLBuilder
 from cpr_data_access.vespa import (
+    build_vespa_request_body,
     find_vespa_cert_paths,
     parse_vespa_response,
     split_document_id,
@@ -21,7 +20,6 @@ from vespa.application import Vespa
 from vespa.exceptions import VespaError
 
 LOGGER = logging.getLogger(__name__)
-SENSITIVE_QUERY_TERMS = load_sensitive_query_terms()
 
 
 class SearchAdapter(ABC):
@@ -82,29 +80,7 @@ class VespaSearchAdapter(SearchAdapter):
         :return SearchResponse: a list of families, with response metadata
         """
         total_time_start = time.time()
-        sensitive = is_sensitive_query(parameters.query_string, SENSITIVE_QUERY_TERMS)
-
-        yql = YQLBuilder(params=parameters, sensitive=sensitive).to_str()
-        vespa_request_body: dict[str, Any] = {
-            "yql": yql,
-            "timeout": "20",
-            "ranking.softtimeout.factor": "0.7",
-        }
-
-        if parameters.exact_match:
-            vespa_request_body["ranking.profile"] = "exact"
-        elif sensitive:
-            vespa_request_body["ranking.profile"] = "hybrid_no_closeness"
-            embedding = self.embedder.embed(
-                parameters.query_string, normalize=False, show_progress_bar=False
-            )
-        else:
-            vespa_request_body["ranking.profile"] = "hybrid"
-            embedding = self.embedder.embed(
-                parameters.query_string, normalize=False, show_progress_bar=False
-            )
-            vespa_request_body["input.query(query_embedding)"] = embedding
-
+        vespa_request_body = build_vespa_request_body(parameters, self.embedder)
         query_time_start = time.time()
         try:
             vespa_response = self.client.query(body=vespa_request_body)
