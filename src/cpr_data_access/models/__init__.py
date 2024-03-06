@@ -30,6 +30,7 @@ from pydantic import (
     NonNegativeInt,
     PrivateAttr,
     model_validator,
+    ConfigDict,
 )
 from tqdm.auto import tqdm
 import numpy as np
@@ -116,15 +117,9 @@ class KnowledgeBaseIDs(BaseModel):
 
     wikipedia_title: Optional[str]
     wikidata_id: Optional[Annotated[str, StringConstraints(pattern=r"^Q\d+$")]]  # type: ignore
-
-    class Config:
-        """
-        Make the model immutable and hashable.
-
-        Generates a __hash__() method for the model: see docs https://docs.pydantic.dev/1.10/usage/model_config/.
-        """
-
-        frozen = True
+    model_config: ConfigDict = {
+        "frozen": True,
+    }
 
 
 class Span(BaseModel):
@@ -180,8 +175,7 @@ class Span(BaseModel):
 class TextBlock(BaseModel):
     """Text block data model. Generic across content types"""
 
-    class Config:  # noqa: D106
-        keep_untouched = (cached_property,)
+    model_config: ConfigDict = {"ignored_types": (cached_property,)}
 
     text: Sequence[str]
     text_block_id: str
@@ -793,8 +787,7 @@ class Dataset:
     :param documents: list of documents to add. Recommended to use `Dataset().load_from_remote` or `Dataset().load_from_local` instead. Defaults to []
     """
 
-    class Config:  # noqa: D106
-        keep_untouched = (cached_property,)
+    model_config: ConfigDict = {"ignored_types": (cached_property,)}
 
     def __init__(
         self,
