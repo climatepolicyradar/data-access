@@ -20,7 +20,10 @@ class YQLBuilder:
             max($LIMIT)
             each(
                 max($MAX_HITS_PER_FAMILY)
-                each(output(summary(search_summary))
+                each(
+                    output(
+                        summary(search_summary)
+                    )
                 )
             )
         )
@@ -52,25 +55,28 @@ class YQLBuilder:
                         family_name contains "$QUERY",
                         family_description contains "$QUERY",
                         text_block contains "$QUERY"
-                ))
+                    )
+                )
             """
             ).substitute(QUERY=query)
         else:
             return Template(
                 """
-                ((
+                (
+                    (
                     {"targetHits": 1000} weakAnd(
                         family_name contains "$QUERY",
                         family_description contains "$QUERY",
                         text_block contains "$QUERY"
                     )
-                ) or (
-                    [{"targetNumHits": 1000}]
-                    nearestNeighbor(family_description_embedding,query_embedding)
-                ) or (
-                    [{"targetNumHits": 1000}]
-                    nearestNeighbor(text_embedding,query_embedding)
-                ))
+                    ) or (
+                        [{"targetNumHits": 1000}]
+                        nearestNeighbor(family_description_embedding,query_embedding)
+                    ) or (
+                        [{"targetNumHits": 1000}]
+                        nearestNeighbor(text_embedding,query_embedding)
+                    )
+                )
             """
             ).substitute(QUERY=query)
 
