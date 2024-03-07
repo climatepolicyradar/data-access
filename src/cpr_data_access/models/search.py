@@ -1,4 +1,5 @@
 from datetime import datetime
+import re
 from typing import List, Mapping, Optional, Sequence, Union
 
 from pydantic import BaseModel, field_validator
@@ -18,6 +19,9 @@ filter_fields = {
     "language": "document_languages",
     "source": "family_source",
 }
+
+_ID_ELEMENT = r"[a-zA-Z0-9]+([-_]?[a-zA-Z0-9]+)*"
+ID_PATTERN = re.compile(rf"{_ID_ELEMENT}\.{_ID_ELEMENT}\.{_ID_ELEMENT}\.{_ID_ELEMENT}")
 
 
 class SearchParameters(BaseModel):
@@ -58,9 +62,9 @@ class SearchParameters(BaseModel):
             CCLW.family.10014.0
         """
         if ids:
-            for i in ids:
-                if len(i.split(".")) != 4:
-                    raise QueryError(f"id does not seem valid: {i}")
+            for _id in ids:
+                if not re.fullmatch(ID_PATTERN, _id):
+                    raise QueryError(f"id seems invalid: {_id}")
         return ids
 
     @field_validator("year_range")

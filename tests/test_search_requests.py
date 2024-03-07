@@ -59,13 +59,25 @@ def test_whether_valid_family_ids_are_accepted():
     assert isinstance(params, SearchParameters)
 
 
-def test_whether_an_invalid_family_id_raises_a_queryerror():
+@pytest.mark.parametrize(
+    "bad_id",
+    [
+        "invalid_fam_id",
+        "Not.Quite.It",
+        "CCLW.family.i00000003.!!!!!!",
+        "UNFCCC.family.i00000003",
+        "UNFCCC.family.i00000003.n000.11",
+    ],
+)
+def test_whether_an_invalid_family_id_raises_a_queryerror(bad_id):
     with pytest.raises(QueryError) as excinfo:
         SearchParameters(
             query_string="test",
-            family_ids=("CCLW.family.i00000003.n0000", "invalid_fam_id"),
+            family_ids=("CCLW.family.i00000003.n0000", bad_id),
         )
-    assert "id does not seem valid: invalid_fam_id" in str(excinfo.value)
+    assert f"id seems invalid: {bad_id}" in str(
+        excinfo.value
+    ), f"expected failure on {bad_id}"
 
 
 def test_whether_valid_document_ids_are_accepted():
@@ -76,13 +88,24 @@ def test_whether_valid_document_ids_are_accepted():
     assert isinstance(params, SearchParameters)
 
 
-def test_whether_an_invalid_document_id_raises_a_queryerror():
+@pytest.mark.parametrize(
+    "bad_id",
+    [
+        "invalid_fam_id",
+        "Not.Quite.It",
+        "CCLW.doc.i00000003.!!!!!!",
+        "UNFCCC.doc.i00000003",
+    ],
+)
+def test_whether_an_invalid_document_id_raises_a_queryerror(bad_id):
     with pytest.raises(QueryError) as excinfo:
         SearchParameters(
             query_string="test",
-            document_ids=("invalid_doc_id", "CCLW.document.i00000004.n0000"),
+            document_ids=(bad_id, "CCLW.document.i00000004.n0000"),
         )
-    assert "id does not seem valid: invalid_doc_id" in str(excinfo.value)
+    assert f"id seems invalid: {bad_id}" in str(
+        excinfo.value
+    ), f"expected failure on {bad_id}"
 
 
 @pytest.mark.parametrize("field", ["date", "name"])
