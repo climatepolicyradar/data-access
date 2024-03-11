@@ -20,6 +20,9 @@
                 "continuation": {
                     "next": "BGAAABECBEBC"
                 },
+                "fields": {
+                    "count()": 18
+                },
                 "children": [
                     {
                         "id": "grouplist:family_import_id",
@@ -33,6 +36,9 @@
                                 "id": "group:string:UNFCCC.family.1062.0",
                                 "relevance": 9.850756434359045,
                                 "value": "UNFCCC.family.1062.0",
+                                "fields": {
+                                    "count()": 451
+                                },
                                 "children": [
                                     {
                                         "id": "hitlist:hits",
@@ -510,6 +516,9 @@
                                 "id": "group:string:CCLW.family.11127.0",
                                 "relevance": 9.68513590994337,
                                 "value": "CCLW.family.11127.0",
+                                "fields": {
+                                    "count()": 251
+                                },
                                 "children": [
                                     {
                                         "id": "hitlist:hits",
@@ -662,6 +671,9 @@
                                 "id": "group:string:CCLW.family.9095.0",
                                 "relevance": 9.671909754163924,
                                 "value": "CCLW.family.9095.0",
+                                "fields": {
+                                    "count()": 151
+                                },
                                 "children": [
                                     {
                                         "id": "hitlist:hits",
@@ -1139,6 +1151,9 @@
                                 "id": "group:string:UNFCCC.family.1018.0",
                                 "relevance": 9.560969759511618,
                                 "value": "UNFCCC.family.1018.0",
+                                "fields": {
+                                    "count()": 71
+                                },
                                 "children": [
                                     {
                                         "id": "hitlist:hits",
@@ -1475,6 +1490,9 @@
                                 "id": "group:string:UNFCCC.family.1006.0",
                                 "relevance": 9.289557554521354,
                                 "value": "UNFCCC.family.1006.0",
+                                "fields": {
+                                    "count()": 47
+                                },
                                 "children": [
                                     {
                                         "id": "hitlist:hits",
@@ -1952,6 +1970,9 @@
                                 "id": "group:string:UNFCCC.family.1024.0",
                                 "relevance": 9.289557554521354,
                                 "value": "UNFCCC.family.1024.0",
+                                "fields": {
+                                    "count()": 44
+                                },
                                 "children": [
                                     {
                                         "id": "hitlist:hits",
@@ -2429,6 +2450,9 @@
                                 "id": "group:string:UNFCCC.family.1010.0",
                                 "relevance": 9.24455139928541,
                                 "value": "UNFCCC.family.1010.0",
+                                "fields": {
+                                    "count()": 38
+                                },
                                 "children": [
                                     {
                                         "id": "hitlist:hits",
@@ -2906,6 +2930,9 @@
                                 "id": "group:string:CCLW.family.11106.0",
                                 "relevance": 9.2028711390936,
                                 "value": "CCLW.family.11106.0",
+                                "fields": {
+                                    "count()": 29
+                                },
                                 "children": [
                                     {
                                         "id": "hitlist:hits",
@@ -3383,6 +3410,9 @@
                                 "id": "group:string:CCLW.family.9101.0",
                                 "relevance": 9.182188646184347,
                                 "value": "CCLW.family.9101.0",
+                                "fields": {
+                                    "count()": 24
+                                },
                                 "children": [
                                     {
                                         "id": "hitlist:hits",
@@ -3860,6 +3890,9 @@
                                 "id": "group:string:UNFCCC.family.1060.0",
                                 "relevance": 9.07481177458161,
                                 "value": "UNFCCC.family.1060.0",
+                                "fields": {
+                                    "count()": 21
+                                },
                                 "children": [
                                     {
                                         "id": "hitlist:hits",
