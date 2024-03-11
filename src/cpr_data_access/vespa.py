@@ -122,10 +122,17 @@ def parse_vespa_response(
     response_families = dig(root, "children", 0, "children", 0, "children", default=[])
 
     for family in response_families:
+        total_passage_hits = dig(family, "fields", "count()")
         family_hits: List[Hit] = []
         for hit in dig(family, "children", 0, "children", default=[]):
             family_hits.append(Hit.from_vespa_response(response_hit=hit))
-        families.append(Family(id=family["value"], hits=family_hits))
+        families.append(
+            Family(
+                id=family["value"],
+                hits=family_hits,
+                total_passage_hits=total_passage_hits,
+            )
+        )
 
     # For now, we can't sort our results natively in vespa because sort orders are
     # applied _before_ grouping. We're sorting here instead.
@@ -138,8 +145,10 @@ def parse_vespa_response(
 
     continuation = dig(root, "children", 0, "continuation", "next", default=None)
     total_hits = dig(root, "fields", "totalCount", default=0)
+    total_family_hits = dig(root, "children", 0, "fields", "count()", default=0)
     return SearchResponse(
         total_hits=total_hits,
+        total_family_hits=total_family_hits,
         families=families,
         continuation_token=continuation,
         query_time_ms=None,
