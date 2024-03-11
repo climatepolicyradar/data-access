@@ -257,12 +257,14 @@ class Family(BaseModel):
 
     id: str
     hits: Sequence[Hit]
+    total_passage_hits: int = 0
 
 
 class SearchResponse(BaseModel):
     """Relevant results, and search response metadata"""
 
     total_hits: int
+    total_family_hits: int = 0
     query_time_ms: Optional[int] = None
     total_time_ms: Optional[int] = None
     families: Sequence[Family]
