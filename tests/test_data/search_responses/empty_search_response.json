@@ -19,6 +19,9 @@
                 "relevance": 1.0,
                 "continuation": {
                     "this": ""
+                },
+                "fields": {
+                    "count()": 0
                 }
             }
         ]
