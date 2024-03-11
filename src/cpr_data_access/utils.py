@@ -1,5 +1,6 @@
 import csv
 from pathlib import Path
+from typing import Any, Union
 
 
 def is_sensitive_query(text: str, sensitive_terms: set) -> bool:
@@ -65,3 +66,23 @@ def load_sensitive_query_terms() -> set[str]:
         sensitive_terms = set([row["keyword"].lower().strip() for row in reader])
 
     return sensitive_terms
+
+
+def dig(obj: Union[list, dict], *fields: Any, default: Any = None) -> Any:
+    """
+    An interface for retrieving data from complicated objects
+
+    Behaviour is to return the default if the path is invalid thereby avoiding errors
+    Example: `dig(nested_dict, "parent", "child", "child_items", 1)`
+    """
+    for field in fields:
+        if isinstance(obj, list):
+            if isinstance(field, int) and len(obj) > field:
+                obj = obj[field]
+            else:
+                return default
+        elif isinstance(obj, dict):
+            obj = obj.get(field, default)
+        elif not obj:
+            return default
+    return obj
