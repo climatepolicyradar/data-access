@@ -1,7 +1,7 @@
 from string import Template
 from typing import Optional
 
-from cpr_data_access.models.search import SearchParameters
+from cpr_data_access.models.search import KeywordFilters, SearchParameters
 
 
 def sanitize(user_input: str) -> str:
@@ -121,17 +121,15 @@ class YQLBuilder:
             return f"(document_import_id in({documents}))"
         return None
 
-    def build_keyword_filter(self) -> Optional[str]:
-        """Create the part of the query that adds keyword filters"""
-        keyword_filters = self.params.keyword_filters
-        if keyword_filters:
-            filters = []
-            for field_name, values in keyword_filters.items():
-                for value in values:
-                    filters.append(f'({field_name} contains "{sanitize(value)}")')
-            if filters:
-                return f"({' or '.join(filters)})"
-        return None
+    def _inclusive_keyword_filters(
+        self, keyword_filters: KeywordFilters, field_name: str
+    ):
+        values = getattr(keyword_filters, field_name)
+        filters = []
+        for value in values:
+            filters.append(f'({field_name} contains "{sanitize(value)}")')
+        if filters:
+            return f"({' or '.join(filters)})"
 
     def build_year_start_filter(self) -> Optional[str]:
         """Create the part of the query that filters on a year range"""
@@ -155,7 +153,11 @@ class YQLBuilder:
         filters.append(self.build_search_term())
         filters.append(self.build_family_filter())
         filters.append(self.build_document_filter())
-        filters.append(self.build_keyword_filter())
+        if kf := self.params.keyword_filters:
+            filters.append(self._inclusive_keyword_filters(kf, "family_geography"))
+            filters.append(self._inclusive_keyword_filters(kf, "family_category"))
+            filters.append(self._inclusive_keyword_filters(kf, "document_languages"))
+            filters.append(self._inclusive_keyword_filters(kf, "family_source"))
         filters.append(self.build_year_start_filter())
         filters.append(self.build_year_end_filter())
         return " and ".join([f for f in filters if f])  # Remove empty
@@ -194,7 +196,9 @@ if __name__ == "__main__":
         exact_match=False,
         limit=10,
         max_hits_per_family=10,
-        keyword_filters={"document_languages": "value", "family_source": "value"},
+        keyword_filters=KeywordFilters(
+            **{"document_languages": "value", "family_source": "value"}
+        ),
         year_range=(2000, 2020),
         continuation_token=None,
     )
