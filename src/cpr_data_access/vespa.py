@@ -14,7 +14,7 @@ from cpr_data_access.models.search import (
 )
 from cpr_data_access.embedding import Embedder
 from cpr_data_access.exceptions import FetchError
-from cpr_data_access.utils import is_sensitive_query, load_sensitive_query_terms
+from cpr_data_access.utils import dig, is_sensitive_query, load_sensitive_query_terms
 from cpr_data_access.yql_builder import YQLBuilder
 
 
@@ -119,15 +119,20 @@ def parse_vespa_response(
     families: List[Family] = []
     root = vespa_response.json["root"]
 
-    response_families = (
-        root.get("children", [{}])[0].get("children", [{}])[0].get("children", [])
-    )
+    response_families = dig(root, "children", 0, "children", 0, "children", default=[])
 
     for family in response_families:
+        total_passage_hits = dig(family, "fields", "count()")
         family_hits: List[Hit] = []
-        for hit in family.get("children", [{}])[0].get("children", []):
+        for hit in dig(family, "children", 0, "children", default=[]):
             family_hits.append(Hit.from_vespa_response(response_hit=hit))
-        families.append(Family(id=family["value"], hits=family_hits))
+        families.append(
+            Family(
+                id=family["value"],
+                hits=family_hits,
+                total_passage_hits=total_passage_hits,
+            )
+        )
 
     # For now, we can't sort our results natively in vespa because sort orders are
     # applied _before_ grouping. We're sorting here instead.
@@ -138,18 +143,14 @@ def parse_vespa_response(
             reverse=request.sort_order == "descending",
         )
 
-    next_family_continuation_token = (
-        root.get("children", [{}])[0].get("continuation", {}).get("next", None)
-    )
-
-    total_hits = (
-        vespa_response.json.get("root", {}).get("fields", {}).get("totalCount", 0)
-    )
-
+    continuation = dig(root, "children", 0, "continuation", "next", default=None)
+    total_hits = dig(root, "fields", "totalCount", default=0)
+    total_family_hits = dig(root, "children", 0, "fields", "count()", default=0)
     return SearchResponse(
         total_hits=total_hits,
+        total_family_hits=total_family_hits,
         families=families,
-        continuation_token=next_family_continuation_token,
+        continuation_token=continuation,
         query_time_ms=None,
         total_time_ms=None,
     )

@@ -44,8 +44,10 @@ class YQLBuilder:
             $CONTINUATION
         all(
             group(family_import_id)
+            output(count())
             max($LIMIT)
             each(
+                output(count())
                 max($MAX_HITS_PER_FAMILY)
                 each(
                     output(

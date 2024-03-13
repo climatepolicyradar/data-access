@@ -19,8 +19,13 @@ def vespa_search(cert_directory: str, request: SearchParameters) -> SearchRespon
 
 @pytest.mark.vespa
 def test_vespa_search_adaptor__works(fake_vespa_credentials):
-    request = SearchParameters(query_string="forest fires")
-    vespa_search(fake_vespa_credentials, request)
+    request = SearchParameters(query_string="the")
+    response = vespa_search(fake_vespa_credentials, request)
+
+    assert len(response.families) == response.total_family_hits == 2
+    assert response.query_time_ms < response.total_time_ms
+    total_passage_count = sum([f.total_passage_hits for f in response.families])
+    assert total_passage_count == response.total_hits
 
 
 @pytest.mark.vespa
