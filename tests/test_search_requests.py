@@ -3,8 +3,9 @@ from unittest.mock import patch
 import pytest
 
 from vespa.exceptions import VespaError
+from pydantic import ValidationError
 
-from cpr_data_access.models.search import SearchParameters
+from cpr_data_access.models.search import KeywordFilters, SearchParameters
 from cpr_data_access.vespa import build_vespa_request_body, VespaErrorDetails
 from cpr_data_access.yql_builder import YQLBuilder, sanitize
 from cpr_data_access.exceptions import QueryError
@@ -137,16 +138,18 @@ def test_whether_an_invalid_sort_order_raises_a_queryerror():
     ["family_geography", "family_category", "document_languages", "family_source"],
 )
 def test_whether_valid_filter_fields_are_accepted(field):
-    params = SearchParameters(query_string="test", keyword_filters={field: "value"})
+    keyword_filters = KeywordFilters(**{field: ["value"]})
+    params = SearchParameters(query_string="test", keyword_filters=keyword_filters)
     assert isinstance(params, SearchParameters)
 
 
 def test_whether_an_invalid_filter_fields_raises_a_valueerror():
-    with pytest.raises(QueryError) as excinfo:
+    with pytest.raises(ValidationError) as excinfo:
         SearchParameters(
-            query_string="test", keyword_filters={"invalid_field": "value"}
+            query_string="test",
+            keyword_filters=KeywordFilters(**{"invalid_field": ["value"]}),
         )
-    assert "keyword_filters must be a subset of" in str(excinfo.value)
+    assert "Extra inputs are not permitted" in str(excinfo.value)
 
 
 @pytest.mark.parametrize(
@@ -169,18 +172,20 @@ def test_whether_malicious_query_strings_are_sanitized(input_string, expected):
 
 
 def test_whether_single_filter_values_and_lists_of_filter_values_appear_in_yql():
+    keyword_filters = {
+        "family_geography": ["SWE"],
+        "family_category": ["Executive"],
+        "document_languages": ["English", "Swedish"],
+        "family_source": ["CCLW"],
+    }
     params = SearchParameters(
         query_string="test",
-        keyword_filters={
-            "family_geography": "SWE",
-            "family_category": "Executive",
-            "document_languages": ["English", "Swedish"],
-            "family_source": "CCLW",
-        },
+        keyword_filters=KeywordFilters(**keyword_filters),
     )
     yql = YQLBuilder(params).to_str()
-    assert isinstance(params.keyword_filters, dict)
-    for key, values in params.keyword_filters.items():
+    assert isinstance(params.keyword_filters, KeywordFilters)
+
+    for key, values in keyword_filters.items():
         for value in values:
             assert key in yql
             assert value in yql
@@ -266,7 +271,7 @@ def test_yql_builder_build_where_clause():
     assert "climate" in where_clause
 
     params = SearchParameters(
-        query_string="climate", keyword_filters={"family_geography": "SWE"}
+        query_string="climate", keyword_filters={"family_geography": ["SWE"]}
     )
     where_clause = YQLBuilder(params).build_where_clause()
     assert "SWE" in where_clause

@@ -1,8 +1,8 @@
 from datetime import datetime
 import re
-from typing import List, Mapping, Optional, Sequence, Union
+from typing import List, Optional, Sequence
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from cpr_data_access.exceptions import QueryError
 
@@ -24,6 +24,19 @@ _ID_ELEMENT = r"[a-zA-Z0-9]+([-_]?[a-zA-Z0-9]+)*"
 ID_PATTERN = re.compile(rf"{_ID_ELEMENT}\.{_ID_ELEMENT}\.{_ID_ELEMENT}\.{_ID_ELEMENT}")
 
 
+class KeywordFilters(BaseModel):
+    """Filterable fields in a search request"""
+
+    family_geography: Sequence[str] = []
+    family_category: Sequence[str] = []
+    document_languages: Sequence[str] = []
+    family_source: Sequence[str] = []
+
+    model_config: ConfigDict = {
+        "extra": "forbid",
+    }
+
+
 class SearchParameters(BaseModel):
     """Parameters for a search request"""
 
@@ -35,7 +48,7 @@ class SearchParameters(BaseModel):
     family_ids: Optional[Sequence[str]] = None
     document_ids: Optional[Sequence[str]] = None
 
-    keyword_filters: Optional[Mapping[str, Union[str, Sequence[str]]]] = None
+    keyword_filters: Optional[KeywordFilters] = None
     year_range: Optional[tuple[Optional[int], Optional[int]]] = None
 
     sort_by: Optional[str] = None
@@ -99,31 +112,6 @@ class SearchParameters(BaseModel):
                 f"{sort_orders}"
             )
         return sort_order
-
-    @field_validator("keyword_filters")
-    def keyword_filters_must_be_valid(cls, keyword_filters):
-        """Validate that the keyword filters are valid."""
-        if keyword_filters is not None:
-            for field_key, values in keyword_filters.items():
-                if field_key not in filter_fields.values():
-                    raise QueryError(
-                        f"Invalid keyword filter: {field_key}. keyword_filters must be "
-                        f"a subset of: {list(filter_fields.values())}"
-                    )
-
-                # convert single values to lists to make things easier later on
-                if not isinstance(values, list):
-                    keyword_filters[field_key] = [values]
-
-                for value in keyword_filters[field_key]:
-                    if not isinstance(value, str):
-                        raise QueryError(
-                            "Invalid keyword filter value: "
-                            f"{{{field_key}: {value}}}. "
-                            "Keyword filter values must be strings."
-                        )
-
-        return keyword_filters
 
 
 class Hit(BaseModel):
