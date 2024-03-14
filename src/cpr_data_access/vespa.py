@@ -80,6 +80,7 @@ def build_vespa_request_body(
         "yql": yql,
         "timeout": "20",
         "ranking.softtimeout.factor": "0.7",
+        "query_string": parameters.query_string,
     }
 
     if parameters.exact_match:
