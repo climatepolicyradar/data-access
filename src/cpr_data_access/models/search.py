@@ -36,6 +36,19 @@ class KeywordFilters(BaseModel):
         "extra": "forbid",
     }
 
+    @field_validator(
+        "family_geography", "family_category", "document_languages", "family_source"
+    )
+    def sanitise_filter_inputs(cls, field):
+        """Remove problematic characters from filter values"""
+        clean_values = []
+        for keyword in field:
+            keyword = keyword.replace('"', "")
+            keyword = keyword.replace("\\", " ")
+            keyword = " ".join(keyword.split())
+            clean_values.append(keyword)
+        return clean_values
+
 
 class SearchParameters(BaseModel):
     """Parameters for a search request"""
