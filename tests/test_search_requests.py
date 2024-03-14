@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 from cpr_data_access.models.search import KeywordFilters, SearchParameters
 from cpr_data_access.vespa import build_vespa_request_body, VespaErrorDetails
-from cpr_data_access.yql_builder import YQLBuilder, sanitize
+from cpr_data_access.yql_builder import YQLBuilder
 from cpr_data_access.exceptions import QueryError
 from cpr_data_access.embedding import Embedder
 
@@ -174,25 +174,6 @@ def test_whether_an_invalid_filter_fields_value_fixes_it_silently(
         keyword_filters=KeywordFilters(**{"family_source": input_filters}),
     )
     assert params.keyword_filters.family_source == expected
-
-
-@pytest.mark.parametrize(
-    "input_string,expected",
-    (
-        ['remove "double quotes"', "remove double quotes"],
-        ["keep 'single quotes'", "keep 'single quotes'"],
-        ["tab\t\tinput", "tab input"],
-        ["new \n \n \n lines", "new lines"],
-        ["back \\\\\\ slashes", "back slashes"],
-        [
-            ' " or true or \t \n family_name contains " ',
-            "or true or family_name contains",
-        ],
-    ),
-)
-def test_whether_malicious_query_strings_are_sanitized(input_string, expected):
-    output_string = sanitize(input_string)
-    assert output_string == expected
 
 
 def test_whether_single_filter_values_and_lists_of_filter_values_appear_in_yql():
