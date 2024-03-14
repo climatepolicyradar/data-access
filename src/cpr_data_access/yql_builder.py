@@ -65,38 +65,32 @@ class YQLBuilder:
 
     def build_search_term(self) -> str:
         """Create the part of the query that matches a users search text"""
-        query = sanitize(self.params.query_string)
         if self.params.exact_match:
-            return Template(
-                """
+            return """
                 (
-                    (family_name contains({stem: false}"$QUERY")) or
-                    (family_description contains({stem: false}"$QUERY")) or
-                    (text_block contains ({stem: false}"$QUERY"))
+                    (family_name contains({stem: false}@query_string)) or
+                    (family_description contains({stem: false}@query_string)) or
+                    (text_block contains ({stem: false}@query_string))
                 )
             """
-            ).substitute(QUERY=query)
         elif self.sensitive:
-            return Template(
-                """
+            return """
                 (
                     {"targetHits": 1000} weakAnd(
-                        family_name contains "$QUERY",
-                        family_description contains "$QUERY",
-                        text_block contains "$QUERY"
+                        family_name contains(@query_string),
+                        family_description contains(@query_string),
+                        text_block contains(@query_string)
                     )
                 )
             """
-            ).substitute(QUERY=query)
         else:
-            return Template(
-                """
+            return """
                 (
                     (
                     {"targetHits": 1000} weakAnd(
-                        family_name contains "$QUERY",
-                        family_description contains "$QUERY",
-                        text_block contains "$QUERY"
+                        family_name contains(@query_string),
+                        family_description contains(@query_string),
+                        text_block contains(@query_string)
                     )
                     ) or (
                         [{"targetNumHits": 1000}]
@@ -107,7 +101,6 @@ class YQLBuilder:
                     )
                 )
             """
-            ).substitute(QUERY=query)
 
     def build_family_filter(self) -> Optional[str]:
         """Create the part of the query that limits to specific families"""

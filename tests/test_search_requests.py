@@ -266,9 +266,12 @@ def test_filter_profiles_return_different_queries():
 
 
 def test_yql_builder_build_where_clause():
-    params = SearchParameters(query_string="climate")
+    query_string = "climate"
+    params = SearchParameters(query_string=query_string)
     where_clause = YQLBuilder(params).build_where_clause()
-    assert "climate" in where_clause
+    # raw user input should NOT be in the where clause
+    # We send this in the body so its cleaned by vespa
+    assert query_string not in where_clause
 
     params = SearchParameters(
         query_string="climate", keyword_filters={"family_geography": ["SWE"]}
