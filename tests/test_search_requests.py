@@ -153,6 +153,30 @@ def test_whether_an_invalid_filter_fields_raises_a_valueerror():
 
 
 @pytest.mark.parametrize(
+    "input_filters,expected",
+    (
+        (['remove "double quotes"'], ["remove double quotes"]),
+        (["keep 'single quotes'"], ["keep 'single quotes'"]),
+        (["tab\t\tinput"], ["tab input"]),
+        (["new \n \n \n lines"], ["new lines"]),
+        (["back \\\\\\ slashes"], ["back slashes"]),
+        (
+            [' " or true or \t \n family_name contains " '],
+            ["or true or family_name contains"],
+        ),
+    ),
+)
+def test_whether_an_invalid_filter_fields_value_fixes_it_silently(
+    input_filters, expected
+):
+    params = SearchParameters(
+        query_string="test",
+        keyword_filters=KeywordFilters(**{"family_source": input_filters}),
+    )
+    assert params.keyword_filters.family_source == expected
+
+
+@pytest.mark.parametrize(
     "input_string,expected",
     (
         ['remove "double quotes"', "remove double quotes"],
