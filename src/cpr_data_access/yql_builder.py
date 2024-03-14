@@ -4,34 +4,6 @@ from typing import Optional
 from cpr_data_access.models.search import KeywordFilters, SearchParameters
 
 
-def sanitize(user_input: str) -> str:
-    """
-    Sanitize user input strings
-
-    This is intended to limit possible YQL injection attacks. The query endpoint is not
-    as vulnerable as sql as updates/inserts/deletes in vespa are handled by a seperate
-    endpoint. The main purpose here is to mitigate vespas "INVALID_QUERY_PARAMETER"
-    errors. See vespa codebase for context on full list of errors:
-    https://github.com/vespa-engine/vespa/blob/dd94d619668210d09792597cbd218994058e923e
-    /container-core/src/main/java/com/yahoo/container/protect/Error.java#L15C2-L15C2
-
-    :param str user_input: a potentially hazardous user input string
-    :return str: sanitized user input string
-    """
-    # in the generated YQL string, user inputs are wrapped in double quotes. We should
-    # therefore remove any double quotes from the user inputs to avoid early terminations,
-    # which could allow for subsequent injections
-    user_input = user_input.replace('"', "")
-
-    # remove backslashes, as these are used by vespa as an escape character
-    user_input = user_input.replace("\\", " ")
-
-    # remove any extra whitespace from the user input string
-    user_input = " ".join(user_input.split())
-
-    return user_input
-
-
 class YQLBuilder:
     """Used to assemble yql queries"""
 
@@ -122,7 +94,7 @@ class YQLBuilder:
         values = getattr(keyword_filters, field_name)
         filters = []
         for value in values:
-            filters.append(f'({field_name} contains "{sanitize(value)}")')
+            filters.append(f'({field_name} contains "{value}")')
         if filters:
             return f"({' or '.join(filters)})"
 
