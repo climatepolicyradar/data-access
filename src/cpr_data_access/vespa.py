@@ -86,15 +86,11 @@ def build_vespa_request_body(
         vespa_request_body["ranking.profile"] = "exact"
     elif sensitive:
         vespa_request_body["ranking.profile"] = "hybrid_no_closeness"
-        embedding = embedder.embed(
-            parameters.query_string, normalize=False, show_progress_bar=False
-        )
     else:
         vespa_request_body["ranking.profile"] = "hybrid"
-        embedding = embedder.embed(
+        vespa_request_body["input.query(query_embedding)"] = embedder.embed(
             parameters.query_string, normalize=False, show_progress_bar=False
         )
-        vespa_request_body["input.query(query_embedding)"] = embedding
     return vespa_request_body
 
 
