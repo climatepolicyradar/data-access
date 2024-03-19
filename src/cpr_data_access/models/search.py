@@ -67,7 +67,21 @@ class SearchParameters(BaseModel):
     sort_by: Optional[str] = None
     sort_order: str = "descending"
 
-    continuation_token: Optional[str] = None
+    continuation_tokens: Optional[Sequence[str]] = None
+
+    @field_validator("continuation_tokens")
+    def continuation_tokens_must_be_upper_strings(cls, continuation_tokens):
+        """Validate continuation_tokens match the expected format"""
+        for token in continuation_tokens:
+            if token == "":
+                continue
+            if not token.isalpha():
+                raise QueryError(f"Expected continuation tokens to be letters: {token}")
+            if not token.isupper():
+                raise QueryError(
+                    f"Expected continuation tokens to be uppercase: {token}"
+                )
+        return continuation_tokens
 
     @field_validator("query_string")
     def query_string_must_not_be_empty(cls, query_string):

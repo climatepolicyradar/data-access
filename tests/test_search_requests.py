@@ -176,6 +176,39 @@ def test_whether_an_invalid_filter_fields_value_fixes_it_silently(
     assert params.keyword_filters.family_source == expected
 
 
+@pytest.mark.parametrize(
+    "tokens, error",
+    (
+        (["", None], ValidationError),
+        ([123], ValidationError),
+        (["123"], QueryError),
+        (["!@$"], QueryError),
+        (["lower"], QueryError),
+        (["", "lower"], QueryError),
+    ),
+)
+def test_continuation_tokens__bad(tokens, error):
+    with pytest.raises(error):
+        SearchParameters(query_string="test", continuation_tokens=tokens)
+
+
+@pytest.mark.parametrize(
+    "tokens",
+    (
+        ["ABCCCABCABCABC"],
+        ["", "ABCCC"],
+        ["", "ABCCC", "ABBBDDDC"],
+        ["ABCC", "ABCCCCCC"],
+        ["ABCC", "ABCCCCCC", "ABBBBBDDC"],
+    ),
+)
+def test_continuation_tokens__good(tokens):
+    try:
+        SearchParameters(query_string="test", continuation_tokens=tokens)
+    except Exception as e:
+        pytest.fail(f"{e.__class__.__name__}: {e}")
+
+
 def test_whether_single_filter_values_and_lists_of_filter_values_appear_in_yql():
     keyword_filters = {
         "family_geography": ["SWE"],
