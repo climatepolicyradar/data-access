@@ -125,3 +125,30 @@ def test_vespa_search_adaptor__sensitive(fake_vespa_credentials):
 
     # Without being too prescriptive, we'd expect something back for this
     assert len(response.families) > 0
+
+
+@pytest.mark.parametrize(
+    "family_limit, max_hits_per_family",
+    [
+        (1, 1),
+        (1, 100),
+        (2, 1),
+        (2, 5),
+        (3, 1000),
+    ],
+)
+@pytest.mark.vespa
+def test_vespa_search_adaptor__limits(
+    fake_vespa_credentials, family_limit, max_hits_per_family
+):
+    request = SearchParameters(
+        query_string="the",
+        family_ids=[],
+        limit=family_limit,
+        max_hits_per_family=max_hits_per_family,
+    )
+    response = vespa_search(fake_vespa_credentials, request)
+
+    assert len(response.families) == family_limit
+    for fam in response.families:
+        assert len(fam.hits) <= max_hits_per_family
