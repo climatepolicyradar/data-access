@@ -273,6 +273,7 @@ class Family(BaseModel):
     id: str
     hits: Sequence[Hit]
     total_passage_hits: int = 0
+    continuation_token: Optional[str] = None
 
 
 class SearchResponse(BaseModel):
@@ -284,3 +285,4 @@ class SearchResponse(BaseModel):
     total_time_ms: Optional[int] = None
     families: Sequence[Family]
     continuation_token: Optional[str] = None
+    this_continuation_token: Optional[str] = None
