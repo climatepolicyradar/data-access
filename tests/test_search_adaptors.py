@@ -152,3 +152,135 @@ def test_vespa_search_adaptor__limits(
     assert len(response.families) == family_limit
     for fam in response.families:
         assert len(fam.hits) <= max_hits_per_family
+
+
+@pytest.mark.vespa
+def test_vespa_search_adaptor__continuation_tokens__families(fake_vespa_credentials):
+    query_string = "the"
+    limit = 2
+    max_hits_per_family = 3
+
+    # Make an initial request to get continuation tokens and results
+    request = SearchParameters(
+        query_string=query_string,
+        limit=limit,
+        max_hits_per_family=max_hits_per_family,
+    )
+    response = vespa_search(fake_vespa_credentials, request)
+    first_family_ids = [f.id for f in response.families]
+    family_continuation = response.continuation_token
+    assert len(response.families) == 2
+    assert response.total_family_hits == 3
+
+    # Family increment
+    request = SearchParameters(
+        query_string=query_string,
+        limit=limit,
+        max_hits_per_family=max_hits_per_family,
+        continuation_tokens=[family_continuation],
+    )
+    response = vespa_search(fake_vespa_credentials, request)
+    assert len(response.families) == 1
+    assert response.total_family_hits == 3
+
+    # Family should have changed
+    second_family_ids = [f.id for f in response.families]
+    assert sorted(first_family_ids) != sorted(second_family_ids)
+    # As this is the end of the results we also expect no more tokens
+    assert response.continuation_token is None
+
+
+@pytest.mark.vespa
+def test_vespa_search_adaptor__continuation_tokens__passages(fake_vespa_credentials):
+    query_string = "the"
+    limit = 1
+    max_hits_per_family = 10
+
+    # Make an initial request to get continuation tokens and results for comparison
+    request = SearchParameters(
+        query_string=query_string,
+        limit=limit,
+        max_hits_per_family=max_hits_per_family,
+    )
+    initial_response = vespa_search(fake_vespa_credentials, request)
+
+    # Collect family & hits for comparison later
+    initial_family_id = initial_response.families[0].id
+    initial_passages = [h.text_block_id for h in initial_response.families[0].hits]
+
+    this_continuation = initial_response.this_continuation_token
+    passage_continuation = initial_response.families[0].continuation_token
+
+    # Passage Increment
+    request = SearchParameters(
+        query_string=query_string,
+        limit=limit,
+        max_hits_per_family=max_hits_per_family,
+        continuation_tokens=[this_continuation, passage_continuation],
+    )
+    response = vespa_search(fake_vespa_credentials, request)
+
+    # Family should not have changed
+    assert response.families[0].id == initial_family_id
+
+    # But Passages SHOULD have changed
+    new_passages = sorted([h.text_block_id for h in response.families[0].hits])
+    assert sorted(new_passages) != sorted(initial_passages)
+
+
+@pytest.mark.vespa
+def test_vespa_search_adaptor__continuation_tokens__families_and_passages(
+    fake_vespa_credentials,
+):
+    query_string = "the"
+    limit = 1
+    max_hits_per_family = 30
+
+    # Make an initial request to get continuation tokens and results for comparison
+    request_one = SearchParameters(
+        query_string=query_string,
+        limit=limit,
+        max_hits_per_family=max_hits_per_family,
+    )
+    response_one = vespa_search(fake_vespa_credentials, request_one)
+
+    # Increment Families
+    request_two = SearchParameters(
+        query_string=query_string,
+        limit=limit,
+        max_hits_per_family=max_hits_per_family,
+        continuation_tokens=[response_one.continuation_token],
+    )
+    response_two = vespa_search(fake_vespa_credentials, request_two)
+
+    # Then Increment Passages Twice
+
+    request_three = SearchParameters(
+        query_string=query_string,
+        limit=limit,
+        max_hits_per_family=max_hits_per_family,
+        continuation_tokens=[
+            response_two.this_continuation_token,
+            response_two.families[0].continuation_token,
+        ],
+    )
+    response_three = vespa_search(fake_vespa_credentials, request_three)
+
+    request_four = SearchParameters(
+        query_string=query_string,
+        limit=limit,
+        max_hits_per_family=max_hits_per_family,
+        continuation_tokens=[
+            response_two.this_continuation_token,
+            response_three.families[0].continuation_token,
+        ],
+    )
+    response_four = vespa_search(fake_vespa_credentials, request_four)
+
+    # All of these should have different passages from each other
+    assert (
+        sorted([h.text_block_id for h in response_one.families[0].hits])
+        != sorted([h.text_block_id for h in response_two.families[0].hits])
+        != sorted([h.text_block_id for h in response_three.families[0].hits])
+        != sorted([h.text_block_id for h in response_four.families[0].hits])
+    )
