@@ -89,6 +89,8 @@ response = adaptor.search(request)
 
 The above example will return a `SearchResponse` object, which lists some basic information about the request, and the results, arranged as a list of Families, which each contain relevant Documents and/or Passages.
 
+### Sorting
+
 By default, results are sorted by relevance, but can be sorted by date, or name, eg
 
 ```python
@@ -99,6 +101,8 @@ request = SearchParameters(
 )
 ```
 
+### Filters
+
 Matching documents can also be filtered by keyword field, and by publication date
 
 ```python
@@ -106,11 +110,46 @@ request = SearchParameters(
     query_string="forest fires",
     keyword_filters={
         "language": ["English", "French"],
-        "category": "Executive",
+        "category": ["Executive"],
     },
     year_range=(2010, 2020)
 )
 ```
+
+### Continuing results
+
+The response objects include continuation tokens, which can be used to get more results.
+
+For the next selection of families:
+
+```python
+response = adaptor.search(SearchParameters(query_string="forest fires"))
+
+follow_up_request = SearchParameters(
+    query_string="forest fires"
+    continuation_tokens=[response.continuation_token],
+
+)
+follow_up_response = adaptor.search(follow_up_request)
+```
+
+It is also possible to get more hits within families by using the continuation token on the family object, rather than at the responses root
+
+Note that `this_continuation_token` is used to mark the current continuation of the families, so getting more passages for a family after getting more families would look like this:
+
+```python
+follow_up_response = adaptor.search(follow_up_request)
+
+this_token = follow_up_response.this_continuation_token
+passage_token = follow_up_response.families[0].continuation_token
+
+follow_up_request = SearchParameters(
+    query_string="forest fires"
+    continuation_tokens=[this_token, passage_token],
+)
+```
+
+## Get a specific document
 
 Users can also fetch single documents directly from Vespa, by document ID
 
