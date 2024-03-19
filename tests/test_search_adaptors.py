@@ -24,7 +24,7 @@ def test_vespa_search_adaptor__works(fake_vespa_credentials):
     request = SearchParameters(query_string="the")
     response = vespa_search(fake_vespa_credentials, request)
 
-    assert len(response.families) == response.total_family_hits == 2
+    assert len(response.families) == response.total_family_hits == 3
     assert response.query_time_ms < response.total_time_ms
     total_passage_count = sum([f.total_passage_hits for f in response.families])
     assert total_passage_count == response.total_hits
@@ -37,6 +37,7 @@ def test_vespa_search_adaptor__works(fake_vespa_credentials):
         ["CCLW.family.i00000003.n0000"],
         ["CCLW.family.10014.0"],
         ["CCLW.family.i00000003.n0000", "CCLW.family.10014.0"],
+        ["CCLW.family.4934.0"],
     ],
 )
 def test_vespa_search_adaptor__family_ids(fake_vespa_credentials, family_ids):
@@ -53,6 +54,7 @@ def test_vespa_search_adaptor__family_ids(fake_vespa_credentials, family_ids):
         ["CCLW.document.i00000004.n0000"],
         ["CCLW.executive.10014.4470"],
         ["CCLW.document.i00000004.n0000", "CCLW.executive.10014.4470"],
+        ["CCLW.executive.4934.1571"],
     ],
 )
 def test_vespa_search_adaptor__document_ids(fake_vespa_credentials, document_ids):
