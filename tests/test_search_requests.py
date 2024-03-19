@@ -195,6 +195,7 @@ def test_continuation_tokens__bad(tokens, error):
 @pytest.mark.parametrize(
     "tokens",
     (
+        None,
         ["ABCCCABCABCABC"],
         ["", "ABCCC"],
         ["", "ABCCC", "ABBBDDDC"],

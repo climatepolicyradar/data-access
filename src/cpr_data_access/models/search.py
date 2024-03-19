@@ -72,6 +72,9 @@ class SearchParameters(BaseModel):
     @field_validator("continuation_tokens")
     def continuation_tokens_must_be_upper_strings(cls, continuation_tokens):
         """Validate continuation_tokens match the expected format"""
+        if not continuation_tokens:
+            return continuation_tokens
+
         for token in continuation_tokens:
             if token == "":
                 continue
