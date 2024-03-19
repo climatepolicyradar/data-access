@@ -130,10 +130,10 @@ class YQLBuilder:
         return " and ".join([f for f in filters if f])  # Remove empty
 
     def build_continuation(self) -> str:
-        """Create the part of the query that adds a continuation token"""
-        continuation = self.params.continuation_token
-        if continuation:
-            return f"{{ 'continuations':['{continuation}'] }}"
+        """Create the part of the query that adds continuation tokens"""
+        if self.params.continuation_tokens:
+            continuations = ", ".join(f"'{c}'" for c in self.params.continuation_tokens)
+            return f"{{ 'continuations': [{continuations}] }}"
         else:
             return ""
 
@@ -167,7 +167,7 @@ if __name__ == "__main__":
             **{"document_languages": "value", "family_source": "value"}
         ),
         year_range=(2000, 2020),
-        continuation_token=None,
+        continuation_tokens=None,
     )
 
     yql_new = YQLBuilder(
