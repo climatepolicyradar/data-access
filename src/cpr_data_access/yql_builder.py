@@ -37,6 +37,8 @@ class YQLBuilder:
 
     def build_search_term(self) -> str:
         """Create the part of the query that matches a users search text"""
+        if self.params.all_results:
+            return "( true )"
         if self.params.exact_match:
             return """
                 (

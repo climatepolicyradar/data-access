@@ -96,7 +96,16 @@ def test_filter_profiles_return_different_queries():
     ).to_str()
     assert "nearestNeighbor" not in sensitive_yql
 
-    queries = [exact_yql, hybrid_yql, sensitive_yql]
+    all_yql = YQLBuilder(
+        params=SearchParameters(
+            query_string="test query string", year_range=(2000, 2024), all_results=True
+        )
+    ).to_str()
+    assert "true" in all_yql
+    assert "2024" in all_yql
+    assert "test query string" not in all_yql
+
+    queries = [exact_yql, hybrid_yql, sensitive_yql, all_yql]
     assert len(queries) == len(set(queries))
 
 
