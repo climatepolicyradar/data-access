@@ -2,7 +2,7 @@ from datetime import datetime
 import re
 from typing import List, Optional, Sequence
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 from cpr_data_access.exceptions import QueryError
 
@@ -55,6 +55,7 @@ class SearchParameters(BaseModel):
 
     query_string: str
     exact_match: bool = False
+    all_results: bool = False
     limit: int = 100
     max_hits_per_family: int = 10
 
@@ -68,6 +69,13 @@ class SearchParameters(BaseModel):
     sort_order: str = "descending"
 
     continuation_tokens: Optional[Sequence[str]] = None
+
+    @model_validator(mode="after")
+    def validate(self):
+        """Validate against mutually exclusive fields"""
+        if self.exact_match and self.all_results:
+            raise QueryError("`exact_match` and `all_results` are mutually exclusive")
+        return self
 
     @field_validator("continuation_tokens")
     def continuation_tokens_must_be_upper_strings(cls, continuation_tokens):
@@ -86,12 +94,14 @@ class SearchParameters(BaseModel):
                 )
         return continuation_tokens
 
-    @field_validator("query_string")
-    def query_string_must_not_be_empty(cls, query_string):
+    @model_validator(mode="after")
+    def query_string_must_not_be_empty(self):
         """Validate that the query string is not empty."""
-        if query_string == "":
+        if self.all_results:
+            return self
+        if self.query_string == "":
             raise QueryError("query_string must not be empty")
-        return query_string
+        return self
 
     @field_validator("family_ids", "document_ids")
     def ids_must_fit_pattern(cls, ids):

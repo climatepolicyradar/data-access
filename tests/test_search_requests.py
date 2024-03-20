@@ -36,6 +36,26 @@ def test_whether_an_empty_query_string_raises_a_queryerror():
         SearchParameters(query_string="")
     assert "query_string must not be empty" in str(excinfo.value)
 
+    # This rule does not apply to `all_result` requests:
+    try:
+        SearchParameters(query_string="", all_results=True)
+    except Exception as e:
+        pytest.fail(f"{e.__class__.__name__}: {e}")
+
+
+def test_wether_combining_all_results_and_exact_match_raises_error():
+    q = "Search"
+    with pytest.raises(QueryError) as excinfo:
+        SearchParameters(query_string=q, exact_match=True, all_results=True)
+    assert "" in str(excinfo.value)
+
+    # They should be fine independently:
+    try:
+        SearchParameters(query_string=q, all_results=True)
+        SearchParameters(query_string=q, exact_match=True)
+    except Exception as e:
+        pytest.fail(f"{e.__class__.__name__}: {e}")
+
 
 @pytest.mark.parametrize("year_range", [(2000, 2020), (2000, None), (None, 2020)])
 def test_whether_valid_year_ranges_are_accepted(year_range):
