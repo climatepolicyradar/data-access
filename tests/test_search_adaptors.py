@@ -97,6 +97,22 @@ def test_vespa_search_adaptor__hybrid(fake_vespa_credentials):
 
 
 @pytest.mark.vespa
+def test_vespa_search_adaptor__all(fake_vespa_credentials):
+    request = SearchParameters(query_string="", all_results=True)
+    response = vespa_search(fake_vespa_credentials, request)
+    assert len(response.families) == response.total_family_hits
+
+    # Filtering should still work
+    family_id = "CCLW.family.i00000003.n0000"
+    request = SearchParameters(
+        query_string="", all_results=True, family_ids=[family_id]
+    )
+    response = vespa_search(fake_vespa_credentials, request)
+    assert len(response.families) == 1
+    assert response.families[0].id == family_id
+
+
+@pytest.mark.vespa
 def test_vespa_search_adaptor__exact(fake_vespa_credentials):
     query_string = "Environmental Strategy for 2014-2023"
     request = SearchParameters(query_string=query_string, exact_match=True)

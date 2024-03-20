@@ -83,7 +83,9 @@ def build_vespa_request_body(
         "query_string": parameters.query_string,
     }
 
-    if parameters.exact_match:
+    if parameters.all_results:
+        pass
+    elif parameters.exact_match:
         vespa_request_body["ranking.profile"] = "exact"
     elif sensitive:
         vespa_request_body["ranking.profile"] = "hybrid_no_closeness"
