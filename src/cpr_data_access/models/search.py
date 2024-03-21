@@ -53,7 +53,7 @@ class KeywordFilters(BaseModel):
 class SearchParameters(BaseModel):
     """Parameters for a search request"""
 
-    query_string: str
+    query_string: Optional[str] = None
     exact_match: bool = False
     all_results: bool = False
     limit: int = 100
@@ -99,7 +99,7 @@ class SearchParameters(BaseModel):
         """Validate that the query string is not empty."""
         if self.all_results:
             return self
-        if self.query_string == "":
+        if not self.query_string:
             raise QueryError("query_string must not be empty")
         return self
 
