@@ -148,7 +148,6 @@ request = SearchParameters(
 Or to ignore the query string and search the whole database instead:
 ```python
 request = SearchParameters(
-    all_results=True,
     year_range=(2020, 2024),
     sort_by="date",
     sort_order="descending",
