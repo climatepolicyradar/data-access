@@ -97,10 +97,8 @@ class SearchParameters(BaseModel):
     @model_validator(mode="after")
     def query_string_must_not_be_empty(self):
         """Validate that the query string is not empty."""
-        if self.all_results:
-            return self
         if not self.query_string:
-            raise QueryError("query_string must not be empty")
+            self.all_results = True
         return self
 
     @field_validator("family_ids", "document_ids")

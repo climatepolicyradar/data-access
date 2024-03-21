@@ -37,10 +37,9 @@ def test_build_vespa_request_body__all():
     assert not body.get("ranking.profile")
 
 
-def test_whether_an_empty_query_string_raises_a_queryerror():
-    with pytest.raises(QueryError) as excinfo:
-        SearchParameters(query_string="")
-    assert "query_string must not be empty" in str(excinfo.value)
+def test_whether_an_empty_query_string_does_all_result_search():
+    params = SearchParameters(query_string="")
+    assert params.all_results
 
     # This rule does not apply to `all_result` requests:
     try:
