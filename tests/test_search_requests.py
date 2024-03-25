@@ -4,7 +4,12 @@ import pytest
 
 from pydantic import ValidationError
 
-from cpr_data_access.models.search import KeywordFilters, SearchParameters
+from cpr_data_access.models.search import (
+    KeywordFilters,
+    SearchParameters,
+    sort_orders,
+    sort_fields,
+)
 from cpr_data_access.vespa import build_vespa_request_body
 from cpr_data_access.exceptions import QueryError
 from cpr_data_access.embedding import Embedder
@@ -156,6 +161,15 @@ def test_whether_an_invalid_sort_order_raises_a_queryerror():
     with pytest.raises(QueryError) as excinfo:
         SearchParameters(query_string="test", sort_order="invalid_order")
     assert "sort_order must be one of" in str(excinfo.value)
+
+
+@pytest.mark.parametrize("sort_by", sort_fields.keys())
+@pytest.mark.parametrize("sort_order", sort_orders.keys())
+def test_computed_vespa_sort_fields(sort_by, sort_order):
+    params = SearchParameters(
+        query_string="test", sort_by=sort_by, sort_order=sort_order
+    )
+    assert params.vespa_sort_by and params.vespa_sort_order
 
 
 @pytest.mark.parametrize(
