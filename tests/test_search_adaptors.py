@@ -3,7 +3,11 @@ from unittest.mock import patch
 import pytest
 
 from cpr_data_access.search_adaptors import VespaSearchAdapter
-from cpr_data_access.models.search import SearchParameters, SearchResponse
+from cpr_data_access.models.search import (
+    SearchParameters,
+    SearchResponse,
+    sort_fields,
+)
 
 from conftest import VESPA_TEST_SEARCH_URL
 
@@ -300,3 +304,18 @@ def test_vespa_search_adaptor__continuation_tokens__families_and_passages(
         != sorted([h.text_block_id for h in response_three.families[0].hits])
         != sorted([h.text_block_id for h in response_four.families[0].hits])
     )
+
+
+@pytest.mark.parametrize("sort_by", sort_fields.keys())
+@pytest.mark.vespa
+def test_vespa_search_adapter_sorting(fake_vespa_credentials, sort_by):
+    ascend = vespa_search(
+        fake_vespa_credentials,
+        SearchParameters(query_string="the", sort_by=sort_by, sort_order="ascending"),
+    )
+    descend = vespa_search(
+        fake_vespa_credentials,
+        SearchParameters(query_string="the", sort_by=sort_by, sort_order="descending"),
+    )
+
+    assert ascend != descend

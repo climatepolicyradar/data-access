@@ -1,7 +1,12 @@
 import pytest
 from vespa.exceptions import VespaError
 
-from cpr_data_access.models.search import KeywordFilters, SearchParameters
+from cpr_data_access.models.search import (
+    KeywordFilters,
+    SearchParameters,
+    sort_fields,
+    sort_orders,
+)
 from cpr_data_access.vespa import VespaErrorDetails
 from cpr_data_access.yql_builder import YQLBuilder
 
@@ -43,6 +48,22 @@ def test_whether_year_ranges_appear_in_yql(
         assert include in yql
     for exclude in expected_exclude:
         assert exclude not in yql
+
+
+@pytest.mark.parametrize("sort_by", sort_fields.keys())
+@pytest.mark.parametrize("sort_order", sort_orders.keys())
+def test_sorting_appears_in_yql(sort_by, sort_order):
+    params = SearchParameters(
+        query_string="test", sort_by=sort_by, sort_order=sort_order
+    )
+    assert "order" in YQLBuilder(params).to_str()
+
+
+def test_sorting_does_not_appear_in_yql():
+    params = SearchParameters(query_string="test", sort_order="ascending")
+    assert "order" not in YQLBuilder(params).to_str()
+    params = SearchParameters(query_string="test")
+    assert "order" not in YQLBuilder(params).to_str()
 
 
 def test_vespa_error_details():
