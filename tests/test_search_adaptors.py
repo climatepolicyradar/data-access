@@ -196,6 +196,7 @@ def test_vespa_search_adaptor__continuation_tokens__families(fake_vespa_credenti
         continuation_tokens=[family_continuation],
     )
     response = vespa_search(fake_vespa_credentials, request)
+    prev_family_continuation = response.prev_continuation_token
     assert len(response.families) == 1
     assert response.total_family_hits == 3
 
@@ -204,6 +205,17 @@ def test_vespa_search_adaptor__continuation_tokens__families(fake_vespa_credenti
     assert sorted(first_family_ids) != sorted(second_family_ids)
     # As this is the end of the results we also expect no more tokens
     assert response.continuation_token is None
+
+    # Using prev_continuation_token give initial results
+    request = SearchParameters(
+        query_string=query_string,
+        limit=limit,
+        max_hits_per_family=max_hits_per_family,
+        continuation_tokens=[prev_family_continuation],
+    )
+    response = vespa_search(fake_vespa_credentials, request)
+    prev_family_ids = [f.id for f in response.families]
+    assert prev_family_ids == first_family_ids
 
 
 @pytest.mark.vespa
@@ -235,6 +247,7 @@ def test_vespa_search_adaptor__continuation_tokens__passages(fake_vespa_credenti
         continuation_tokens=[this_continuation, passage_continuation],
     )
     response = vespa_search(fake_vespa_credentials, request)
+    prev_passage_continuation = response.families[0].prev_continuation_token
 
     # Family should not have changed
     assert response.families[0].id == initial_family_id
@@ -242,6 +255,19 @@ def test_vespa_search_adaptor__continuation_tokens__passages(fake_vespa_credenti
     # But Passages SHOULD have changed
     new_passages = sorted([h.text_block_id for h in response.families[0].hits])
     assert sorted(new_passages) != sorted(initial_passages)
+
+    # Previous passage continuation gives initial results
+    request = SearchParameters(
+        query_string=query_string,
+        limit=limit,
+        max_hits_per_family=max_hits_per_family,
+        continuation_tokens=[this_continuation, prev_passage_continuation],
+    )
+    response = vespa_search(fake_vespa_credentials, request)
+    assert response.families[0].id == initial_family_id
+    prev_passages = sorted([h.text_block_id for h in response.families[0].hits])
+    assert sorted(prev_passages) != sorted(new_passages)
+    assert sorted(prev_passages) == sorted(initial_passages)
 
 
 @pytest.mark.vespa

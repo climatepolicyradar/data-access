@@ -125,6 +125,7 @@ def test_whether_continuation_token_is_returned_when_present(
         request=request, vespa_response=valid_vespa_search_response
     )
     assert response.continuation_token
+    assert response.prev_continuation_token
 
 
 def test_whether_valid_get_document_response_is_parsed(valid_get_document_response):
