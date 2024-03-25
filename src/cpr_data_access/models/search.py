@@ -2,11 +2,17 @@ from datetime import datetime
 import re
 from typing import List, Optional, Sequence
 
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    computed_field,
+    ConfigDict,
+    field_validator,
+    model_validator,
+)
 
 from cpr_data_access.exceptions import QueryError
 
-sort_orders = ["ascending", "descending"]
+sort_orders = {"ascending": "+", "descending": "-"}
 
 sort_fields = {
     "date": "family_publication_ts",
@@ -144,12 +150,25 @@ class SearchParameters(BaseModel):
     @field_validator("sort_order")
     def sort_order_must_be_valid(cls, sort_order):
         """Validate that the sort order is valid."""
-        if sort_order not in ["ascending", "descending"]:
+        if sort_order not in sort_orders:
             raise QueryError(
                 f"Invalid sort order: {sort_order}. sort_order must be one of: "
                 f"{sort_orders}"
             )
         return sort_order
+
+    @computed_field
+    def vespa_sort_by(self) -> Optional[str]:
+        """Translates sort by into the format acceptable by vespa"""
+        if self.sort_by:
+            return sort_fields.get(self.sort_by)
+        else:
+            return None
+
+    @computed_field
+    def vespa_sort_order(self) -> Optional[str]:
+        """Translates sort order into the format acceptable by vespa"""
+        return sort_orders.get(self.sort_order)
 
 
 class Hit(BaseModel):

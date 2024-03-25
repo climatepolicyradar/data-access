@@ -10,7 +10,6 @@ from cpr_data_access.models.search import (
     Hit,
     SearchParameters,
     SearchResponse,
-    sort_fields,
 )
 from cpr_data_access.embedding import Embedder
 from cpr_data_access.exceptions import FetchError
@@ -135,15 +134,6 @@ def parse_vespa_response(
                 continuation_token=passages_continuation,
                 prev_continuation_token=prev_passages_continuation,
             )
-        )
-
-    # For now, we can't sort our results natively in vespa because sort orders are
-    # applied _before_ grouping. We're sorting here instead.
-    if request.sort_by is not None:
-        sort_field = sort_fields[request.sort_by]
-        families.sort(
-            key=lambda f: getattr(f.hits[0], sort_field),
-            reverse=request.sort_order == "descending",
         )
 
     next_family_continuation = dig(
