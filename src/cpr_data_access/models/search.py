@@ -304,6 +304,7 @@ class Family(BaseModel):
     hits: Sequence[Hit]
     total_passage_hits: int = 0
     continuation_token: Optional[str] = None
+    prev_continuation_token: Optional[str] = None
 
 
 class SearchResponse(BaseModel):
@@ -316,3 +317,4 @@ class SearchResponse(BaseModel):
     families: Sequence[Family]
     continuation_token: Optional[str] = None
     this_continuation_token: Optional[str] = None
+    prev_continuation_token: Optional[str] = None
