@@ -124,6 +124,7 @@ def parse_vespa_response(
         total_passage_hits = dig(family, "fields", "count()")
         family_hits: List[Hit] = []
         passages_continuation = dig(family, "children", 0, "continuation", "next")
+        prev_passages_continuation = dig(family, "children", 0, "continuation", "prev")
         for hit in dig(family, "children", 0, "children", default=[]):
             family_hits.append(Hit.from_vespa_response(response_hit=hit))
         families.append(
@@ -132,6 +133,7 @@ def parse_vespa_response(
                 hits=family_hits,
                 total_passage_hits=total_passage_hits,
                 continuation_token=passages_continuation,
+                prev_continuation_token=prev_passages_continuation,
             )
         )
 
@@ -147,6 +149,9 @@ def parse_vespa_response(
     next_family_continuation = dig(
         root, "children", 0, "children", 0, "continuation", "next"
     )
+    prev_family_continuation = dig(
+        root, "children", 0, "children", 0, "continuation", "prev"
+    )
     this_family_continuation = dig(root, "children", 0, "continuation", "this")
     total_hits = dig(root, "fields", "totalCount", default=0)
     total_family_hits = dig(root, "children", 0, "fields", "count()", default=0)
@@ -156,6 +161,7 @@ def parse_vespa_response(
         families=families,
         continuation_token=next_family_continuation,
         this_continuation_token=this_family_continuation,
+        prev_continuation_token=prev_family_continuation,
         query_time_ms=None,
         total_time_ms=None,
     )
