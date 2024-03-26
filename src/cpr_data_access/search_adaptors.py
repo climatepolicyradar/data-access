@@ -93,9 +93,7 @@ class VespaSearchAdapter(SearchAdapter):
                 raise e
         query_time_end = time.time()
 
-        response = parse_vespa_response(
-            request=parameters, vespa_response=vespa_response
-        )
+        response = parse_vespa_response(vespa_response=vespa_response)
 
         response.query_time_ms = int((query_time_end - query_time_start) * 1000)
         response.total_time_ms = int((time.time() - total_time_start) * 1000)
