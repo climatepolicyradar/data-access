@@ -72,10 +72,11 @@ class SearchParameters(BaseModel):
     query_string: Optional[str] = None
     exact_match: bool = False
     all_results: bool = False
-    limit: int = 100
+    limit: int = Field(ge=0, default=100)
     max_hits_per_family: int = Field(
         validation_alias=AliasChoices("max_passages_per_doc", "max_hits_per_family"),
         default=10,
+        ge=0,
     )
 
     family_ids: Optional[Sequence[str]] = None
