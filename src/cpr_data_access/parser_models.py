@@ -354,6 +354,12 @@ class BaseParserOutput(BaseModel):
 
         return self
 
+
+class ParserOutput(BaseParserOutput):
+    """Output to a parser with the metadata format used by the CPR backend."""
+
+    document_metadata: BackendDocument
+
     @staticmethod
     def from_flat_json(data: dict):
         """
@@ -361,6 +367,7 @@ class BaseParserOutput(BaseModel):
 
         I.e. metadata.data respresents {"metadata": {"data": {}}}
         """
+
         unflattened = {}
         for key, value in data.items():
             parts = key.split(".")
@@ -368,10 +375,11 @@ class BaseParserOutput(BaseModel):
             for part in parts[:-1]:
                 current = current.setdefault(part, {})
             current[parts[-1]] = value
-        return ParserOutput.model_validate(**unflattened)
 
+        remove_keys = []
+        for key in ["html_data", "pdf_data"]:
+            if all(value is None for value in unflattened[key].values()):
+                remove_keys.append(key)
+        [unflattened.pop(key) for key in remove_keys]
 
-class ParserOutput(BaseParserOutput):
-    """Output to a parser with the metadata format used by the CPR backend."""
-
-    document_metadata: BackendDocument
+        return ParserOutput.model_validate(unflattened)
