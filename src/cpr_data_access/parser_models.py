@@ -368,7 +368,7 @@ class BaseParserOutput(BaseModel):
             for part in parts[:-1]:
                 current = current.setdefault(part, {})
             current[parts[-1]] = value
-        return ParserOutput(**unflattened)
+        return ParserOutput.model_validate(**unflattened)
 
 
 class ParserOutput(BaseParserOutput):
