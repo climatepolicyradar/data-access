@@ -3,19 +3,29 @@ import re
 from typing import List, Optional, Sequence
 
 from pydantic import (
+    AliasChoices,
     BaseModel,
     computed_field,
     ConfigDict,
+    Field,
     field_validator,
     model_validator,
 )
 
+
 from cpr_data_access.exceptions import QueryError
 
-sort_orders = {"ascending": "+", "descending": "-"}
+# Value Lookup Tables
+sort_orders = {
+    "asc": "+",
+    "desc": "-",
+    "ascending": "+",
+    "descending": "-",
+}
 
 sort_fields = {
     "date": "family_publication_ts",
+    "title": "family_name",
     "name": "family_name",
 }
 
@@ -63,7 +73,10 @@ class SearchParameters(BaseModel):
     exact_match: bool = False
     all_results: bool = False
     limit: int = 100
-    max_hits_per_family: int = 10
+    max_hits_per_family: int = Field(
+        validation_alias=AliasChoices("max_passages_per_doc", "max_hits_per_family"),
+        default=10,
+    )
 
     family_ids: Optional[Sequence[str]] = None
     document_ids: Optional[Sequence[str]] = None
@@ -71,7 +84,9 @@ class SearchParameters(BaseModel):
     keyword_filters: Optional[KeywordFilters] = None
     year_range: Optional[tuple[Optional[int], Optional[int]]] = None
 
-    sort_by: Optional[str] = None
+    sort_by: Optional[str] = Field(
+        validation_alias=AliasChoices("sort_field", "sort_by"), default=None
+    )
     sort_order: str = "descending"
 
     continuation_tokens: Optional[Sequence[str]] = None
