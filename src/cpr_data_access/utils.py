@@ -104,8 +104,11 @@ def unflatten_json(data: dict) -> dict:
     return unflattened
 
 
-def remove_key_if_all_vals_none(data: dict, key: str):
-    """Remove a key if all values in the nested dictionary are None."""
-    if all(value is None for value in data[key].values()):
-        data.pop(key)
+def remove_if_all_nested_vals_none(data: dict, key: str):
+    """Remove an item if it's a dict with all values in the nested dictionary are None."""
+    if key not in data:
+        return data
+    if isinstance(data[key], dict):
+        if all(value is None for value in data[key].values()):
+            data.pop(key)
     return data
