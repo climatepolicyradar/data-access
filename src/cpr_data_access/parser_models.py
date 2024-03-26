@@ -5,6 +5,7 @@ from datetime import date
 from enum import Enum
 from typing import List, Optional, Sequence, Tuple, TypeVar, Union
 
+from cpr_data_access.utils import unflatten_json, remove_key_if_all_vals_none
 from langdetect import DetectorFactory, LangDetectException, detect
 from pydantic import BaseModel, AnyHttpUrl, Field, model_validator
 
@@ -362,24 +363,11 @@ class ParserOutput(BaseParserOutput):
 
     @staticmethod
     def from_flat_json(data: dict):
-        """
-        Instantiate a parser output object from flat json.
+        """Instantiate a parser output object from flat json."""
 
-        I.e. metadata.data respresents {"metadata": {"data": {}}}
-        """
+        unflattened = unflatten_json(data)
 
-        unflattened = {}
-        for key, value in data.items():
-            parts = key.split(".")
-            current = unflattened
-            for part in parts[:-1]:
-                current = current.setdefault(part, {})
-            current[parts[-1]] = value
-
-        remove_keys = []
-        for key in ["html_data", "pdf_data"]:
-            if all(value is None for value in unflattened[key].values()):
-                remove_keys.append(key)
-        [unflattened.pop(key) for key in remove_keys]
+        unflattened = remove_key_if_all_vals_none(unflattened, "html_data")
+        unflattened = remove_key_if_all_vals_none(unflattened, "pdf_data")
 
         return ParserOutput.model_validate(unflattened)
