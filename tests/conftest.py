@@ -64,6 +64,13 @@ def parser_output_json_html() -> dict:
 
 
 @pytest.fixture()
+def parser_output_json_flat() -> dict:
+    """A dictionary representation of a parser output that is flat"""
+    with open("tests/test_data/flat_hf_parser_output.json") as f:
+        return json.load(f)
+
+
+@pytest.fixture()
 def backend_document_json() -> dict:
     """A dictionary representation of a backend document"""
     return {

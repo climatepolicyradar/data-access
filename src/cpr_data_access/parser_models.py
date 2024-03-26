@@ -354,6 +354,22 @@ class BaseParserOutput(BaseModel):
 
         return self
 
+    @staticmethod
+    def from_flat_json(data: dict):
+        """
+        Instantiate a parser output object from flat json.
+
+        I.e. metadata.data respresents {"metadata": {"data": {}}}
+        """
+        unflattened = {}
+        for key, value in data.items():
+            parts = key.split(".")
+            current = unflattened
+            for part in parts[:-1]:
+                current = current.setdefault(part, {})
+            current[parts[-1]] = value
+        return ParserOutput(**unflattened)
+
 
 class ParserOutput(BaseParserOutput):
     """Output to a parser with the metadata format used by the CPR backend."""
