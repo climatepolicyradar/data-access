@@ -66,7 +66,7 @@ def parser_output_json_html() -> dict:
 @pytest.fixture()
 def parser_output_json_flat() -> dict:
     """A dictionary representation of a parser output that is flat"""
-    with open("tests/test_data/flat_hf_parser_output.json") as f:
+    with open("tests/test_data/huggingface/flat_hf_parser_output.json") as f:
         return json.load(f)
 
 
