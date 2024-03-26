@@ -96,10 +96,7 @@ def build_vespa_request_body(
     return vespa_request_body
 
 
-def parse_vespa_response(
-    request: SearchParameters,
-    vespa_response: VespaResponse,
-) -> SearchResponse:
+def parse_vespa_response(vespa_response: VespaResponse) -> SearchResponse:
     """
     Parse a vespa response into a SearchResponse object
 
