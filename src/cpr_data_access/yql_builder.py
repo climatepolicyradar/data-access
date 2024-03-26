@@ -18,6 +18,7 @@ class YQLBuilder:
             group(family_import_id)
             output(count())
             max($LIMIT)
+            $SORT
             each(
                 output(count())
                 max($MAX_HITS_PER_FAMILY)
@@ -37,6 +38,8 @@ class YQLBuilder:
 
     def build_search_term(self) -> str:
         """Create the part of the query that matches a users search text"""
+        if self.params.all_results:
+            return "( true )"
         if self.params.exact_match:
             return """
                 (
@@ -141,6 +144,15 @@ class YQLBuilder:
         """Create the part of the query limiting the number of families returned"""
         return self.params.limit
 
+    def build_sort(self) -> str:
+        """Creates the part of the query used for sorting by different fields"""
+        sort_by = self.params.vespa_sort_by
+        sort_order = self.params.vespa_sort_order
+
+        if not sort_by or not sort_order:
+            return ""
+        return f"order({sort_order}max({sort_by}))"
+
     def build_max_hits_per_family(self) -> int:
         """Create the part of the query limiting passages within a family returned"""
         return self.params.max_hits_per_family
@@ -151,6 +163,7 @@ class YQLBuilder:
             WHERE_CLAUSE=self.build_where_clause(),
             CONTINUATION=self.build_continuation(),
             LIMIT=self.build_limit(),
+            SORT=self.build_sort(),
             MAX_HITS_PER_FAMILY=self.build_max_hits_per_family(),
         )
         return " ".join(yql.split())

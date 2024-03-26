@@ -116,6 +116,44 @@ request = SearchParameters(
 )
 ```
 
+### Search within families or documents
+
+A subset of families or documents can be retrieved for search using their ids
+```python
+request = SearchParameters(
+    query_string="forest fires",
+    family_ids=["CCLW.family.10121.0", "CCLW.family.4980.0"],
+)
+```
+
+```python
+request = SearchParameters(
+    query_string="forest fires",
+    document_ids=["CCLW.executive.10121.4637", "CCLW.legislative.4980.1745"],
+)
+```
+
+### Types of query
+The default search approach uses a nearest neighbour search ranking.
+
+Its also possible to search for exact matches instead:
+
+```python
+request = SearchParameters(
+    query_string="forest fires",
+    exact_match=True,
+)
+```
+
+Or to ignore the query string and search the whole database instead:
+```python
+request = SearchParameters(
+    year_range=(2020, 2024),
+    sort_by="date",
+    sort_order="descending",
+)
+```
+
 ### Continuing results
 
 The response objects include continuation tokens, which can be used to get more results.

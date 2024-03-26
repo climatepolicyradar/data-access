@@ -2,11 +2,17 @@ from datetime import datetime
 import re
 from typing import List, Optional, Sequence
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import (
+    BaseModel,
+    computed_field,
+    ConfigDict,
+    field_validator,
+    model_validator,
+)
 
 from cpr_data_access.exceptions import QueryError
 
-sort_orders = ["ascending", "descending"]
+sort_orders = {"ascending": "+", "descending": "-"}
 
 sort_fields = {
     "date": "family_publication_ts",
@@ -53,8 +59,9 @@ class KeywordFilters(BaseModel):
 class SearchParameters(BaseModel):
     """Parameters for a search request"""
 
-    query_string: str
+    query_string: Optional[str] = None
     exact_match: bool = False
+    all_results: bool = False
     limit: int = 100
     max_hits_per_family: int = 10
 
@@ -68,6 +75,13 @@ class SearchParameters(BaseModel):
     sort_order: str = "descending"
 
     continuation_tokens: Optional[Sequence[str]] = None
+
+    @model_validator(mode="after")
+    def validate(self):
+        """Validate against mutually exclusive fields"""
+        if self.exact_match and self.all_results:
+            raise QueryError("`exact_match` and `all_results` are mutually exclusive")
+        return self
 
     @field_validator("continuation_tokens")
     def continuation_tokens_must_be_upper_strings(cls, continuation_tokens):
@@ -86,12 +100,12 @@ class SearchParameters(BaseModel):
                 )
         return continuation_tokens
 
-    @field_validator("query_string")
-    def query_string_must_not_be_empty(cls, query_string):
+    @model_validator(mode="after")
+    def query_string_must_not_be_empty(self):
         """Validate that the query string is not empty."""
-        if query_string == "":
-            raise QueryError("query_string must not be empty")
-        return query_string
+        if not self.query_string:
+            self.all_results = True
+        return self
 
     @field_validator("family_ids", "document_ids")
     def ids_must_fit_pattern(cls, ids):
@@ -136,12 +150,25 @@ class SearchParameters(BaseModel):
     @field_validator("sort_order")
     def sort_order_must_be_valid(cls, sort_order):
         """Validate that the sort order is valid."""
-        if sort_order not in ["ascending", "descending"]:
+        if sort_order not in sort_orders:
             raise QueryError(
                 f"Invalid sort order: {sort_order}. sort_order must be one of: "
                 f"{sort_orders}"
             )
         return sort_order
+
+    @computed_field
+    def vespa_sort_by(self) -> Optional[str]:
+        """Translates sort by into the format acceptable by vespa"""
+        if self.sort_by:
+            return sort_fields.get(self.sort_by)
+        else:
+            return None
+
+    @computed_field
+    def vespa_sort_order(self) -> Optional[str]:
+        """Translates sort order into the format acceptable by vespa"""
+        return sort_orders.get(self.sort_order)
 
 
 class Hit(BaseModel):
@@ -277,6 +304,7 @@ class Family(BaseModel):
     hits: Sequence[Hit]
     total_passage_hits: int = 0
     continuation_token: Optional[str] = None
+    prev_continuation_token: Optional[str] = None
 
 
 class SearchResponse(BaseModel):
@@ -289,3 +317,4 @@ class SearchResponse(BaseModel):
     families: Sequence[Family]
     continuation_token: Optional[str] = None
     this_continuation_token: Optional[str] = None
+    prev_continuation_token: Optional[str] = None

@@ -10,7 +10,6 @@ from cpr_data_access.models.search import (
     Hit,
     SearchParameters,
     SearchResponse,
-    sort_fields,
 )
 from cpr_data_access.embedding import Embedder
 from cpr_data_access.exceptions import FetchError
@@ -83,7 +82,9 @@ def build_vespa_request_body(
         "query_string": parameters.query_string,
     }
 
-    if parameters.exact_match:
+    if parameters.all_results:
+        pass
+    elif parameters.exact_match:
         vespa_request_body["ranking.profile"] = "exact"
     elif sensitive:
         vespa_request_body["ranking.profile"] = "hybrid_no_closeness"
@@ -122,6 +123,7 @@ def parse_vespa_response(
         total_passage_hits = dig(family, "fields", "count()")
         family_hits: List[Hit] = []
         passages_continuation = dig(family, "children", 0, "continuation", "next")
+        prev_passages_continuation = dig(family, "children", 0, "continuation", "prev")
         for hit in dig(family, "children", 0, "children", default=[]):
             family_hits.append(Hit.from_vespa_response(response_hit=hit))
         families.append(
@@ -130,20 +132,15 @@ def parse_vespa_response(
                 hits=family_hits,
                 total_passage_hits=total_passage_hits,
                 continuation_token=passages_continuation,
+                prev_continuation_token=prev_passages_continuation,
             )
-        )
-
-    # For now, we can't sort our results natively in vespa because sort orders are
-    # applied _before_ grouping. We're sorting here instead.
-    if request.sort_by is not None:
-        sort_field = sort_fields[request.sort_by]
-        families.sort(
-            key=lambda f: getattr(f.hits[0], sort_field),
-            reverse=request.sort_order == "descending",
         )
 
     next_family_continuation = dig(
         root, "children", 0, "children", 0, "continuation", "next"
+    )
+    prev_family_continuation = dig(
+        root, "children", 0, "children", 0, "continuation", "prev"
     )
     this_family_continuation = dig(root, "children", 0, "continuation", "this")
     total_hits = dig(root, "fields", "totalCount", default=0)
@@ -154,6 +151,7 @@ def parse_vespa_response(
         families=families,
         continuation_token=next_family_continuation,
         this_continuation_token=this_family_continuation,
+        prev_continuation_token=prev_family_continuation,
         query_time_ms=None,
         total_time_ms=None,
     )
