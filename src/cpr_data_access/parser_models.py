@@ -5,15 +5,15 @@ from datetime import date
 from enum import Enum
 from typing import List, Optional, Sequence, Tuple, TypeVar, Union
 
-from langdetect import DetectorFactory, LangDetectException, detect
-from pydantic import BaseModel, AnyHttpUrl, Field, model_validator
-
 from cpr_data_access.pipeline_general_models import (
     CONTENT_TYPE_HTML,
     CONTENT_TYPE_PDF,
     BackendDocument,
     Json,
 )
+from cpr_data_access.utils import remove_key_if_all_nested_vals_none, unflatten_json
+from langdetect import DetectorFactory, LangDetectException, detect
+from pydantic import AnyHttpUrl, BaseModel, Field, model_validator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -359,3 +359,17 @@ class ParserOutput(BaseParserOutput):
     """Output to a parser with the metadata format used by the CPR backend."""
 
     document_metadata: BackendDocument
+
+    @staticmethod
+    def from_flat_json(data: dict):
+        """Instantiate a parser output object from flat json."""
+
+        unflattened = unflatten_json(data)
+
+        # We remove optional fields that have complex nested structures.
+        # E.g. if html_data had a value of None for has_valid_text, we need to remove
+        # it as this would throw a validation error.
+        unflattened = remove_key_if_all_nested_vals_none(unflattened, "html_data")
+        unflattened = remove_key_if_all_nested_vals_none(unflattened, "pdf_data")
+
+        return ParserOutput.model_validate(unflattened)

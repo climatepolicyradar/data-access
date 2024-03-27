@@ -23,7 +23,11 @@ def test_parser_input_object(parser_output_json_pdf) -> None:
     ParserInput.model_validate(parser_output_json_pdf)
 
 
-def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -> None:
+def test_parser_output_object(
+    parser_output_json_pdf: dict,
+    parser_output_json_html: dict,
+    parser_output_json_flat: dict,
+) -> None:
     """
     Test that we correctly instantiate the parser output object.
 
@@ -142,3 +146,8 @@ def test_parser_output_object(parser_output_json_pdf, parser_output_json_html) -
     assert ("1 validation error for ParserOutput\npdf_data.text_blocks.0.type") in str(
         context.value
     )
+
+    # Test that we can correctly instantiate the parser output object from flat json.
+    with pytest.raises(pydantic.ValidationError) as context:
+        ParserOutput.model_validate(parser_output_json_flat)
+    parser_output = ParserOutput.from_flat_json(parser_output_json_flat)

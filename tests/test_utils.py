@@ -1,7 +1,11 @@
 import pytest
-
-from cpr_data_access.utils import dig, is_sensitive_query, load_sensitive_query_terms
-
+from cpr_data_access.utils import (
+    dig,
+    is_sensitive_query,
+    load_sensitive_query_terms,
+    remove_key_if_all_nested_vals_none,
+    unflatten_json,
+)
 
 TEST_SENSITIVE_QUERY_TERMS = (
     "word",
@@ -65,3 +69,40 @@ def test_dig(fields, default, expected):
     }
 
     assert dig(obj, *fields, default=default) == expected
+
+
+def test_unflatten_json() -> None:
+    """Test unflatten_json function."""
+    data = {
+        "a.b.c": 1,
+        "a.b.d": 2,
+        "a.e": 3,
+        "f": 4,
+    }
+
+    expected = {
+        "a": {
+            "b": {"c": 1, "d": 2},
+            "e": 3,
+        },
+        "f": 4,
+    }
+
+    assert unflatten_json(data) == expected
+
+
+def test_remove_key_if_all_nested_vals_none() -> None:
+    """Test remove_key_if_all_nested_vals_none function."""
+    assert remove_key_if_all_nested_vals_none({}, "key") == {}
+    assert remove_key_if_all_nested_vals_none({"key": None}, "key") == {"key": None}
+    assert remove_key_if_all_nested_vals_none({"key": {"nested": None}}, "key") == {}
+    assert remove_key_if_all_nested_vals_none({"key": {"nested": None}}, "no_key") == {
+        "key": {"nested": None}
+    }
+    assert remove_key_if_all_nested_vals_none(
+        {
+            "key": {"nested": None},
+            "key2": {"nested": "value"},
+        },
+        "key",
+    ) == {"key2": {"nested": "value"}}

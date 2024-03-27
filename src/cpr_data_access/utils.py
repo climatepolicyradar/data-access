@@ -86,3 +86,33 @@ def dig(obj: Union[list, dict], *fields: Any, default: Any = None) -> Any:
         elif not obj:
             return default
     return obj
+
+
+def unflatten_json(data: dict) -> dict:
+    """
+    Unflatten a dictionary with keys that are dot-separated strings.
+
+    I.e. metadata.data respresents {"metadata": {"data": {}}}
+    """
+    unflattened = {}
+    for key, value in data.items():
+        parts = key.split(".")
+        current = unflattened
+        for part in parts[:-1]:
+            current = current.setdefault(part, {})
+        current[parts[-1]] = value
+    return unflattened
+
+
+def remove_key_if_all_nested_vals_none(data: dict, key: str) -> dict:
+    """
+    Remove the value for a given key if it's a dict with all None values.
+
+    E.g. {"key": {"a": None, "b": None}} -> {}
+    """
+    if key not in data:
+        return data
+    if isinstance(data[key], dict):
+        if all(value is None for value in data[key].values()):
+            data.pop(key)
+    return data
