@@ -69,7 +69,7 @@ class KeywordFilters(BaseModel):
 class SearchParameters(BaseModel):
     """Parameters for a search request"""
 
-    query_string: Optional[str] = None
+    query_string: Optional[str] = ""
     exact_match: bool = False
     all_results: bool = False
     limit: int = Field(ge=0, default=100)
