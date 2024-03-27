@@ -2,7 +2,7 @@ import pytest
 from vespa.exceptions import VespaError
 
 from cpr_data_access.models.search import (
-    KeywordFilters,
+    Filters,
     SearchParameters,
     sort_fields,
     sort_orders,
@@ -12,7 +12,7 @@ from cpr_data_access.yql_builder import YQLBuilder
 
 
 def test_whether_single_filter_values_and_lists_of_filter_values_appear_in_yql():
-    keyword_filters = {
+    filters = {
         "family_geography": ["SWE"],
         "family_category": ["Executive"],
         "document_languages": ["English", "Swedish"],
@@ -20,12 +20,12 @@ def test_whether_single_filter_values_and_lists_of_filter_values_appear_in_yql()
     }
     params = SearchParameters(
         query_string="test",
-        keyword_filters=KeywordFilters(**keyword_filters),
+        filters=Filters(**filters),
     )
     yql = YQLBuilder(params).to_str()
-    assert isinstance(params.keyword_filters, KeywordFilters)
+    assert isinstance(params.filters, Filters)
 
-    for key, values in keyword_filters.items():
+    for key, values in filters.items():
         for value in values:
             assert key in yql
             assert value in yql
@@ -139,7 +139,7 @@ def test_yql_builder_build_where_clause():
     assert query_string not in where_clause
 
     params = SearchParameters(
-        query_string="climate", keyword_filters={"family_geography": ["SWE"]}
+        query_string="climate", filters={"family_geography": ["SWE"]}
     )
     where_clause = YQLBuilder(params).build_where_clause()
     assert "SWE" in where_clause
