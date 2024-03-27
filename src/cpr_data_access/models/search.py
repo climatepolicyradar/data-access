@@ -40,7 +40,7 @@ _ID_ELEMENT = r"[a-zA-Z0-9]+([-_]?[a-zA-Z0-9]+)*"
 ID_PATTERN = re.compile(rf"{_ID_ELEMENT}\.{_ID_ELEMENT}\.{_ID_ELEMENT}\.{_ID_ELEMENT}")
 
 
-class KeywordFilters(BaseModel):
+class Filters(BaseModel):
     """Filterable fields in a search request"""
 
     family_geography: Sequence[str] = []
@@ -82,7 +82,7 @@ class SearchParameters(BaseModel):
     family_ids: Optional[Sequence[str]] = None
     document_ids: Optional[Sequence[str]] = None
 
-    keyword_filters: Optional[KeywordFilters] = None
+    filters: Optional[Filters] = None
     year_range: Optional[tuple[Optional[int], Optional[int]]] = None
 
     sort_by: Optional[str] = Field(

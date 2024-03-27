@@ -5,10 +5,10 @@ import pytest
 from pydantic import ValidationError
 
 from cpr_data_access.models.search import (
-    KeywordFilters,
+    Filters,
     SearchParameters,
-    sort_orders,
     sort_fields,
+    sort_orders,
 )
 from cpr_data_access.vespa import build_vespa_request_body
 from cpr_data_access.exceptions import QueryError
@@ -189,8 +189,8 @@ def test_computed_vespa_sort_fields(sort_by, sort_order):
     ["family_geography", "family_category", "document_languages", "family_source"],
 )
 def test_whether_valid_filter_fields_are_accepted(field):
-    keyword_filters = KeywordFilters(**{field: ["value"]})
-    params = SearchParameters(query_string="test", keyword_filters=keyword_filters)
+    filters = Filters(**{field: ["value"]})
+    params = SearchParameters(query_string="test", filters=filters)
     assert isinstance(params, SearchParameters)
 
 
@@ -198,7 +198,7 @@ def test_whether_an_invalid_filter_fields_raises_a_valueerror():
     with pytest.raises(ValidationError) as excinfo:
         SearchParameters(
             query_string="test",
-            keyword_filters=KeywordFilters(**{"invalid_field": ["value"]}),
+            filters=Filters(**{"invalid_field": ["value"]}),
         )
     assert "Extra inputs are not permitted" in str(excinfo.value)
 
@@ -222,9 +222,9 @@ def test_whether_an_invalid_filter_fields_value_fixes_it_silently(
 ):
     params = SearchParameters(
         query_string="test",
-        keyword_filters=KeywordFilters(**{"family_source": input_filters}),
+        filters=Filters(**{"family_source": input_filters}),
     )
-    assert params.keyword_filters.family_source == expected
+    assert params.filters.family_source == expected
 
 
 @pytest.mark.parametrize(

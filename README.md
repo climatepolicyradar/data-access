@@ -108,7 +108,7 @@ Matching documents can also be filtered by keyword field, and by publication dat
 ```python
 request = SearchParameters(
     query_string="forest fires",
-    keyword_filters={
+    filters={
         "language": ["English", "French"],
         "category": ["Executive"],
     },
