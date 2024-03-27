@@ -1,13 +1,11 @@
 import pytest
-
 from cpr_data_access.utils import (
     dig,
     is_sensitive_query,
     load_sensitive_query_terms,
+    remove_key_if_all_nested_vals_none,
     unflatten_json,
-    remove_if_all_nested_vals_none,
 )
-
 
 TEST_SENSITIVE_QUERY_TERMS = (
     "word",
@@ -93,15 +91,15 @@ def test_unflatten_json() -> None:
     assert unflatten_json(data) == expected
 
 
-def test_remove_if_all_nested_vals_none() -> None:
-    """Test remove_if_all_nested_vals_none function."""
-    assert remove_if_all_nested_vals_none({}, "key") == {}
-    assert remove_if_all_nested_vals_none({"key": None}, "key") == {"key": None}
-    assert remove_if_all_nested_vals_none({"key": {"nested": None}}, "key") == {}
-    assert remove_if_all_nested_vals_none({"key": {"nested": None}}, "no_key") == {
+def test_remove_key_if_all_nested_vals_none() -> None:
+    """Test remove_key_if_all_nested_vals_none function."""
+    assert remove_key_if_all_nested_vals_none({}, "key") == {}
+    assert remove_key_if_all_nested_vals_none({"key": None}, "key") == {"key": None}
+    assert remove_key_if_all_nested_vals_none({"key": {"nested": None}}, "key") == {}
+    assert remove_key_if_all_nested_vals_none({"key": {"nested": None}}, "no_key") == {
         "key": {"nested": None}
     }
-    assert remove_if_all_nested_vals_none(
+    assert remove_key_if_all_nested_vals_none(
         {
             "key": {"nested": None},
             "key2": {"nested": "value"},

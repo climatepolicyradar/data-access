@@ -11,7 +11,7 @@ from cpr_data_access.pipeline_general_models import (
     BackendDocument,
     Json,
 )
-from cpr_data_access.utils import remove_if_all_nested_vals_none, unflatten_json
+from cpr_data_access.utils import remove_key_if_all_nested_vals_none, unflatten_json
 from langdetect import DetectorFactory, LangDetectException, detect
 from pydantic import AnyHttpUrl, BaseModel, Field, model_validator
 
@@ -369,7 +369,7 @@ class ParserOutput(BaseParserOutput):
         # We remove optional fields that have complex nested structures.
         # E.g. if html_data had a value of None for has_valid_text, we need to remove
         # it as this would throw a validation error.
-        unflattened = remove_if_all_nested_vals_none(unflattened, "html_data")
-        unflattened = remove_if_all_nested_vals_none(unflattened, "pdf_data")
+        unflattened = remove_key_if_all_nested_vals_none(unflattened, "html_data")
+        unflattened = remove_key_if_all_nested_vals_none(unflattened, "pdf_data")
 
         return ParserOutput.model_validate(unflattened)
