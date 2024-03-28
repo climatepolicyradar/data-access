@@ -26,3 +26,9 @@ Please describe the tests that you added to verify your changes.
 - [ ] Any required documentation updates have been made
 - [ ] Any TODOs added are captured in future tickets
 - [ ] No FIXMEs remain
+
+
+## Package Usage
+
+- Please consider that this package is consumed by many repositories and projects as a dependency.
+- Take a second to think as to whether this pull request introduces any breaking changes and if so have you notified users.
