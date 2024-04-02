@@ -6,7 +6,7 @@ body:
 - type: markdown
   attributes:
     value: >
-      #### Before submitting a bug, please make sure the issue hasn't been already addressed by searching through [the existing and past issues](https://github.com/allenai/python-package-template/issues?q=is%3Aissue+sort%3Acreated-desc+).
+      #### Before submitting a bug, please make sure the issue hasn't been already addressed by searching through [the existing and past issues](https://github.com/climatepolicyradar/cpr-sdk/issues).
 - type: textarea
   attributes:
     label: 🐛 Describe the bug
