@@ -37,9 +37,9 @@ import numpy as np
 import random
 
 from datasets import Dataset as HFDataset, DatasetInfo, load_dataset
-import cpr_data_access.data_adaptors as adaptors
-from cpr_data_access.parser_models import BlockType, BaseParserOutput
-from cpr_data_access.pipeline_general_models import (
+import cpr_sdk.data_adaptors as adaptors
+from cpr_sdk.parser_models import BlockType, BaseParserOutput
+from cpr_sdk.pipeline_general_models import (
     CONTENT_TYPE_HTML,
     CONTENT_TYPE_PDF,
     Json,

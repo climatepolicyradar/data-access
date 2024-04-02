@@ -2,8 +2,8 @@ from unittest.mock import patch
 
 import pytest
 
-from cpr_data_access.search_adaptors import VespaSearchAdapter
-from cpr_data_access.models.search import (
+from cpr_sdk.search_adaptors import VespaSearchAdapter
+from cpr_sdk.models.search import (
     SearchParameters,
     SearchResponse,
     sort_fields,

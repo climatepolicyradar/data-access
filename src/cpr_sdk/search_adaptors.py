@@ -5,10 +5,10 @@ from pathlib import Path
 from typing import Optional
 import logging
 
-from cpr_data_access.embedding import Embedder
-from cpr_data_access.exceptions import DocumentNotFoundError, FetchError, QueryError
-from cpr_data_access.models.search import Hit, SearchParameters, SearchResponse
-from cpr_data_access.vespa import (
+from cpr_sdk.embedding import Embedder
+from cpr_sdk.exceptions import DocumentNotFoundError, FetchError, QueryError
+from cpr_sdk.models.search import Hit, SearchParameters, SearchResponse
+from cpr_sdk.vespa import (
     build_vespa_request_body,
     find_vespa_cert_paths,
     parse_vespa_response,

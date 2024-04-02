@@ -5,7 +5,7 @@ import pandas as pd
 from typing import Iterable
 
 from datasets import Dataset as HuggingFaceDataset
-from cpr_data_access.models import (
+from cpr_sdk.models import (
     Dataset,
     BaseDocument,
     GSTDocument,

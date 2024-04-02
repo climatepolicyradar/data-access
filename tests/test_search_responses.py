@@ -3,9 +3,9 @@ import json
 import pytest
 from vespa.io import VespaResponse
 
-from cpr_data_access.models.search import Hit
-from cpr_data_access.vespa import parse_vespa_response, split_document_id
-from cpr_data_access.exceptions import FetchError
+from cpr_sdk.models.search import Hit
+from cpr_sdk.vespa import parse_vespa_response, split_document_id
+from cpr_sdk.exceptions import FetchError
 
 
 @pytest.fixture

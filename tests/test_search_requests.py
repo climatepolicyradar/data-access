@@ -4,15 +4,15 @@ import pytest
 
 from pydantic import ValidationError
 
-from cpr_data_access.models.search import (
+from cpr_sdk.models.search import (
     Filters,
     SearchParameters,
     sort_fields,
     sort_orders,
 )
-from cpr_data_access.vespa import build_vespa_request_body
-from cpr_data_access.exceptions import QueryError
-from cpr_data_access.embedding import Embedder
+from cpr_sdk.vespa import build_vespa_request_body
+from cpr_sdk.exceptions import QueryError
+from cpr_sdk.embedding import Embedder
 
 
 @patch("cpr_data_access.vespa.SENSITIVE_QUERY_TERMS", {"sensitive"})

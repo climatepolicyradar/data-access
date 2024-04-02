@@ -1,5 +1,5 @@
 import pytest
-from cpr_data_access.utils import (
+from cpr_sdk.utils import (
     dig,
     is_sensitive_query,
     load_sensitive_query_terms,
