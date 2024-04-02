@@ -4,7 +4,7 @@ version = "0.5.6"
 description = ""
 authors = ["CPR Tech <tech@climatepolicyradar.org>"]
 readme = "README.md"
-packages = [{include = "cpr_data_access", from = "src"}]
+packages = [{include = "cpr_sdk", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
