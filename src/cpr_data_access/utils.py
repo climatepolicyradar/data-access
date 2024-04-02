@@ -21,7 +21,7 @@ def is_sensitive_query(text: str, sensitive_terms: set) -> bool:
 
     """
     sensitive_terms_in_query = [
-        term for term in sensitive_terms if term in text.lower()
+        term for term in sensitive_terms if term in text.lower().split()
     ]
 
     if sensitive_terms_in_query:
