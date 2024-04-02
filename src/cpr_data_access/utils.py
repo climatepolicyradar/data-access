@@ -1,4 +1,5 @@
 import csv
+import re
 from pathlib import Path
 from typing import Any, Union
 
@@ -21,7 +22,9 @@ def is_sensitive_query(text: str, sensitive_terms: set) -> bool:
 
     """
     sensitive_terms_in_query = [
-        term for term in sensitive_terms if term in text.lower().split()
+        term
+        for term in sensitive_terms
+        if re.findall(r"\b" + re.escape(term) + r"\b", text.lower())
     ]
 
     if sensitive_terms_in_query:

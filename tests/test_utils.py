@@ -22,7 +22,7 @@ TEST_SENSITIVE_QUERY_TERMS = (
         [False, "word but outnumbered"],
         [False, "word another phrase example but with many other items"],
         [True, "word"],
-        [True, "wordle"],
+        [False, "wordle"],
         [True, "test term"],
         [True, "test term word"],
         [True, "test term and"],
