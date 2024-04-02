@@ -3,19 +3,29 @@ import re
 from typing import List, Optional, Sequence
 
 from pydantic import (
+    AliasChoices,
     BaseModel,
     computed_field,
     ConfigDict,
+    Field,
     field_validator,
     model_validator,
 )
 
+
 from cpr_data_access.exceptions import QueryError
 
-sort_orders = {"ascending": "+", "descending": "-"}
+# Value Lookup Tables
+sort_orders = {
+    "asc": "+",
+    "desc": "-",
+    "ascending": "+",
+    "descending": "-",
+}
 
 sort_fields = {
     "date": "family_publication_ts",
+    "title": "family_name",
     "name": "family_name",
 }
 
@@ -30,7 +40,7 @@ _ID_ELEMENT = r"[a-zA-Z0-9]+([-_]?[a-zA-Z0-9]+)*"
 ID_PATTERN = re.compile(rf"{_ID_ELEMENT}\.{_ID_ELEMENT}\.{_ID_ELEMENT}\.{_ID_ELEMENT}")
 
 
-class KeywordFilters(BaseModel):
+class Filters(BaseModel):
     """Filterable fields in a search request"""
 
     family_geography: Sequence[str] = []
@@ -59,19 +69,25 @@ class KeywordFilters(BaseModel):
 class SearchParameters(BaseModel):
     """Parameters for a search request"""
 
-    query_string: Optional[str] = None
+    query_string: Optional[str] = ""
     exact_match: bool = False
     all_results: bool = False
-    limit: int = 100
-    max_hits_per_family: int = 10
+    limit: int = Field(ge=0, default=100)
+    max_hits_per_family: int = Field(
+        validation_alias=AliasChoices("max_passages_per_doc", "max_hits_per_family"),
+        default=10,
+        ge=0,
+    )
 
     family_ids: Optional[Sequence[str]] = None
     document_ids: Optional[Sequence[str]] = None
 
-    keyword_filters: Optional[KeywordFilters] = None
+    filters: Optional[Filters] = None
     year_range: Optional[tuple[Optional[int], Optional[int]]] = None
 
-    sort_by: Optional[str] = None
+    sort_by: Optional[str] = Field(
+        validation_alias=AliasChoices("sort_field", "sort_by"), default=None
+    )
     sort_order: str = "descending"
 
     continuation_tokens: Optional[Sequence[str]] = None

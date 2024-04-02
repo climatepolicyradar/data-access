@@ -5,10 +5,10 @@ import pytest
 from pydantic import ValidationError
 
 from cpr_data_access.models.search import (
-    KeywordFilters,
+    Filters,
     SearchParameters,
-    sort_orders,
     sort_fields,
+    sort_orders,
 )
 from cpr_data_access.vespa import build_vespa_request_body
 from cpr_data_access.exceptions import QueryError
@@ -65,6 +65,18 @@ def test_wether_combining_all_results_and_exact_match_raises_error():
         SearchParameters(query_string=q, exact_match=True)
     except Exception as e:
         pytest.fail(f"{e.__class__.__name__}: {e}")
+
+
+def test_max_hit_aliases_work():
+    max_hits_params = SearchParameters(max_hits_per_family=1)
+    max_passages_params = SearchParameters(max_passages_per_doc=1)
+    assert max_hits_params == max_passages_params
+
+
+def test_sort_by_aliases_work():
+    by_params = SearchParameters(sort_by="name")
+    field_params = SearchParameters(sort_field="name")
+    assert by_params == field_params
 
 
 @pytest.mark.parametrize("year_range", [(2000, 2020), (2000, None), (None, 2020)])
@@ -139,7 +151,7 @@ def test_whether_an_invalid_document_id_raises_a_queryerror(bad_id):
     ), f"expected failure on {bad_id}"
 
 
-@pytest.mark.parametrize("field", ["date", "name"])
+@pytest.mark.parametrize("field", sort_fields.keys())
 def test_whether_valid_sort_fields_are_accepted(field):
     params = SearchParameters(query_string="test", sort_by=field)
     assert isinstance(params, SearchParameters)
@@ -151,7 +163,7 @@ def test_whether_an_invalid_sort_field_raises_a_queryerror():
     assert "sort_by must be one of" in str(excinfo.value)
 
 
-@pytest.mark.parametrize("order", ["ascending", "descending"])
+@pytest.mark.parametrize("order", sort_orders.keys())
 def test_whether_valid_sort_orders_are_accepted(order):
     params = SearchParameters(query_string="test", sort_order=order)
     assert isinstance(params, SearchParameters)
@@ -177,8 +189,8 @@ def test_computed_vespa_sort_fields(sort_by, sort_order):
     ["family_geography", "family_category", "document_languages", "family_source"],
 )
 def test_whether_valid_filter_fields_are_accepted(field):
-    keyword_filters = KeywordFilters(**{field: ["value"]})
-    params = SearchParameters(query_string="test", keyword_filters=keyword_filters)
+    filters = Filters(**{field: ["value"]})
+    params = SearchParameters(query_string="test", filters=filters)
     assert isinstance(params, SearchParameters)
 
 
@@ -186,7 +198,7 @@ def test_whether_an_invalid_filter_fields_raises_a_valueerror():
     with pytest.raises(ValidationError) as excinfo:
         SearchParameters(
             query_string="test",
-            keyword_filters=KeywordFilters(**{"invalid_field": ["value"]}),
+            filters=Filters(**{"invalid_field": ["value"]}),
         )
     assert "Extra inputs are not permitted" in str(excinfo.value)
 
@@ -210,9 +222,9 @@ def test_whether_an_invalid_filter_fields_value_fixes_it_silently(
 ):
     params = SearchParameters(
         query_string="test",
-        keyword_filters=KeywordFilters(**{"family_source": input_filters}),
+        filters=Filters(**{"family_source": input_filters}),
     )
-    assert params.keyword_filters.family_source == expected
+    assert params.filters.family_source == expected
 
 
 @pytest.mark.parametrize(
