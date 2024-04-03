@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from cpr_cpr_sdk.data_adaptors import LocalDataAdaptor, S3DataAdaptor
+from cpr_sdk.data_adaptors import LocalDataAdaptor, S3DataAdaptor
 from pydantic import ValidationError
 
 

@@ -1,12 +1,12 @@
 import pydantic
 import pytest
-from cpr_cpr_sdk.parser_models import (
+from cpr_sdk.parser_models import (
     ParserInput,
     ParserOutput,
     PDFTextBlock,
     VerticalFlipError,
 )
-from cpr_cpr_sdk.pipeline_general_models import (
+from cpr_sdk.pipeline_general_models import (
     CONTENT_TYPE_HTML,
     CONTENT_TYPE_PDF,
 )

@@ -1,12 +1,12 @@
 import pytest
-from cpr_cpr_sdk.models.search import (
+from cpr_sdk.models.search import (
     Filters,
     SearchParameters,
     sort_fields,
     sort_orders,
 )
-from cpr_cpr_sdk.vespa import VespaErrorDetails
-from cpr_cpr_sdk.yql_builder import YQLBuilder
+from cpr_sdk.vespa import VespaErrorDetails
+from cpr_sdk.yql_builder import YQLBuilder
 from vespa.exceptions import VespaError
 
 

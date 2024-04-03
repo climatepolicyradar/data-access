@@ -16,7 +16,7 @@ The `Dataset` class is automatically configured with the Huggingface repos we us
 If the repository is private you must provide a [user access token](https://huggingface.co/docs/hub/security-tokens), either in your environment as `HUGGINGFACE_TOKEN`, or as an argument to `from_huggingface`.
 
 ```py
-from cpr_cpr_sdk.models import Dataset, GSTDocument
+from cpr_sdk.models import Dataset, GSTDocument
 
 dataset = Dataset(GSTDocument).from_huggingface(
     version="d8363af072d7e0f87ec281dd5084fb3d3f4583a9", # commit hash, optional
@@ -38,7 +38,7 @@ document = BaseDocument.load_from_remote(dataset_key"s3://cpr-data", document_id
 To manage metadata, documents need to be loaded into a `Dataset` object.
 
 ```py
-from cpr_cpr_sdk.models import Dataset, CPRDocument, GSTDocument
+from cpr_sdk.models import Dataset, CPRDocument, GSTDocument
 
 dataset = Dataset().load_from_local("path/to/data", limit=1000)
 assert all([isinstance(document, BaseDocument) for document in dataset])
@@ -77,8 +77,8 @@ dataset.filter("document_id", lambda x: x in ["1234", "5678"])
 This library can also be used to run searches against CPR documents and passages in Vespa.
 
 ```python
-from src.cpr_cpr_sdk.search_adaptors import VespaSearchAdapter
-from src.cpr_cpr_sdk.models.search import SearchParameters
+from src.cpr_sdk.search_adaptors import VespaSearchAdapter
+from src.cpr_sdk.models.search import SearchParameters
 
 adaptor = VespaSearchAdapter(instance_url="YOUR_INSTANCE_URL")
 

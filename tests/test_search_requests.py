@@ -1,19 +1,19 @@
 from unittest.mock import patch
 
 import pytest
-from cpr_cpr_sdk.embedding import Embedder
-from cpr_cpr_sdk.exceptions import QueryError
-from cpr_cpr_sdk.models.search import (
+from cpr_sdk.embedding import Embedder
+from cpr_sdk.exceptions import QueryError
+from cpr_sdk.models.search import (
     Filters,
     SearchParameters,
     sort_fields,
     sort_orders,
 )
-from cpr_cpr_sdk.vespa import build_vespa_request_body
+from cpr_sdk.vespa import build_vespa_request_body
 from pydantic import ValidationError
 
 
-@patch("cpr_cpr_sdk.vespa.SENSITIVE_QUERY_TERMS", {"sensitive"})
+@patch("cpr_sdk.vespa.SENSITIVE_QUERY_TERMS", {"sensitive"})
 @pytest.mark.parametrize(
     "query_type, params",
     [

@@ -3,7 +3,7 @@ from typing import Iterable
 
 import pandas as pd
 import pytest
-from cpr_cpr_sdk.models import (
+from cpr_sdk.models import (
     BaseDocument,
     BlockType,
     CPRDocument,
