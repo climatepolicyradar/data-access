@@ -22,21 +22,15 @@ def is_sensitive_query(text: str, sensitive_terms: set) -> bool:
 
     """
     sensitive_terms_in_query = [
-        term
-        for term in sensitive_terms
-        if re.findall(r"\b" + re.escape(term) + r"\b", text.lower())
+        term for term in sensitive_terms if re.findall(term, text.lower())
     ]
 
     if sensitive_terms_in_query:
-        shortest_sensitive_term = min(sensitive_terms_in_query, key=len)
+        terms = [term.pattern.strip("\\b") for term in sensitive_terms_in_query]
+        shortest_sensitive_term = min(terms, key=len)
         shortest_sensitive_word_count = len(shortest_sensitive_term.split(" "))
-
         remaining_sensitive_word_count = sum(
-            [
-                len(term.split())
-                for term in sensitive_terms_in_query
-                if term != shortest_sensitive_term
-            ]
+            [len(term.split()) for term in terms if term != shortest_sensitive_term]
         )
 
         query_word_count = len(text.split())
@@ -54,7 +48,7 @@ def is_sensitive_query(text: str, sensitive_terms: set) -> bool:
     return False
 
 
-def load_sensitive_query_terms() -> set[str]:
+def load_sensitive_query_terms() -> set[re.Pattern]:
     """
     Return sensitive query terms from the first column of a TSV file.
 
@@ -65,10 +59,12 @@ def load_sensitive_query_terms() -> set[str]:
     tsv_path = Path(__file__).parent / "resources" / "sensitive_query_terms.tsv"
     with open(tsv_path, "r") as tsv_file:
         reader = csv.DictReader(tsv_file, delimiter="\t")
-
-        sensitive_terms = set([row["keyword"].lower().strip() for row in reader])
-
-    return sensitive_terms
+        sensitive_terms = []
+        for row in reader:
+            keyword = row["keyword"].lower().strip()
+            keyword_regex = re.compile(r"\b" + re.escape(keyword) + r"\b")
+            sensitive_terms.append(keyword_regex)
+    return set(sensitive_terms)
 
 
 def dig(obj: Union[list, dict], *fields: Any, default: Any = None) -> Any:
