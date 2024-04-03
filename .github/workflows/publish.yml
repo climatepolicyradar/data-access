@@ -9,7 +9,11 @@ jobs:
   precommit-checks:
     runs-on: ubuntu-latest
     steps: 
-    - uses: ./.github/actions/precommit-checks
+    - name: Check out repository code
+      uses: actions/checkout@v4
+
+    - name: Run pre-commit checks
+      uses: ./.github/actions/precommit-checks
 
   publish:
     runs-on: ubuntu-latest
