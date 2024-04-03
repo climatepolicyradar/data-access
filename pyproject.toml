@@ -1,10 +1,15 @@
 [build-system]
-build-backend = "setuptools.build_meta"
-requires = ["setuptools"]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.poetry-dynamic-versioning]
+enable = true
 
 [tool.poetry]
-name = "cpr-sdk"
-version = "0.5.6" 
+name = "cpr_sdk"
+# Place holder for the version. 
+# This is dynamically updated and reverted during poetry commands - https://pypi.org/project/poetry-dynamic-versioning/. 
+version = "0.0.0"
 description = ""
 authors = ["CPR Tech <tech@climatepolicyradar.org>"]
 readme = "README.md"
