@@ -6,10 +6,15 @@ on:
       - feature/rename-package
 
 jobs:
-  test:
+  precommit-checks:
+    runs-on: ubuntu-latest
+    steps: 
+    - uses: ./.github/workflows/actions/precommit-checks.yml
+
+  publish:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
+    needs: precommit-checks
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -31,6 +36,6 @@ jobs:
         run: |
           poetry build 
 
-      - name: Publish 
-        run: |
-          poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
+      # - name: Publish 
+      #   run: |
+      #     poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
