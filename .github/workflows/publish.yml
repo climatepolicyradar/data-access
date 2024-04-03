@@ -1,0 +1,36 @@
+name: publish
+on:
+  pull_request:
+    # TODO: Update once merged 
+    branches:
+      - feature/rename-package
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Install poetry
+        run: pipx install poetry==1.3.2
+
+      - name: Install python or load from cache with dependencies
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "poetry"
+
+      - name: Install dependencies
+        run: |
+          poetry install --all-extras --with dev
+
+      - name: Build 
+        run: |
+          poetry build 
+
+      - name: Publish 
+        run: |
+          poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
