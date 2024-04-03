@@ -26,7 +26,8 @@ jobs:
 
   package-version-checks:
     uses: ./.github/actions/check-version
-    secrets: inherit
+    secrets:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   test:
     runs-on: ubuntu-latest
