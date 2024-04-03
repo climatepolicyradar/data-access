@@ -9,7 +9,7 @@ class YQLBuilder:
 
     yql_base = Template(
         """
-        select * from sources family_document, document_passage
+        select * from sources $SOURCES
             where $WHERE_CLAUSE
         limit 0 
         |
@@ -35,6 +35,13 @@ class YQLBuilder:
     def __init__(self, params: SearchParameters, sensitive: bool = False) -> None:
         self.params = params
         self.sensitive = sensitive
+
+    def build_sources(self) -> str:
+        """Creates the part of the query that determines which sources to search"""
+        if self.params.documents_only:
+            return "family_document"
+        else:
+            return "family_document, document_passage"
 
     def build_search_term(self) -> str:
         """Create the part of the query that matches a users search text"""
@@ -158,6 +165,7 @@ class YQLBuilder:
     def to_str(self) -> str:
         """Assemble the yql from parts using the template"""
         yql = self.yql_base.substitute(
+            SOURCES=self.build_sources(),
             WHERE_CLAUSE=self.build_where_clause(),
             CONTINUATION=self.build_continuation(),
             LIMIT=self.build_limit(),

@@ -7,6 +7,8 @@ from cpr_data_access.models.search import (
     SearchParameters,
     SearchResponse,
     sort_fields,
+    Document,
+    Passage,
 )
 
 from conftest import VESPA_TEST_SEARCH_URL
@@ -345,3 +347,25 @@ def test_vespa_search_adapter_sorting(fake_vespa_credentials, sort_by):
     )
 
     assert ascend != descend
+
+
+@pytest.mark.vespa
+def test_vespa_search_no_passages_search(fake_vespa_credentials):
+    no_passages = vespa_search(
+        fake_vespa_credentials,
+        SearchParameters(all_results=True, documents_only=True),
+    )
+    for family in no_passages.families:
+        for hit in family.hits:
+            assert isinstance(hit, Document)
+
+    with_passages = vespa_search(
+        fake_vespa_credentials,
+        SearchParameters(all_results=True),
+    )
+    found_a_passage = False
+    for family in with_passages.families:
+        for hit in family.hits:
+            if isinstance(hit, Passage):
+                found_a_passage = True
+    assert found_a_passage
