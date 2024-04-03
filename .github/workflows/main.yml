@@ -25,7 +25,10 @@ jobs:
       uses: ./.github/actions/fixme-checks
 
   package-version-checks:
-    uses: ./.github/actions/check-version
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Check the package version
+      uses: ./.github/actions/check-version
 
   test:
     runs-on: ubuntu-latest
