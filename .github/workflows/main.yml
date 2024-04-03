@@ -1,9 +1,11 @@
 name: main
 on:
-  pull_request:
-    # TODO: Update once merged 
+  push:
     branches:
-      - feature/rename-package
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   precommit-checks:
@@ -29,7 +31,7 @@ jobs:
     steps: 
     - name: Check out repository code
       uses: actions/checkout@v4
-      
+
     - name: Check the package version
       uses: ./.github/actions/check-version
 

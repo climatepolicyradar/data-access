@@ -1,9 +1,8 @@
 name: publish
 on:
-  pull_request:
-    # TODO: Update once merged 
-    branches:
-      - feature/rename-package
+  release:
+    types:
+      - published
 
 jobs:
   precommit-checks:
