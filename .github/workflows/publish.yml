@@ -9,7 +9,7 @@ jobs:
   precommit-checks:
     runs-on: ubuntu-latest
     steps: 
-    - uses: ./.github/workflows/actions/precommit-checks.yml
+    - uses: ./.github/actions/precommit-checks
 
   publish:
     runs-on: ubuntu-latest
