@@ -25,13 +25,8 @@ jobs:
       uses: ./.github/actions/fixme-checks
 
   package-version-checks:
-    runs-on: ubuntu-latest
-    steps: 
-    - name: Check out repository code
-      uses: actions/checkout@v4
-   
-    - name: Run package version checks
-      uses: ./.github/actions/check-version
+    uses: ./.github/actions/check-version
+    secrets: inherit
 
   test:
     runs-on: ubuntu-latest
