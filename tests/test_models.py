@@ -1,21 +1,20 @@
 from pathlib import Path
-
-import pytest
-import pandas as pd
 from typing import Iterable
 
-from datasets import Dataset as HuggingFaceDataset
-from cpr_data_access.models import (
-    Dataset,
+import pandas as pd
+import pytest
+from cpr_cpr_sdk.models import (
     BaseDocument,
-    GSTDocument,
+    BlockType,
     CPRDocument,
     CPRDocumentMetadata,
-    Span,
+    Dataset,
+    GSTDocument,
     KnowledgeBaseIDs,
+    Span,
     TextBlock,
-    BlockType,
 )
+from datasets import Dataset as HuggingFaceDataset
 
 
 @pytest.fixture

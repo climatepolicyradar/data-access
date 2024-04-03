@@ -1,14 +1,13 @@
 import pytest
-from vespa.exceptions import VespaError
-
-from cpr_data_access.models.search import (
+from cpr_cpr_sdk.models.search import (
     Filters,
     SearchParameters,
     sort_fields,
     sort_orders,
 )
-from cpr_data_access.vespa import VespaErrorDetails
-from cpr_data_access.yql_builder import YQLBuilder
+from cpr_cpr_sdk.vespa import VespaErrorDetails
+from cpr_cpr_sdk.yql_builder import YQLBuilder
+from vespa.exceptions import VespaError
 
 
 def test_whether_single_filter_values_and_lists_of_filter_values_appear_in_yql():

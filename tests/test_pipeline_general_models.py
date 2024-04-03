@@ -1,4 +1,4 @@
-from cpr_data_access.pipeline_general_models import BackendDocument
+from cpr_cpr_sdk.pipeline_general_models import BackendDocument
 
 
 def test_backend_document(backend_document_json) -> None:

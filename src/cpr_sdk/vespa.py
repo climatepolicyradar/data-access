@@ -5,16 +5,16 @@ import yaml
 from vespa.io import VespaResponse
 from vespa.exceptions import VespaError
 
-from cpr_data_access.models.search import (
+from cpr_sdk.models.search import (
     Family,
     Hit,
     SearchParameters,
     SearchResponse,
 )
-from cpr_data_access.embedding import Embedder
-from cpr_data_access.exceptions import FetchError
-from cpr_data_access.utils import dig, is_sensitive_query, load_sensitive_query_terms
-from cpr_data_access.yql_builder import YQLBuilder
+from cpr_sdk.embedding import Embedder
+from cpr_sdk.exceptions import FetchError
+from cpr_sdk.utils import dig, is_sensitive_query, load_sensitive_query_terms
+from cpr_sdk.yql_builder import YQLBuilder
 
 
 SENSITIVE_QUERY_TERMS = load_sensitive_query_terms()
