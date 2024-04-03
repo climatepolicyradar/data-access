@@ -1,4 +1,6 @@
 from unittest.mock import patch
+from timeit import timeit
+from typing import Mapping
 
 import pytest
 
@@ -25,6 +27,17 @@ def vespa_search(cert_directory: str, request: SearchParameters) -> SearchRespon
     return response
 
 
+def profile_search(
+    fake_vespa_credentials, params: Mapping[str, str], n: int = 25
+) -> float:
+    t = timeit(
+        lambda: vespa_search(fake_vespa_credentials, SearchParameters(**params)),
+        number=n,
+    )
+    avg_ms = (t / n) * 1000
+    return avg_ms
+
+
 @pytest.mark.vespa
 def test_vespa_search_adaptor__works(fake_vespa_credentials):
     request = SearchParameters(query_string="the")
@@ -34,6 +47,25 @@ def test_vespa_search_adaptor__works(fake_vespa_credentials):
     assert response.query_time_ms < response.total_time_ms
     total_passage_count = sum([f.total_passage_hits for f in response.families])
     assert total_passage_count == response.total_hits
+
+
+@pytest.mark.parametrize(
+    "params",
+    (
+        {"query_string": "the"},
+        {"query_string": "climate change"},
+        {"query_string": "fuel", "exact_search": True},
+        {"all_results": True, "documents_only": True},
+        {"query_string": "fuel", "sort_by": "date", "sort_order": "asc"},
+        {"query_string": "forest", "filter": {"family_category": "CCLW"}},
+    ),
+)
+@pytest.mark.vespa
+def test_vespa_search_adaptor__is_fast_enough(fake_vespa_credentials, params):
+    MAX_SPEED_MS = 750
+
+    avg_ms = profile_search(fake_vespa_credentials, params=params)
+    assert avg_ms <= MAX_SPEED_MS
 
 
 @pytest.mark.vespa

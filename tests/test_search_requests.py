@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import re
 
 import pytest
 
@@ -15,7 +16,10 @@ from cpr_data_access.exceptions import QueryError
 from cpr_data_access.embedding import Embedder
 
 
-@patch("cpr_data_access.vespa.SENSITIVE_QUERY_TERMS", {"sensitive"})
+@patch(
+    "cpr_data_access.vespa.SENSITIVE_QUERY_TERMS",
+    {re.compile(r"\b" + re.escape("sensitive") + r"\b")},
+)
 @pytest.mark.parametrize(
     "query_type, params",
     [
