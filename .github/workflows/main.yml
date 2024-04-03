@@ -1,0 +1,43 @@
+name: main
+on:
+  pull_request:
+    # TODO: Update once merged 
+    branches:
+      - feature/rename-package
+
+jobs:
+  precommit-checks:
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Check out repository code
+      uses: actions/checkout@v4
+
+    - name: Run pre-commit checks
+      uses: ./.github/actions/precommit-checks
+
+  fixme-checks:
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Check out repository code
+      uses: actions/checkout@v4
+
+    - name: Run fixme checks 
+      uses: ./.github/actions/fixme-checks
+
+  package-version-checks:
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Check out repository code
+      uses: actions/checkout@v4
+   
+    - name: Run package version checks
+      uses: ./.github/actions/check-version
+
+  test:
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Check out repository code
+      uses: actions/checkout@v4
+    
+    - name: Run tests
+      uses: ./.github/actions/test
