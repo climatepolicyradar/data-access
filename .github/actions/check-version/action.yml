@@ -12,8 +12,6 @@ runs:
       python -m pip install "toml==0.10.2"
 
   - shell: bash
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     run: |
       PYPROJECT_VERSION=$(python -c "import toml; print(toml.load('pyproject.toml')['tool']['poetry']['version'])")
       echo "PYPROJECT_VERSION=${PYPROJECT_VERSION}"
