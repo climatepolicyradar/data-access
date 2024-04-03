@@ -14,6 +14,7 @@ runs:
 
   - shell: bash
     run: |
+      pip install packaging==24.0
       PYPROJECT_VERSION=$(python -c "from src import cpr_sdk; print(cpr_sdk.__version__)")
       echo "PYPROJECT_VERSION=${PYPROJECT_VERSION}"
 
