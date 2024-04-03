@@ -6,8 +6,6 @@ on:
   pull_request:
     branches:
       - main
-      # TODO: Remove once merged. 
-      - feature/publish-package-workflow-custom
 
 jobs:
   precommit-checks:
