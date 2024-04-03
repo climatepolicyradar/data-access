@@ -24,6 +24,8 @@ runs:
 
   - shell: bash
     run: |
+      python -m venv venv 
+      source venv/bin/activate
       poetry install
       PYPROJECT_VERSION=$(python -c "import cpr_sdk; print(cpr_sdk.__version__)")
       echo "PYPROJECT_VERSION=${PYPROJECT_VERSION}"
