@@ -71,6 +71,7 @@ jobs:
 
       - name: Build 
         run: |
+          poetry self add "poetry-dynamic-versioning[plugin]"
           poetry build 
 
       - name: Publish 
