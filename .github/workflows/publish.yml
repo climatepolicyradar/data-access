@@ -67,9 +67,9 @@ jobs:
           source venv/bin/activate
           poetry install
 
+      # poetry self add "poetry-dynamic-versioning[plugin]"
       - name: Build 
         run: |
-          poetry self add "poetry-dynamic-versioning[plugin]"
           pipx inject poetry "poetry-dynamic-versioning[plugin]"
           poetry build 
 
