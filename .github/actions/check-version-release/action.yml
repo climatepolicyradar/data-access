@@ -1,5 +1,5 @@
 name: check-pyproject-version
-description: Check that the pyproject.toml version is greater than the latest GitHub release
+description: Check that the pyproject.toml version is the same as the latest GitHub release
 
 runs:
   using: composite
@@ -24,12 +24,12 @@ runs:
       echo "GITHUB_RELEASE_VERSION=${GITHUB_RELEASE_VERSION}"
       
       # Check that semver tag is greater than the github release version
-      PYPROJECT_GREATER_THAN_GITHUB_RELEASE=$(python -c "from packaging.version import Version; print(Version('${PYPROJECT_VERSION}') > Version('${GITHUB_RELEASE_VERSION}'))")
-      echo "PYPROJECT_GREATER_THAN_GITHUB_RELEASE=${PYPROJECT_GREATER_THAN_GITHUB_RELEASE}"
+      PYPROJECT_EQUALS_GITHUB_RELEASE=$(python -c "from packaging.version import Version; print(Version('${PYPROJECT_VERSION}') == Version('${GITHUB_RELEASE_VERSION}'))")
+      echo "PYPROJECT_EQUALS_GITHUB_RELEASE=${PYPROJECT_EQUALS_GITHUB_RELEASE}"
 
-      if [[ PYPROJECT_GREATER_THAN_GITHUB_RELEASE ]]; then
-        echo "The pyproject.toml version is greater than the latest GitHub release."
+      if [[ PYPROJECT_EQUALS_GITHUB_RELEASE ]]; then
+        echo "The pyproject.toml version is equal to the latest GitHub release."
       else
-        echo "The pyproject.toml version is not greater than the latest GitHub release."
+        echo "The pyproject.toml version is not equal to the the latest GitHub release."
         exit 1
       fi

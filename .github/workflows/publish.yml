@@ -30,7 +30,7 @@ jobs:
       uses: actions/checkout@v4
    
     - name: Run package version checks
-      uses: ./.github/actions/check-version
+      uses: ./.github/actions/check-version-release
 
   test:
     runs-on: ubuntu-latest
