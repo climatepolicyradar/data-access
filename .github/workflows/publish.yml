@@ -63,7 +63,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --all-extras --with dev
+          poetry install
 
       - name: Set The Poetry Version from the Package 
         run: |

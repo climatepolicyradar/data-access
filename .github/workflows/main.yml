@@ -61,7 +61,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --all-extras --with dev
+          poetry install
 
       - name: Set Unique Package Version
         run: |
