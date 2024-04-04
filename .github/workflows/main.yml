@@ -63,6 +63,12 @@ jobs:
         run: |
           poetry install --all-extras --with dev
 
+      - name: Set Unique Package Version
+        run: |
+          export "CURRENT_DATETIME=$(date +%s)"
+          poetry version "1.0.${CURRENT_DATETIME}"
+          poetry version
+
       - name: Build 
         run: |
           poetry build 
