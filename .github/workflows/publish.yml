@@ -67,7 +67,7 @@ jobs:
 
       - name: Set The Poetry Version from the Package 
         run: |
-          export "CURRENT_VERSION=$(python -c 'import cpr_sdk; print(cpr_sdk.__version__)')"
+          export "CURRENT_VERSION=$(python -c 'from src import cpr_sdk; print(cpr_sdk.__version__)')"
           poetry version "${CURRENT_VERSION}-alpha"
           poetry version
 
