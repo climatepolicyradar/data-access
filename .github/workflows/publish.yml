@@ -63,17 +63,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m venv venv 
-          source venv/bin/activate
-          echo "export PYTHONPATH=\$PYTHONPATH:$(pwd)/src" >> $GITHUB_ENV
-          echo "export PATH=\$PATH:$(pwd)/src" >> $GITHUB_ENV
           poetry install
-
-      # - name: Set The Poetry Version from the Package 
-      #   run: |
-      #     export "CURRENT_VERSION=$(python -c 'from src import cpr_sdk; print(cpr_sdk.__version__)')"
-      #     poetry version "${CURRENT_VERSION}"
-      #     poetry version
 
       - name: Build 
         run: |
