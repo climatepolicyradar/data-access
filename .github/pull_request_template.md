@@ -41,15 +41,6 @@ Please select the option(s) below that are most relevant:
 
 Please describe the tests that you added to verify your changes.
 
-## Reviewer Checklist
-
-- [ ] The PR represents a single feature (small drive-by fixes are also ok)
-- [ ] The PR includes tests that are sufficient for the level of risk
-- [ ] The code is sufficiently commented, particularly in hard-to-understand areas
-- [ ] Any required documentation updates have been made
-- [ ] Any TODOs added are captured in future tickets
-- [ ] No FIXMEs remain
-
 ## Before submitting
 
 <!-- Please complete this checklist BEFORE submitting your PR to speed along the review process. -->
