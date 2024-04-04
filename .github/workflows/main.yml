@@ -43,3 +43,33 @@ jobs:
     
     - name: Run tests
       uses: ./.github/actions/test
+
+  test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [precommit-checks, fixme-checks, package-version-checks, test]
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Install poetry
+        run: pipx install poetry==1.3.2
+
+      - name: Install python or load from cache with dependencies
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "poetry"
+
+      - name: Install dependencies
+        run: |
+          poetry install --all-extras --with dev
+
+      - name: Build 
+        run: |
+          poetry build 
+
+      - name: Publish 
+        run: |
+          poetry config repositories.test-pypi https://test.pypi.org/legacy/
+          poetry publish --username __token__ --password ${{ secrets.TEST_PYPI_TOKEN }} -r test-pypi
