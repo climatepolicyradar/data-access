@@ -72,6 +72,7 @@ class SearchParameters(BaseModel):
     query_string: Optional[str] = ""
     exact_match: bool = False
     all_results: bool = False
+    documents_only: bool = False
     limit: int = Field(ge=0, default=100)
     max_hits_per_family: int = Field(
         validation_alias=AliasChoices("max_passages_per_doc", "max_hits_per_family"),
@@ -97,6 +98,10 @@ class SearchParameters(BaseModel):
         """Validate against mutually exclusive fields"""
         if self.exact_match and self.all_results:
             raise QueryError("`exact_match` and `all_results` are mutually exclusive")
+        if self.documents_only and not self.all_results:
+            raise QueryError(
+                "`documents_only` requires `all_results`, other queries are not supported"
+            )
         return self
 
     @field_validator("continuation_tokens")
