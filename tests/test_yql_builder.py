@@ -10,6 +10,16 @@ from cpr_sdk.yql_builder import YQLBuilder
 from vespa.exceptions import VespaError
 
 
+def test_whether_document_only_search_ignores_passages_in_yql():
+    params = SearchParameters(
+        all_results=True,
+        documents_only=True,
+    )
+    yql = YQLBuilder(params).to_str()
+    assert "family_document" in yql
+    assert "document_passage" not in yql
+
+
 def test_whether_single_filter_values_and_lists_of_filter_values_appear_in_yql():
     filters = {
         "family_geography": ["SWE"],

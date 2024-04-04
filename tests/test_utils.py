@@ -1,3 +1,5 @@
+from unittest.mock import patch, mock_open
+
 import pytest
 from cpr_sdk.utils import (
     dig,
@@ -7,11 +9,11 @@ from cpr_sdk.utils import (
     unflatten_json,
 )
 
-TEST_SENSITIVE_QUERY_TERMS = (
-    "word",
-    "test term",
-    "another phrase example",
-)
+TEST_SENSITIVE_QUERY_TERMS = """group_name\tkeyword
+type\tWord
+type\tTest Term
+type\tAnother Phrase Example
+"""
 
 
 @pytest.mark.parametrize(
@@ -33,9 +35,9 @@ TEST_SENSITIVE_QUERY_TERMS = (
     ),
 )
 def test_is_sensitive_query(expected, text):
-    assert (
-        is_sensitive_query(text, sensitive_terms=TEST_SENSITIVE_QUERY_TERMS) == expected
-    )
+    with patch("builtins.open", mock_open(read_data=TEST_SENSITIVE_QUERY_TERMS)):
+        sensitive_terms = load_sensitive_query_terms()
+    assert is_sensitive_query(text, sensitive_terms=sensitive_terms) == expected
 
 
 def test_load_sensitive_query_terms():

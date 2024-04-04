@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import re
 
 import pytest
 from cpr_sdk.embedding import Embedder
@@ -13,7 +14,10 @@ from cpr_sdk.vespa import build_vespa_request_body
 from pydantic import ValidationError
 
 
-@patch("cpr_sdk.vespa.SENSITIVE_QUERY_TERMS", {"sensitive"})
+@patch(
+    "cpr_sdk.vespa.SENSITIVE_QUERY_TERMS",
+    {re.compile(r"\b" + re.escape("sensitive") + r"\b")},
+)
 @pytest.mark.parametrize(
     "query_type, params",
     [
@@ -51,11 +55,26 @@ def test_whether_an_empty_query_string_does_all_result_search():
         pytest.fail(f"{e.__class__.__name__}: {e}")
 
 
+def test_wether_documents_only_without_all_results_raises_error():
+    q = "Search"
+    with pytest.raises(QueryError) as excinfo:
+        SearchParameters(query_string=q, documents_only=True)
+    assert "Failed to build query" in str(excinfo.value)
+    assert "`documents_only` requires `all_results`" in str(excinfo.value)
+
+    # They should be fine otherwise:
+    try:
+        SearchParameters(query_string=q, all_results=True, documents_only=True)
+    except Exception as e:
+        pytest.fail(f"{e.__class__.__name__}: {e}")
+
+
 def test_wether_combining_all_results_and_exact_match_raises_error():
     q = "Search"
     with pytest.raises(QueryError) as excinfo:
         SearchParameters(query_string=q, exact_match=True, all_results=True)
-    assert "" in str(excinfo.value)
+    assert "Failed to build query" in str(excinfo.value)
+    assert "`exact_match` and `all_results`" in str(excinfo.value)
 
     # They should be fine independently:
     try:
