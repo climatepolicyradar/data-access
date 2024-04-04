@@ -27,7 +27,7 @@ runs:
       PYPROJECT_EQUALS_GITHUB_RELEASE=$(python -c "from packaging.version import Version; print(Version('${PYPROJECT_VERSION}') == Version('${GITHUB_RELEASE_VERSION}'))")
       echo "PYPROJECT_EQUALS_GITHUB_RELEASE=${PYPROJECT_EQUALS_GITHUB_RELEASE}"
 
-      if $PYPROJECT_EQUALS_GITHUB_RELEASE; then
+      if [[ PYPROJECT_EQUALS_GITHUB_RELEASE ]]; then
         echo "The pyproject.toml version is equal to the latest GitHub release."
       else
         echo "The pyproject.toml version is not equal to the the latest GitHub release."
