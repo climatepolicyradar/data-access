@@ -63,6 +63,8 @@ jobs:
         run: |
           python -m venv venv 
           source venv/bin/activate
+          echo "export PYTHONPATH=\$PYTHONPATH:$(pwd)/src" >> $GITHUB_ENV
+          echo "export PATH=\$PATH:$(pwd)/src" >> $GITHUB_ENV
           poetry install
 
       # - name: Set The Poetry Version from the Package 
