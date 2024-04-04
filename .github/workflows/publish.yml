@@ -71,7 +71,8 @@ jobs:
 
       - name: Build 
         run: |
-          poetry self add "poetry-dynamic-versioning[plugin]"
+          # poetry self add "poetry-dynamic-versioning[plugin]"
+          pipx inject poetry "poetry-dynamic-versioning[plugin]"
           poetry build 
 
       - name: Publish 
