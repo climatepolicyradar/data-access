@@ -1,0 +1,34 @@
+name: check-pyproject-version
+description: Check that the pyproject.toml version is greater than the latest GitHub release
+
+runs:
+  using: composite
+  steps:
+  - name: Checkout Repository
+    uses: actions/checkout@v4
+
+  - name: Setup Python
+    uses: actions/setup-python@v4
+    with:
+      python-version: "3.10"    
+
+  - shell: bash
+    run: |
+      pip install packaging==24.0
+      PYPROJECT_VERSION=$(python -c "from src import cpr_sdk; print(cpr_sdk.__version__)")
+      echo "PYPROJECT_VERSION=${PYPROJECT_VERSION}"
+
+      GITHUB_RELEASE_VERSION=$(curl --silent "https://api.github.com/repos/climatepolicyradar/cpr-sdk/releases/latest" | jq -r '.tag_name')
+      # remove the "v" from the version
+      GITHUB_RELEASE_VERSION=${GITHUB_RELEASE_VERSION#v}
+      echo "GITHUB_RELEASE_VERSION=${GITHUB_RELEASE_VERSION}"
+      
+      # Check that semver tag is greater than the github release version
+      PYPROJECT_GREATER_THAN_GITHUB_RELEASE=$(python -c "from packaging.version import Version; print(Version('${PYPROJECT_VERSION}') > Version('${GITHUB_RELEASE_VERSION}'))")
+
+      if [[ PYPROJECT_GREATER_THAN_GITHUB_RELEASE ]]; then
+        echo "The pyproject.toml version is greater than the latest GitHub release."
+      else
+        echo "The pyproject.toml version is not greater than the latest GitHub release."
+        exit 1
+      fi
