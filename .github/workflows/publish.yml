@@ -74,7 +74,8 @@ jobs:
           echo "PYPROJECT_VERSION=${PYPROJECT_VERSION}"
           pipx inject poetry "poetry-dynamic-versioning[plugin]"
           poetry build 
-
-      - name: Publish 
-        run: |
           poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
+
+      # - name: Publish 
+      #   run: |
+      #     poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
