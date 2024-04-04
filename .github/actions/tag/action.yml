@@ -1,0 +1,32 @@
+name: Tag Package
+description: Tag pull requests and merges to main
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+
+    - shell: bash
+      run: |
+        git config --global user.email "tech@cpr.org"
+        git config --global user.name "CPR Tech Team"
+
+    - name: List Tags Pre-tag
+      shell: bash
+      run: |
+        git tag -l
+
+    - name: Tag
+      shell: bash
+      run: |
+        git tag -a ${GITHUB_REF##*/}-${GITHUB_SHA::8} -m "Tagging ${GITHUB_REF##*/} in CI/CD."
+
+    - name: Push the tag
+      shell: bash
+      run: |
+        git push origin ${GITHUB_REF##*/}-${GITHUB_SHA::8}
+
+    - name: List Tags Post-tag
+      shell: bash
+      run: |
+        git tag -l

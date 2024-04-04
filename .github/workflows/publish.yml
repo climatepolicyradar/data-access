@@ -1,0 +1,71 @@
+name: publish
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  precommit-checks:
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Check out repository code
+      uses: actions/checkout@v4
+
+    - name: Run pre-commit checks
+      uses: ./.github/actions/precommit-checks
+
+  fixme-checks:
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Check out repository code
+      uses: actions/checkout@v4
+
+    - name: Run fixme checks 
+      uses: ./.github/actions/fixme-checks
+
+  package-version-checks:
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Check out repository code
+      uses: actions/checkout@v4
+   
+    - name: Run package version checks
+      uses: ./.github/actions/check-version
+
+  test:
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Check out repository code
+      uses: actions/checkout@v4
+    
+    - name: Run tests
+      uses: ./.github/actions/test
+
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [precommit-checks, fixme-checks, package-version-checks, test]
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Install poetry
+        run: pipx install poetry==1.3.2
+
+      - name: Install python or load from cache with dependencies
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "poetry"
+
+      - name: Install dependencies
+        run: |
+          poetry install --all-extras --with dev
+
+      - name: Build 
+        run: |
+          poetry build 
+
+      - name: Publish 
+        run: |
+          poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
