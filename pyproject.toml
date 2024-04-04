@@ -7,8 +7,12 @@ enable = true
 
 [tool.poetry]
 name = "cpr_sdk"
-# Place holder for the version. 
-# This is dynamically updated and reverted during poetry commands - https://pypi.org/project/poetry-dynamic-versioning/. 
+# VERSION PLACEHOLDER 
+# The actual version is set as an attribute in the __init__.py module of the cpr-sdk pacakge. 
+# This is dynamically updated and reverted during poetry commands to facilitate dynamic versioning. 
+# https://pypi.org/project/poetry-dynamic-versioning/
+# The update flow is therefore, bump the version in the cpr_sdk/version.py module, make a pr, merge. 
+# The publish github actions workflow will then build and publish the cpr-sdk package upon manual published release.
 version = "0.0.0"
 description = ""
 authors = ["CPR Tech <tech@climatepolicyradar.org>"]
