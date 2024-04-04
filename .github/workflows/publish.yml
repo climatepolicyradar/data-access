@@ -3,6 +3,8 @@ on:
   release:
     types:
       - published
+  # TODO: REMOVE THIS BEFORE PUBLISHING
+  pull_request:
 
 jobs:
   precommit-checks:
@@ -61,6 +63,12 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install --all-extras --with dev
+
+      - name: Set The Poetry Version from the Package 
+        run: |
+          export "CURRENT_VERSION=$(python -c 'import cpr_sdk; print(cpr_sdk.__version__)')"
+          poetry version "${CURRENT_VERSION}-alpha"
+          poetry version
 
       - name: Build 
         run: |
