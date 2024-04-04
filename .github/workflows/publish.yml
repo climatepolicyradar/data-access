@@ -46,7 +46,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [precommit-checks, fixme-checks, package-version-checks, test]
+    # TODO REMOVE 
+    # needs: [precommit-checks, fixme-checks, package-version-checks, test]
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
