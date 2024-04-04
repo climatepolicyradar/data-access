@@ -5,13 +5,13 @@ from datetime import date
 from enum import Enum
 from typing import List, Optional, Sequence, Tuple, TypeVar, Union
 
-from cpr_data_access.pipeline_general_models import (
+from cpr_sdk.pipeline_general_models import (
     CONTENT_TYPE_HTML,
     CONTENT_TYPE_PDF,
     BackendDocument,
     Json,
 )
-from cpr_data_access.utils import remove_key_if_all_nested_vals_none, unflatten_json
+from cpr_sdk.utils import remove_key_if_all_nested_vals_none, unflatten_json
 from langdetect import DetectorFactory, LangDetectException, detect
 from pydantic import AnyHttpUrl, BaseModel, Field, model_validator
 

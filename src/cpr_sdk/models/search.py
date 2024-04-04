@@ -13,7 +13,7 @@ from pydantic import (
 )
 
 
-from cpr_data_access.exceptions import QueryError
+from cpr_sdk.exceptions import QueryError
 
 # Value Lookup Tables
 sort_orders = {

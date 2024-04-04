@@ -6,8 +6,8 @@ from typing import List, Optional
 from pathlib import Path
 from tqdm.auto import tqdm
 
-from cpr_data_access.parser_models import BaseParserOutput
-from cpr_data_access.s3 import _get_s3_keys_with_prefix, _s3_object_read_text
+from cpr_sdk.parser_models import BaseParserOutput
+from cpr_sdk.s3 import _get_s3_keys_with_prefix, _s3_object_read_text
 
 _LOGGER = logging.getLogger(__name__)
 

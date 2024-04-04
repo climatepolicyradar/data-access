@@ -3,17 +3,15 @@ from timeit import timeit
 from typing import Mapping
 
 import pytest
-
-from cpr_data_access.search_adaptors import VespaSearchAdapter
-from cpr_data_access.models.search import (
+from conftest import VESPA_TEST_SEARCH_URL
+from cpr_sdk.models.search import (
     SearchParameters,
     SearchResponse,
     sort_fields,
     Document,
     Passage,
 )
-
-from conftest import VESPA_TEST_SEARCH_URL
+from cpr_sdk.search_adaptors import VespaSearchAdapter
 
 
 def vespa_search(cert_directory: str, request: SearchParameters) -> SearchResponse:
@@ -172,7 +170,7 @@ def test_vespa_search_adaptor__exact(fake_vespa_credentials):
 
 
 @pytest.mark.vespa
-@patch("cpr_data_access.vespa.SENSITIVE_QUERY_TERMS", {"Government"})
+@patch("cpr_sdk.vespa.SENSITIVE_QUERY_TERMS", {"Government"})
 def test_vespa_search_adaptor__sensitive(fake_vespa_credentials):
     request = SearchParameters(query_string="Government")
     response = vespa_search(fake_vespa_credentials, request)

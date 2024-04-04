@@ -1,6 +1,5 @@
 import pytest
-
-from cpr_data_access.s3 import _s3_object_read_text, _get_s3_keys_with_prefix
+from cpr_sdk.s3 import _get_s3_keys_with_prefix, _s3_object_read_text
 
 
 def test_s3_get_keys_with_prefix(s3_client):

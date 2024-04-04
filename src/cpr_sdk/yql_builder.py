@@ -1,7 +1,7 @@
 from string import Template
 from typing import Optional
 
-from cpr_data_access.models.search import Filters, SearchParameters
+from cpr_sdk.models.search import Filters, SearchParameters
 
 
 class YQLBuilder:
