@@ -13,7 +13,7 @@
     <content id="family-document-passage" version="1.0">
         <tuning>
             <resource-limits>
-                <disk>0.95</disk>
+                <disk>0.98</disk>
             </resource-limits>
         </tuning>
         <min-redundancy>2</min-redundancy>
