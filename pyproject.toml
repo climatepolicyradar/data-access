@@ -1,10 +1,37 @@
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+
 [tool.poetry]
-name = "cpr-sdk"
-version = "0.5.8"
+name = "cpr_sdk"
+# VERSION PLACEHOLDER 
+# The actual version is set as an attribute in the __init__.py module of the cpr-sdk pacakge. 
+# This is dynamically updated and reverted during poetry commands to facilitate dynamic versioning. 
+# https://pypi.org/project/poetry-dynamic-versioning/
+# The update flow is therefore, bump the version in the cpr_sdk/version.py module, make a pr, merge. 
+# The publish github actions workflow will then build and publish the cpr-sdk package upon manual published release.
+version = "0.0.0"
 description = ""
 authors = ["CPR Tech <tech@climatepolicyradar.org>"]
 readme = "README.md"
 packages = [{include = "cpr_sdk", from = "src"}]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: BSD 3-Clause License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+license = "LICENSE"
+
+[project.urls]
+Homepage = "https://github.com/climatepolicyradar/cpr-sdk"
+Repository = "https://github.com/climatepolicyradar/cpr-sdk"
+Changelog = "https://github.com/climatepolicyradar/cpr-sdk/blob/main/CHANGELOG.md"
+
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -39,9 +66,6 @@ black = "^24.2.0"
 moto = {extras = ["s3"], version = "^5.0.2"}
 pytest-dotenv = "^0.5.2"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 addopts = "-p no:cacheprovider"

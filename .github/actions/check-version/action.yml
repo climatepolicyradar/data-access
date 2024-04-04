@@ -7,13 +7,15 @@ runs:
   - name: Checkout Repository
     uses: actions/checkout@v4
 
-  - shell: bash
-    run: |
-      python -m pip install "toml==0.10.2"
+  - name: Setup Python
+    uses: actions/setup-python@v4
+    with:
+      python-version: "3.10"    
 
   - shell: bash
     run: |
-      PYPROJECT_VERSION=$(python -c "import toml; print(toml.load('pyproject.toml')['tool']['poetry']['version'])")
+      pip install packaging==24.0
+      PYPROJECT_VERSION=$(python -c "from src import cpr_sdk; print(cpr_sdk.__version__)")
       echo "PYPROJECT_VERSION=${PYPROJECT_VERSION}"
 
       GITHUB_RELEASE_VERSION=$(curl --silent "https://api.github.com/repos/climatepolicyradar/cpr-sdk/releases/latest" | jq -r '.tag_name')
