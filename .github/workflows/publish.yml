@@ -61,6 +61,8 @@ jobs:
 
       - name: Install dependencies
         run: |
+          python -m venv venv 
+          source venv/bin/activate
           poetry install
 
       # - name: Set The Poetry Version from the Package 
@@ -71,7 +73,7 @@ jobs:
 
       - name: Build 
         run: |
-          # poetry self add "poetry-dynamic-versioning[plugin]"
+          poetry self add "poetry-dynamic-versioning[plugin]"
           pipx inject poetry "poetry-dynamic-versioning[plugin]"
           poetry build 
 
