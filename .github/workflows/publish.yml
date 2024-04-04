@@ -3,10 +3,6 @@ on:
   release:
     types:
       - published
-  # TODO REMOVE AFTER TESTING 
-  pull_request:
-    branches:
-      - main
 
 jobs:
   precommit-checks:
@@ -70,7 +66,6 @@ jobs:
         run: |
           poetry build 
       
-      # TODO REMOVE AFTER TESTING 
-      # - name: Publish 
-      #   run: |
-      #     poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
+      - name: Publish 
+        run: |
+          poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
