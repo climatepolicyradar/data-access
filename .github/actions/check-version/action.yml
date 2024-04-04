@@ -25,8 +25,9 @@ runs:
       
       # Check that semver tag is greater than the github release version
       PYPROJECT_GREATER_THAN_GITHUB_RELEASE=$(python -c "from packaging.version import Version; print(Version('${PYPROJECT_VERSION}') > Version('${GITHUB_RELEASE_VERSION}'))")
+      echo "PYPROJECT_GREATER_THAN_GITHUB_RELEASE=${PYPROJECT_GREATER_THAN_GITHUB_RELEASE}"
 
-      if [[ PYPROJECT_GREATER_THAN_GITHUB_RELEASE == "True" ]]; then
+      if $PYPROJECT_GREATER_THAN_GITHUB_RELEASE; then
         echo "The pyproject.toml version is greater than the latest GitHub release."
       else
         echo "The pyproject.toml version is not greater than the latest GitHub release."
