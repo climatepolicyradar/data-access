@@ -3,8 +3,6 @@ on:
   release:
     types:
       - published
-  # TODO: REMOVE THIS BEFORE PUBLISHING
-  pull_request:
 
 jobs:
   precommit-checks:
@@ -46,8 +44,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # TODO REMOVE 
-    # needs: [precommit-checks, fixme-checks, package-version-checks, test]
+    needs: [precommit-checks, fixme-checks, package-version-checks, test]
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -68,7 +65,7 @@ jobs:
       - name: Set The Poetry Version from the Package 
         run: |
           export "CURRENT_VERSION=$(python -c 'from src import cpr_sdk; print(cpr_sdk.__version__)')"
-          poetry version "${CURRENT_VERSION}-alpha"
+          poetry version "${CURRENT_VERSION}"
           poetry version
 
       - name: Build 
