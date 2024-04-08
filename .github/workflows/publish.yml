@@ -70,9 +70,9 @@ jobs:
       # poetry self add "poetry-dynamic-versioning[plugin]"
       - name: Build 
         run: |
+          pipx inject poetry "poetry-dynamic-versioning[plugin]"
           PYPROJECT_VERSION=$(python -c "from src import cpr_sdk; print(cpr_sdk.__version__)")
           echo "PYPROJECT_VERSION=${PYPROJECT_VERSION}"
-          pipx inject poetry "poetry-dynamic-versioning[plugin]"
           poetry build 
 
       - name: Publish 
