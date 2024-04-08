@@ -259,17 +259,17 @@ numpy = {version = ">=1.19.0", markers = "python_version >= \"3.9\""}
 
 [[package]]
 name = "boto3"
-version = "1.34.77"
+version = "1.34.79"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "boto3-1.34.77-py3-none-any.whl", hash = "sha256:7abd327980258ec2ae980d2ff7fc32ede7448146b14d34c56bf0be074e2a149b"},
-    {file = "boto3-1.34.77.tar.gz", hash = "sha256:8ebed4fa5a3b84dd4037f28226985af00e00fb860d739fc8b1ed6381caa4b330"},
+    {file = "boto3-1.34.79-py3-none-any.whl", hash = "sha256:265b0b4865e8c07e27abb32a31d2bd9129bb009b1d89ca0783776ec084886123"},
+    {file = "boto3-1.34.79.tar.gz", hash = "sha256:139dd2d94eaa0e3213ff37ba7cf4cb2e3823269178fe8f3e33c965f680a9ddde"},
 ]
 
 [package.dependencies]
-botocore = ">=1.34.77,<1.35.0"
+botocore = ">=1.34.79,<1.35.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.10.0,<0.11.0"
 
@@ -278,13 +278,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.34.77"
+version = "1.34.79"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "botocore-1.34.77-py3-none-any.whl", hash = "sha256:6d6a402032ca0b89525212356a865397f8f2839683dd53d41b8cee1aa84b2b4b"},
-    {file = "botocore-1.34.77.tar.gz", hash = "sha256:6dab60261cdbfb7d0059488ea39408d5522fad419c004ba5db3484e6df854ea8"},
+    {file = "botocore-1.34.79-py3-none-any.whl", hash = "sha256:a42a014d3dbaa9ef123810592af69f9e55b456c5be3ac9efc037325685519e83"},
+    {file = "botocore-1.34.79.tar.gz", hash = "sha256:6b59b0f7de219d383a2a633f6718c2600642ebcb707749dc6c67a6a436474b7a"},
 ]
 
 [package.dependencies]
@@ -1117,13 +1117,13 @@ files = [
 
 [[package]]
 name = "moto"
-version = "5.0.4"
+version = "5.0.5"
 description = ""
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "moto-5.0.4-py2.py3-none-any.whl", hash = "sha256:4054360b882b6e7bab25d52d057e196b978b8d15f1921333f534c4d8f6510bbb"},
-    {file = "moto-5.0.4.tar.gz", hash = "sha256:8d19125d40c919cb40df62f4576904c2647c4e9a0e1ebc42491dd7787d09e107"},
+    {file = "moto-5.0.5-py2.py3-none-any.whl", hash = "sha256:4ecdd4084491a2f25f7a7925416dcf07eee0031ce724957439a32ef764b22874"},
+    {file = "moto-5.0.5.tar.gz", hash = "sha256:2eaca2df7758f6868df420bf0725cd0b93d98709606f1fb8b2343b5bdc822d91"},
 ]
 
 [package.dependencies]
@@ -1131,7 +1131,7 @@ boto3 = ">=1.9.201"
 botocore = ">=1.14.0"
 cryptography = ">=3.3.1"
 Jinja2 = ">=2.10.1"
-py-partiql-parser = {version = "0.5.2", optional = true, markers = "extra == \"s3\""}
+py-partiql-parser = {version = "0.5.4", optional = true, markers = "extra == \"s3\""}
 python-dateutil = ">=2.1,<3.0.0"
 PyYAML = {version = ">=5.1", optional = true, markers = "extra == \"s3\""}
 requests = ">=2.5"
@@ -1140,23 +1140,23 @@ werkzeug = ">=0.5,<2.2.0 || >2.2.0,<2.2.1 || >2.2.1"
 xmltodict = "*"
 
 [package.extras]
-all = ["PyYAML (>=5.1)", "antlr4-python3-runtime", "aws-xray-sdk (>=0.93,!=0.96)", "cfn-lint (>=0.40.0)", "docker (>=3.0.0)", "graphql-core", "joserfc (>=0.9.0)", "jsondiff (>=1.1.2)", "jsonpath-ng", "multipart", "openapi-spec-validator (>=0.5.0)", "py-partiql-parser (==0.5.2)", "pyparsing (>=3.0.7)", "setuptools"]
+all = ["PyYAML (>=5.1)", "antlr4-python3-runtime", "aws-xray-sdk (>=0.93,!=0.96)", "cfn-lint (>=0.40.0)", "docker (>=3.0.0)", "graphql-core", "joserfc (>=0.9.0)", "jsondiff (>=1.1.2)", "jsonpath-ng", "multipart", "openapi-spec-validator (>=0.5.0)", "py-partiql-parser (==0.5.4)", "pyparsing (>=3.0.7)", "setuptools"]
 apigateway = ["PyYAML (>=5.1)", "joserfc (>=0.9.0)", "openapi-spec-validator (>=0.5.0)"]
 apigatewayv2 = ["PyYAML (>=5.1)", "openapi-spec-validator (>=0.5.0)"]
 appsync = ["graphql-core"]
 awslambda = ["docker (>=3.0.0)"]
 batch = ["docker (>=3.0.0)"]
-cloudformation = ["PyYAML (>=5.1)", "aws-xray-sdk (>=0.93,!=0.96)", "cfn-lint (>=0.40.0)", "docker (>=3.0.0)", "graphql-core", "joserfc (>=0.9.0)", "jsondiff (>=1.1.2)", "openapi-spec-validator (>=0.5.0)", "py-partiql-parser (==0.5.2)", "pyparsing (>=3.0.7)", "setuptools"]
+cloudformation = ["PyYAML (>=5.1)", "aws-xray-sdk (>=0.93,!=0.96)", "cfn-lint (>=0.40.0)", "docker (>=3.0.0)", "graphql-core", "joserfc (>=0.9.0)", "jsondiff (>=1.1.2)", "openapi-spec-validator (>=0.5.0)", "py-partiql-parser (==0.5.4)", "pyparsing (>=3.0.7)", "setuptools"]
 cognitoidp = ["joserfc (>=0.9.0)"]
-dynamodb = ["docker (>=3.0.0)", "py-partiql-parser (==0.5.2)"]
-dynamodbstreams = ["docker (>=3.0.0)", "py-partiql-parser (==0.5.2)"]
+dynamodb = ["docker (>=3.0.0)", "py-partiql-parser (==0.5.4)"]
+dynamodbstreams = ["docker (>=3.0.0)", "py-partiql-parser (==0.5.4)"]
 glue = ["pyparsing (>=3.0.7)"]
 iotdata = ["jsondiff (>=1.1.2)"]
-proxy = ["PyYAML (>=5.1)", "antlr4-python3-runtime", "aws-xray-sdk (>=0.93,!=0.96)", "cfn-lint (>=0.40.0)", "docker (>=2.5.1)", "graphql-core", "joserfc (>=0.9.0)", "jsondiff (>=1.1.2)", "jsonpath-ng", "multipart", "openapi-spec-validator (>=0.5.0)", "py-partiql-parser (==0.5.2)", "pyparsing (>=3.0.7)", "setuptools"]
-resourcegroupstaggingapi = ["PyYAML (>=5.1)", "cfn-lint (>=0.40.0)", "docker (>=3.0.0)", "graphql-core", "joserfc (>=0.9.0)", "jsondiff (>=1.1.2)", "openapi-spec-validator (>=0.5.0)", "py-partiql-parser (==0.5.2)", "pyparsing (>=3.0.7)"]
-s3 = ["PyYAML (>=5.1)", "py-partiql-parser (==0.5.2)"]
-s3crc32c = ["PyYAML (>=5.1)", "crc32c", "py-partiql-parser (==0.5.2)"]
-server = ["PyYAML (>=5.1)", "antlr4-python3-runtime", "aws-xray-sdk (>=0.93,!=0.96)", "cfn-lint (>=0.40.0)", "docker (>=3.0.0)", "flask (!=2.2.0,!=2.2.1)", "flask-cors", "graphql-core", "joserfc (>=0.9.0)", "jsondiff (>=1.1.2)", "jsonpath-ng", "openapi-spec-validator (>=0.5.0)", "py-partiql-parser (==0.5.2)", "pyparsing (>=3.0.7)", "setuptools"]
+proxy = ["PyYAML (>=5.1)", "antlr4-python3-runtime", "aws-xray-sdk (>=0.93,!=0.96)", "cfn-lint (>=0.40.0)", "docker (>=2.5.1)", "graphql-core", "joserfc (>=0.9.0)", "jsondiff (>=1.1.2)", "jsonpath-ng", "multipart", "openapi-spec-validator (>=0.5.0)", "py-partiql-parser (==0.5.4)", "pyparsing (>=3.0.7)", "setuptools"]
+resourcegroupstaggingapi = ["PyYAML (>=5.1)", "cfn-lint (>=0.40.0)", "docker (>=3.0.0)", "graphql-core", "joserfc (>=0.9.0)", "jsondiff (>=1.1.2)", "openapi-spec-validator (>=0.5.0)", "py-partiql-parser (==0.5.4)", "pyparsing (>=3.0.7)"]
+s3 = ["PyYAML (>=5.1)", "py-partiql-parser (==0.5.4)"]
+s3crc32c = ["PyYAML (>=5.1)", "crc32c", "py-partiql-parser (==0.5.4)"]
+server = ["PyYAML (>=5.1)", "antlr4-python3-runtime", "aws-xray-sdk (>=0.93,!=0.96)", "cfn-lint (>=0.40.0)", "docker (>=3.0.0)", "flask (!=2.2.0,!=2.2.1)", "flask-cors", "graphql-core", "joserfc (>=0.9.0)", "jsondiff (>=1.1.2)", "jsonpath-ng", "openapi-spec-validator (>=0.5.0)", "py-partiql-parser (==0.5.4)", "pyparsing (>=3.0.7)", "setuptools"]
 ssm = ["PyYAML (>=5.1)"]
 stepfunctions = ["antlr4-python3-runtime", "jsonpath-ng"]
 xray = ["aws-xray-sdk (>=0.93,!=0.96)", "setuptools"]
@@ -1824,13 +1824,13 @@ murmurhash = ">=0.28.0,<1.1.0"
 
 [[package]]
 name = "py-partiql-parser"
-version = "0.5.2"
+version = "0.5.4"
 description = "Pure Python PartiQL Parser"
 optional = false
 python-versions = "*"
 files = [
-    {file = "py-partiql-parser-0.5.2.tar.gz", hash = "sha256:bdec65fe17d6093c05e9bc1742a99a041ef810b50a71cc0d9e74a88218d938cf"},
-    {file = "py_partiql_parser-0.5.2-py3-none-any.whl", hash = "sha256:9c79b59bbe0cb50daa8090020f2e7f3e5a0e33f7846b48924f19a8f7704f4877"},
+    {file = "py_partiql_parser-0.5.4-py2.py3-none-any.whl", hash = "sha256:3dc4295a47da9587681a96b35c6e151886fdbd0a4acbe0d97c4c68e5f689d315"},
+    {file = "py_partiql_parser-0.5.4.tar.gz", hash = "sha256:72e043919538fa63edae72fb59afc7e3fd93adbde656718a7d2b4666f23dd114"},
 ]
 
 [package.extras]
@@ -3254,13 +3254,13 @@ test = ["black (>=22.3.0,<23.0.0)", "coverage (>=6.2,<7.0)", "isort (>=5.0.6,<6.
 
 [[package]]
 name = "typing-extensions"
-version = "4.10.0"
+version = "4.11.0"
 description = "Backported and Experimental Type Hints for Python 3.8+"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "typing_extensions-4.10.0-py3-none-any.whl", hash = "sha256:69b1a937c3a517342112fb4c6df7e72fc39a38e7891a5730ed4985b5214b5475"},
-    {file = "typing_extensions-4.10.0.tar.gz", hash = "sha256:b0abd7c89e8fb96f98db18d86106ff1d90ab692004eb746cf6eda2682f91b3cb"},
+    {file = "typing_extensions-4.11.0-py3-none-any.whl", hash = "sha256:c1f94d72897edaf4ce775bb7558d5b79d8126906a14ea5ed1635921406c0387a"},
+    {file = "typing_extensions-4.11.0.tar.gz", hash = "sha256:83f085bd5ca59c80295fc2a82ab5dac679cbe02b9f33f7d83af68e241bea51b0"},
 ]
 
 [[package]]
