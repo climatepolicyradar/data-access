@@ -1,18 +1,9 @@
 [build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
-build-backend = "poetry_dynamic_versioning.backend"
-
-[tool.poetry-dynamic-versioning]
-enable = true
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "cpr_sdk"
-# VERSION PLACEHOLDER 
-# The actual version is set as an attribute in the __init__.py module of the cpr-sdk pacakge. 
-# This is dynamically updated and reverted during poetry commands to facilitate dynamic versioning. 
-# https://pypi.org/project/poetry-dynamic-versioning/
-# The update flow is therefore, bump the version in the cpr_sdk/version.py module, make a pr, merge. 
-# The publish github actions workflow will then build and publish the cpr-sdk package upon manual published release.
 version = "0.0.0"
 description = ""
 authors = ["CPR Tech <tech@climatepolicyradar.org>"]
