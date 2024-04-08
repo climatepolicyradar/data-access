@@ -1,0 +1,32 @@
+name: check-pyproject-package-versions-match
+description: Check that the pyproject.toml version is the same as the version in the version.py module
+
+runs:
+  using: composite
+  steps:
+  - name: Checkout Repository
+    uses: actions/checkout@v4
+
+  - name: Setup Python
+    uses: actions/setup-python@v4
+    with:
+      python-version: "3.10"    
+
+  - shell: bash
+    run: |
+      pip install packaging==24.0
+      PACKAGE_VERSION=$(python -c "from src import cpr_sdk; print(cpr_sdk.__version__)")
+      echo "PACKAGE_VERSION=${PACKAGE_VERSION}"
+
+      PYPROJECT_VERSION=$(poetry version | cut -d' ' -f2)
+      echo "PYPROJECT_VERSION=${PYPROJECT_VERSION}"
+
+      PYPROJECT_EQUALS_PACKAGE_VERSION=$(python -c "from packaging.version import Version; print(Version('${PYPROJECT_VERSION}') == Version('${PACKAGE_VERSION}'))")
+      echo "PYPROJECT_EQUALS_PACKAGE_VERSION=${PYPROJECT_EQUALS_PACKAGE_VERSION}"
+
+      if [[ PYPROJECT_EQUALS_PACKAGE_VERSION ]]; then
+        echo "The pyproject.toml version is the same as the version in the package __init__.py module."
+      else
+        echo "The pyproject.toml version is NOT the same as the version in the package __init__.py module."
+        exit 1
+      fi

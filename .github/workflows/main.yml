@@ -33,6 +33,15 @@ jobs:
     - name: Check the package version
       uses: ./.github/actions/check-version
 
+  package-pyproject-version-checks: 
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Check out repository code
+      uses: actions/checkout@v4
+
+    - name: Check the pyproject.toml version matches the module version
+      uses: ./.github/actions/check-version-pyproject-toml-version-module
+
   test:
     runs-on: ubuntu-latest
     steps: 
@@ -45,7 +54,7 @@ jobs:
   test-publish:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [precommit-checks, fixme-checks, package-version-checks, test]
+    needs: [precommit-checks, fixme-checks, package-version-checks, package-pyproject-version-checks, test]
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4

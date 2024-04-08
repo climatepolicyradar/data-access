@@ -3,7 +3,6 @@ on:
   release:
     types:
       - published
-  pull_request:  
 
 jobs:
   precommit-checks:
@@ -33,6 +32,15 @@ jobs:
     - name: Run package version checks
       uses: ./.github/actions/check-version-release
 
+  package-pyproject-version-checks: 
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Check out repository code
+      uses: actions/checkout@v4
+
+    - name: Check the pyproject.toml version matches the module version
+      uses: ./.github/actions/check-version-pyproject-toml-version-module
+
   test:
     runs-on: ubuntu-latest
     steps: 
@@ -45,7 +53,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # needs: [precommit-checks, fixme-checks, package-version-checks, test]
+    needs: [precommit-checks, fixme-checks, package-version-checks, package-pyproject-version-checks, test]
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -65,27 +73,8 @@ jobs:
 
       - name: Build 
         run: |
-          PYPROJECT_VERSION=$(python -c "from src import cpr_sdk; print(cpr_sdk.__version__)")
-          poetry version $PYPROJECT_VERSION
           poetry build 
 
       - name: Publish 
         run: |
           poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
-
-      - name: Create Pull Request
-        id: cpr
-        uses: peter-evans/create-pull-request@v5
-        with:
-          commit-message: Creating a pull request with bumped version in pyproject.toml
-          committer: GitHub <noreply@github.com>
-          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
-          signoff: false
-          branch: update-pyproject-version
-          base: main
-          delete-branch: true
-          title: 'New sdk vesion! :robot:'
-          body: |
-            New sdk package version: 
-            - Updated the pyproject.toml with a new version post release.
-            - Used todays date - *today's* for the unique ID. 
