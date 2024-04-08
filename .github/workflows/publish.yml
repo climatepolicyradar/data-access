@@ -49,8 +49,6 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Install poetry
         run: pipx install poetry==1.7.1
@@ -63,14 +61,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m venv venv 
-          source venv/bin/activate
           poetry install
 
       - name: Build 
         run: |
           PYPROJECT_VERSION=$(python -c "from src import cpr_sdk; print(cpr_sdk.__version__)")
-          echo "PYPROJECT_VERSION=${PYPROJECT_VERSION}"
           poetry version $PYPROJECT_VERSION
           poetry build 
 
