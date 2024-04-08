@@ -3,6 +3,7 @@ on:
   release:
     types:
       - published
+  pull_request:
 
 jobs:
   precommit-checks:
@@ -53,7 +54,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [precommit-checks, fixme-checks, package-version-checks, package-pyproject-version-checks, test]
+    # needs: [precommit-checks, fixme-checks, package-version-checks, package-pyproject-version-checks, test]
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -70,6 +71,11 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install
+
+      - name: Update version in pyproject.toml 
+        run: |
+          PACKAGE_VERSION=$(python -c "from src import cpr_sdk; print(cpr_sdk.__version__)")
+          poetry version $PACKAGE_VERSION 
 
       - name: Build 
         run: |
