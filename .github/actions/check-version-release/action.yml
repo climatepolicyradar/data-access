@@ -33,3 +33,4 @@ runs:
         echo "The pyproject.toml version is NOT equal to the the latest GitHub release."
         exit 1
       fi
+  
