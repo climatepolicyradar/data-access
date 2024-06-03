@@ -18,7 +18,7 @@ langdetect = "^1.0.9"
 deprecation = "^2.1.0"
 numpy = ">=1.23.5"
 
-pyvespa = { version = "^0.37.1", optional = true } 
+pyvespa = { version = "^0.41.0", optional = true } 
 pyyaml = { version = "^6.0.1", optional = true } 
 sentence-transformers = { version = "^2.2.2", optional = true } 
 torch = { version = "^2.0.0", optional = true } 
